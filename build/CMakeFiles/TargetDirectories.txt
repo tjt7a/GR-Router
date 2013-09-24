@@ -1,0 +1,9 @@
+/home/tjt7a/Src/new/gr-router/build/swig/CMakeFiles/_router_swig.dir
+/home/tjt7a/Src/new/gr-router/build/swig/CMakeFiles/_router_swig_doc_tag.dir
+/home/tjt7a/Src/new/gr-router/build/swig/CMakeFiles/_router_swig_swig_tag.dir
+/home/tjt7a/Src/new/gr-router/build/lib/CMakeFiles/gnuradio-router.dir
+/home/tjt7a/Src/new/gr-router/build/apps/CMakeFiles/pygen_apps_9a6dd.dir
+/home/tjt7a/Src/new/gr-router/build/python/CMakeFiles/pygen_python_2d1e9.dir
+/home/tjt7a/Src/new/gr-router/build/swig/CMakeFiles/pygen_swig_02aed.dir
+/home/tjt7a/Src/new/gr-router/build/lib/CMakeFiles/test-router.dir
+/home/tjt7a/Src/new/gr-router/build/CMakeFiles/uninstall.dir

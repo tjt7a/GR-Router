@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,_router_swig.so -o _router_swig.so CMakeFiles/_router_swig.dir/router_swigPYTHON_wrap.cxx.o -lpython2.7 ../lib/libgnuradio-router.so -lboost_filesystem -lboost_system /home/tjt7a/Src/target/lib/libgnuradio-runtime.so -Wl,-rpath,/home/tjt7a/Src/new/gr-router/build/lib:/home/tjt7a/Src/target/lib: 
