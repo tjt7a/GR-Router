@@ -14,10 +14,10 @@
 // Default Constructor
 NetworkInterface::NetworkInterface(int itemsize, int children_count, int port_arg=8080, bool root_arg=false){
 
-	d_itemsize = itemsize;
-	children = children_count; 
-	port = port_arg;
-	root = root_arg; 
+	d_itemsize = itemsize; // The size of each element in the packet; going to be using bytes = 1
+	children = children_count;  // Number of children
+	port = port_arg; // Port to connect with
+	root = root_arg;  // Is this node the Root node?
 	d_residue  = new unsigned char[itemsize];
 	d_residue_len = 0;
 
@@ -73,7 +73,8 @@ bool NetworkInterface::connect(char* parent_hostname){
 	}
 }
 
-// Code copied from file_descriptor_source_impl
+// Code copied from file_descriptor_source_impl from GNURADIO code
+// Used to read items from packet and rebuild stream
 int NetworkInterface::read_items(int index, char *buf, int nitems){
 	
 	int r;
@@ -109,7 +110,7 @@ int NetworkInterface::read_items(int index, char *buf, int nitems){
 	return r;
 }
 
-// Code copied from file_descriptor_source_impl
+// Code copied from file_descriptor_source_impl from GNURADIO code
 int NetworkInterface::handle_residue(char *buf, int nbytes_read){
 	assert(nbytes_read >= 0);
 
@@ -122,7 +123,7 @@ int NetworkInterface::handle_residue(char *buf, int nbytes_read){
 }
 
 
-// Code copied from file_descriptor_source_impl
+// Code copied from file_descriptor_source_impl from GNURADIO code
 int NetworkInterface::receive(int child_index, char * outbuf, int noutput_items){
 	assert(noutput_items > 0);
 

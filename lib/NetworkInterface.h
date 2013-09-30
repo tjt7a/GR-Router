@@ -24,32 +24,32 @@ public:
 	NetworkInterface(int itemsize, int children, int port, bool root);
 	~NetworkInterface();
 
-    	// Build connection graph
-    	bool connect(char* parent_hostname);
+    // Build connection graph
+    bool connect(char* parent_hostname);
 
-    	// Receive 
-    	int receive(int child_index, char * outbuf, int noutput_items);
+    // Receive 
+    int receive(int child_index, char * outbuf, int noutput_items);
 
-    	// Send msg to child at index child_index
-    	int send(int child_index, char* msg, int num);
+    // Send msg to child at index child_index
+    int send(int child_index, char* msg, int num);
 
 private:
 
-    	//functions
-    	int read_items(int child_index, char *buf, int nitems);
-    	int handle_residue(char *buf, int nbytes_read);
-    	void flush_residue(){d_residue_len = 0; }
+    //functions
+    int read_items(int child_index, char *buf, int nitems);
+    int handle_residue(char *buf, int nbytes_read);
+    void flush_residue(){d_residue_len = 0; }
 
 
-    	EthernetConnector *connector;
-    	int children;
-    	int port;
-    	bool root;
-    	size_t d_itemsize; //# Size of the items to be sent/received
+    EthernetConnector *connector;
+    int children;
+    int port;
+    bool root;
+    size_t d_itemsize; //# Size of the items to be sent/received
 
-    	// For receiving
-    	unsigned char *d_residue;
-    	unsigned long d_residue_len;
+    // For receiving
+    unsigned char *d_residue;
+    unsigned long d_residue_len;
 };
 
 #endif

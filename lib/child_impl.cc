@@ -27,6 +27,7 @@
  namespace gr {
  	namespace router {
 
+ 		// Return a shared pointer to the Scheduler; this public constructor calls the private constructor
  		child::sptr
  		child::make(int number_of_children, int child_index, char * hostname, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > input_queue, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > output_queue)
  		{
@@ -47,28 +48,30 @@
 
 		// Initialize global_counter for router 
      	global_counter = 0;
-
-
-		in_queue = input_queue; // Assign queue pointers
+     	// These queues serve as the input/output queues for packetized data
+     	// Assign queue pointers
+		in_queue = input_queue; 
 		out_queue = output_queue;
 
-
+		// Used to kill all threads
 		d_finished = false;
-		number_of_children = numberofchildren;
-		parent_hostname = hostname;
+
+		number_of_children = numberofchildren; // How many children does this node have?
+		parent_hostname = hostname; // What is the hostname of this child's parent?
 		
+		// Weights table to keep track of the 'business' of child nodes
 		weights = new double[number_of_children];
 
-		// Index of current window
-		index_of_window = 0;
-
-		// Create a thread per child
+		// Create a thread per child for listeners (future work)
 		//for(int i = 0; i < number_of_children; i++){
 		//	thread_vector.append(boost::shared_ptr<boost::thread>(new Boost::thread(boost::bind(&child_impl::run, this))));
 		//}
 		
-		// Create single thread; no children
-		d_thread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::run, this)));	
+		// Create single thread for sending windows back to root
+		d_thread_send_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::send_root, this)));
+
+		// Create single thread for receiving messages from root
+		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
 	}
 
     /*
@@ -77,10 +80,18 @@
      child_impl::~child_impl()
      {
      	d_finished = true;
-     	d_thread->interrupt();
-     	d_thread->join();
+
+     	// Kill send thread
+     	d_thread_send_root->interrupt();
+     	d_thread_send_root->join();
+
+     	// Kill receive thread
+     	d_thread_receive_root->interrupt();
+     	d_thread_receive_root->join();
      }
 
+     // This is the work function sthat is called by the scheduler
+     // Because this block is completely asynchronous, this function is of no importance
      int
      child_impl::work(int noutput_items,
      	gr_vector_const_void_star &input_items,
@@ -101,123 +112,106 @@
      	return ret;
      }
 
-    // thread execution
-    // Receive, send, send
-     void child_impl::run(){ // Split into send() and receive()
+
+     // Thread receive function receives from root
+     void child_impl::receive_root(){
 
      	float *buffer = new float[1025];
-     	std::vector<float> *temp;
-     	int run_index = get_index();
 
-	// Until the thread is finished...
      	while(!d_finished){
 
      		int size = 0;
 
-// Receive WINDOW OR WEIGHT
-		// Spin wait; might want to do an interrupt handler here	
+     		// Spin weight; might want to change this later to interrupt handler
      		while(size < 1)
-			size = connector->receive(-1, (char*)buffer, (4*1025)); // Receive window from parent; returns byte size
+     			size = connector->receive(-1, (char*)buffer, (4*1025));
 
+     		if(size < 12){
+     			int index = (int)buffer[0];
+     			if((index >= 0) && (index < number_of_children))
+     				weights[index] = buffer[1];
+     		}
+     		else{
+     			//If we receive a packet, push to in_queue
+     			if(size == (1025 * 4)){
+     				std::vector<float> *arrival;
+     				arrival->assign((float*)buffer, (float*)buffer + 1025);
+     				in_queue->push(arrival);
+     				increment();
+     			}
+     			else
+     				printf("This is no good; we are receiving data of unexpected size: %d\n", size);
+     		}
+     	}
+     }
 
-		// If we get a weight message
-		if(size < 12){
-			int index = (int)buffer[0];
-			if((index >= 0) && (index < number_of_children))
-				weights[index] = buffer[1];
-		}
-		else{
-			// If we recieve a window, push to in_queue
-			if(size == (1025*4)){
-				std::vector<float> *arrival;
-				arrival->assign((float*)buffer, (float*)buffer + 1025);
-				in_queue->push(arrival);
-				increment(); // We have recevied another window!
+     // Thread send function
+     void child_impl::send_root(){
+     	std::vector<float> *temp;
+
+     	while(!d_finished){
+
+     		// If we have windows, send window
+     		if(out_queue->pop(temp)){
+     			connector->send(-1, (char*)temp->data(), (1025*4));
+     			decrement();
+
+     			// Send weight
+     			temp->clear();
+     			temp->push_back((float)child_index);
+     			temp->push_back((float)get_weight());
+     			connector->send(-1, (char*)temp->data(), (2*4));
+     		}
+     	}
+     }
+
+     // Thread receive function receives from each child
+     void child_impl::receive_child(int index){
+     	// Recieve from children
+     	// To be implemented
+     }
+
+     // Thread send function sends to all children
+     void child_impl::send_child(int index){
+     	// Send to children
+     	// To be implemented
+     }
+
+    // Determine child with minimum weight (big_o(n)) -- not really a big deal with few children
+    // Determine better solution
+	int child_impl::min(){
+		int min = weights[0];
+		int index = 0;
+		for(int i = 1; i < number_of_children; i++){
+			if(weights[i] < min){
+				min = weights[i];
+				index = i;
 			}
-			else{
-				printf("This is no good; we are receiving data of unexpected size: %d\n", size);
-			}
-		}		
-
-// SEND WEIGHT
-		temp->clear();
-		temp->push_back((float)child_index);
-		temp->push_back((float)get_weight());
-		connector->send(-1, (char*)temp->data(), (2*4));
-
-
-// SEND WINDOW OR WEIGHT
-
-		if(out_queue->pop(temp)){ // If popping from out_queue was successful
-			connector->send(-1, (char*)temp->data(), (1025*4)); // Send computed window to parent
-			// Sent one of our windows; decrement window count
-			decrement();
 		}
-		else{ // If we don't have a window ready to send to parent, just send weight
-			temp->clear();
-		temp->push_back((float)child_index);
-		temp->push_back((float)get_weight());	
-		connector->send(-1, (char*)temp->data(), (2*4));	
+		return index;
 	}
-// SEND WEIGHT
-	temp->clear();
-	temp->push_back((float)child_index);
-	temp->push_back((float)get_weight());
-	connector->send(-1, (char*)temp->data(), (2*4));
 
-	size = 0;
-	while(size < 1)
-		size = connector->receive(-1, (char*)buffer, (1025*4));
-
-		// Received weight
-	if(size < 12){
-		int index = (int)buffer[0];
-		if(index < number_of_children)
-			weights[index] = buffer[1];
-	}
-	else{
-		printf("Received something unexepected of size: %d\n", size);
-	}
-}
-	delete [] buffer; // We're done with our buffer
-}
-
-    // Determine child with minimum weight
-int child_impl::min(){
-	int min = weights[0];
-	int index = 0;
-	for(int i = 1; i < number_of_children; i++){
-		if(weights[i] < min){
-			min = weights[i];
-			index = i;
-		}
-	}
-	return index;
-}
-
-    // Calculate weight of subtree
-inline int child_impl::get_weight(){
+    // Calculate weight of subtree (how many packets are out for computation?)
+	inline int child_impl::get_weight(){
 
 		//For simple application with no sub-trees, simply return outstandng windows
-	return global_counter;	
-}
+		return global_counter;	
+	}
 
 	// These functions are intended for a multi-threaded implementation; locking is not necessary with a single thread
 
     // Decrement global counter
-inline void child_impl::decrement(){
-	global_lock.lock();
-	global_counter--;
-	global_lock.unlock();
-}
+	inline void child_impl::decrement(){
+		global_lock.lock();
+		global_counter--;
+		global_lock.unlock();
+	}
 
     // Increment global counter
-inline  void child_impl::increment(){
-	global_lock.lock();
-	global_counter++;
-	global_lock.unlock();
-}
-
-
+	inline  void child_impl::increment(){
+		global_lock.lock();
+		global_counter++;
+		global_lock.unlock();
+	}
   } /* namespace router */
 } /* namespace gr */

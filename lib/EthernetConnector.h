@@ -17,16 +17,17 @@
 // Verbose Flag
 #define V	true
 
-// Class for children nodes
+// Class for children nodes; encapsulates child-specific data
 class Node{
 public:
 	int socket_fd; // Socket File Descriptor
 	int port; // Port
-	sockaddr_in address; // address
+	sockaddr_in address; // IP address
 	hostent *host; // hostname
 	socklen_t length; // socket 'length'
 };
 
+// Class for Ethernet-specific connector
 class EthernetConnector{
 public:
 
@@ -37,12 +38,12 @@ public:
 	// Parent functions
 	bool connect_to_parent(char* hostname, int port);
 	int write_parent(char * msg, int size); // Return number of bytes written
-	int read_parent(char * outbuf, int size);
+	int read_parent(char * outbuf, int size); // Return number of bytes read
 
 	// Child functions
 	bool connect_to_child(int index, int port);
-	int write_child(int index, char * inbuf, unsigned long size);
-	int read_child(int index, char * outbuf, int size);
+	int write_child(int index, char * inbuf, unsigned long size); // Return number of bytes written
+	int read_child(int index, char * outbuf, int size); // Return number of bytes read
 
 	// Close all file descriptors
 	void stop();
@@ -52,11 +53,11 @@ private:
 	// Private Variables
 	Node local;
 	Node parent;
-	Node *children;
+	Node *children; // Pointer to array of children nodes
 	
 	int numChildren;
 
-	// Locks for FD access
+	// Locks for File Descriptor access
 	boost::mutex read_parent_mutex;
 	boost::mutex write_parent_mutex;
 	boost::mutex read_child_mutex;

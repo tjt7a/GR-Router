@@ -19,7 +19,6 @@ EthernetConnector::EthernetConnector(int count, int port){
 	}
 }
 
-
 // Destructor
 EthernetConnector::~EthernetConnector(){
 
@@ -32,49 +31,57 @@ EthernetConnector::~EthernetConnector(){
 bool EthernetConnector::set_local_fd(){
 
 	// Create a new Socket File Descriptor for local Node
-        local.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	local.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
-        if(local.socket_fd < 0){
-                if(V)printf("Serious Error: Could not create a local socket!\n");
-                return false;
-        }
+	// We could not get a socket FD
+    if(local.socket_fd < 0){
+    	if(V)printf("Serious Error: Could not create a local socket!\n");
+        return false;
+    }
 	
-		local.length = sizeof(local.address);
-        bzero((char *) &(local.address), (local.length));
+	local.length = sizeof(local.address);
+    bzero((char *) &(local.address), (local.length));
 
-        local.address.sin_family = AF_INET;
-        local.address.sin_addr.s_addr = INADDR_ANY;
-        local.address.sin_port = htons(local.port);
+    local.address.sin_family = AF_INET;
+    local.address.sin_addr.s_addr = INADDR_ANY;
+    local.address.sin_port = htons(local.port);
 
-        if(bind(local.socket_fd, (struct sockaddr *) &local.address,
-                        (local.length)) < 0){
-                if(V)printf("Serious Error: Could not bind to port %d\n", local.port);
-               	return false;
-        }
-        if(V)printf("Set Local Socket and bound to port %d\n", local.port);
-        return true;
+    if(bind(local.socket_fd, (struct sockaddr *) &local.address,(local.length)) < 0){
+    	if(V)printf("Serious Error: Could not bind to port %d\n", local.port);
+    	return false;
+    }
+    
+    if(V)printf("Set Local Socket and bound to port %d\n", local.port);
+    return true;
 }
 
 
 // Wait for connection from child
 bool EthernetConnector::connect_to_child(int index, int port){
+
 	if(index > (numChildren - 1)){
 		if(V)printf("index > number of children - 1\n");
 		return false;
 	}
+
 	//char buffer[256];
 	listen(local.socket_fd,3);
 
 	(children[index]).length = sizeof((children[index].address));
+
 	if(V) printf("Waiting for Child %d to connect...\n", index);
+
 	(children[index]).socket_fd = accept(local.socket_fd,
 						(sockaddr *) &(children[index].address),
 						&(children[index].length));
+
+	// Could not connect to the child
 	if((children[index].socket_fd) < 0){
 		if(V)printf("Serious Error: Could not connect to child\n");
 		return false;
 	}
 	
+	// Child is now connected
 	if(V)printf("Connected to Child!\n");
 	return true;
 }
@@ -85,8 +92,10 @@ int EthernetConnector::write_child(int index, char * inbuf, unsigned long size){
 		if(V)printf("index > number of children - 1\n");
 		return false;
 	}
+
+	// Write to child file descriptor
 	write_child_mutex.lock();	
-	ssize_t r = write((children[index]).socket_fd,inbuf,size);
+	ssize_t r = write((children[index]).socket_fd, inbuf, size);
 	write_child_mutex.unlock();
 	return r;
 }
@@ -94,6 +103,7 @@ int EthernetConnector::write_child(int index, char * inbuf, unsigned long size){
 // Read from the child at index Children[index] of size size
 int EthernetConnector::read_child(int index, char * outbuf, int size){
 	
+	// Read from child file descriptor
 	read_child_mutex.lock();
 	ssize_t r = read((children[index]).socket_fd, outbuf, size);
 	read_child_mutex.unlock();
@@ -151,11 +161,11 @@ bool EthernetConnector::set_parent_fd(){
 
 	if(V)printf("Set parent socket fd\n");
 	return true;
-
 }
 
 // Write the msg to parent
 int EthernetConnector::write_parent(char * msg, int size){
+	
 	// Critical section, we dont want threads writing to the same FD at the same time
 	write_parent_mutex.lock();
 	ssize_t r = write(parent.socket_fd,msg,size);
@@ -184,4 +194,3 @@ void EthernetConnector::stop()
 		close((children[i].socket_fd));
 	}
 }
-

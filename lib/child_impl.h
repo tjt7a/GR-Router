@@ -57,25 +57,27 @@ namespace gr {
 
 	std::vector< std::vector <float> > out_vector;	
 
-	boost::shared_ptr< boost::thread > d_thread;
+	boost::shared_ptr< boost::thread > d_thread_receive_root;
+	boost::shared_ptr< boost::thread > d_thread_send_root;
 
 	double * weights;
 
 	NetworkInterface *connector;
 
-	float index_of_window;
 	float current_index;
 
 	int number_of_output_items;
 
 	int total_floats, number_of_windows, left_over_values;
 
-	// Thread program
-	void run();
+	// Thread programs
+	void receive_root();
+	void send_root();
+	void receive_child(int index);
+	void send_child(int index);
 
 	// Determine index of min child
 	int min();
-
 
 	// Global counter increment/decrement functions
 	void increment();
@@ -85,9 +87,8 @@ namespace gr {
 	// Return global counter value
 	int get_weight();
 
-	// Compare function for SORT
+	// Compare function for SORT -- This functionality has moved to queue_sink
 	//bool compare_by_index(const vector<float> &a, const vector<float> &b);
-
 
      public:
       child_impl(int number_of_children, int child_index, char* hostname, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > in_queue,

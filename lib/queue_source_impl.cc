@@ -49,12 +49,13 @@ namespace gr {
 		      gr::io_signature::make(1, 1, sizeof(float)))
     {
       queue = shared_queue;
-      indexes = index_queue;
+      
+      indexes = index_queue; // Move this to stream tags!
+
       item_size = size;
       preserve = preserve_index; // Does index need to be re-established?
       order = order_data;
       global_index = 0; // Zero is the initial index used for ordering
-
     }
 
     /*
