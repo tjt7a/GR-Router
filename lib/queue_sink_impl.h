@@ -1,5 +1,5 @@
 /* -*- c++ -*- */
-/* 
+/* Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,25 +37,23 @@ namespace gr {
       int total_floats; // Number of available floats
       int number_of_windows; // Number of windows we can fill with floats
       int left_over_values; // Remaining floats after filling Windows
+      std::vector<gr_tag_t> tags; // Vector of tags pulled from stream
       
 
       boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // Pointer to queue where Windows will be sent
       int queue_counter; // Counter for windows in queue
-
-      boost::shared_ptr< boost::lockfree::queue<float> > indexes; // Pointer to queue of indexes
-
       int item_size;
   
       // window buffer
       std::vector<float> *window; // Window buffer for building windows
 
-      int index_of_window; // window indexing if not preserved
+      float index_of_window; // window indexing if not preserved
 
       bool preserve; // Re-establish index from source?
 
 
     public:
-      queue_sink_impl(int item_size, boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > shared_queue, boost::shared_ptr< boost::lockfree::queue< float> > indexes, bool preserve_index);
+      queue_sink_impl(int item_size, boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index);
       ~queue_sink_impl();
 
       // Where all the action really happens
@@ -64,11 +62,10 @@ namespace gr {
 	       gr_vector_void_star &output_items);
 
       // Get index
-      int get_index();
+      int get_index(std::vector<gr_tag_t> *tags);
     };
 
   } // namespace router
 } // namespace gr
 
 #endif /* INCLUDED_ROUTER_QUEUE_SINK_IMPL_H */
-

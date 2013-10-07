@@ -1,3 +1,6 @@
+/*
+	Written by Tommy Tracy II (University of Virginia HPLP)
+*/
 #include "NetworkInterface.h"
 
 #include <cstdio>

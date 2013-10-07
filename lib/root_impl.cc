@@ -1,5 +1,5 @@
 /* -*- c++ -*- */
-/* 
+/* Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@
 
 #include <gnuradio/io_signature.h>
 #include "root_impl.h"
-
-#define PARENT_INDEX	0
 
  namespace gr {
  	namespace router {
@@ -176,7 +174,7 @@
      		}
 
      		// Received window
-     		if(size > (1025*4)){
+     		if(size == (1025*4)){
      			std::vector<float> *arrival;
 				arrival->assign(((float*)buffer), ((float*)buffer)+1025);
 				out_queue->push(arrival);

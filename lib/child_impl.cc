@@ -1,5 +1,5 @@
 /* -*- c++ -*- */
-/* 
+/* Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@
      		while(size < 1)
      			size = connector->receive(-1, (char*)buffer, (4*1025));
 
-     		if(size < 12){
+     		if(size == 8){
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];

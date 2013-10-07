@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2013 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2013 Tommy Tracy II.
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ namespace gr {
         * class. router::queue_source::make is the public interface for
         * creating new instances.
         */
-       static sptr make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, boost::shared_ptr< boost::lockfree::queue<float> > indexes, bool preserve_index, bool order);
+       static sptr make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order);
     };
 
   } // namespace router

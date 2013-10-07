@@ -1,5 +1,5 @@
 /* -*- c++ -*- */
-/* 
+/* Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,23 +35,24 @@ namespace gr {
 
     */
     queue_source::sptr
-    queue_source::make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, boost::shared_ptr< boost::lockfree::queue<float> > indexes, bool preserve_index, bool order)
+    queue_source::make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order)
     {
-      return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, indexes, preserve_index, order));
+      return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order));
     }
 
     /*
      * The private constructor
+     * size: size of the data type that is passed in flowgraph = sizeof(float) = 4
+     * shared_queue: pointer to queue from which to read windows
+     * preserve_index (boolean): Use stream tags to forward along window index
+     * order_data (boolean): If we need to order the windows by index
      */
-    queue_source_impl::queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, boost::shared_ptr< boost::lockfree::queue<float> > index_queue, bool preserve_index, bool order_data)
+    queue_source_impl::queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order_data)
       : gr::sync_block("queue_source",
 		      gr::io_signature::make(0, 0, 0),
 		      gr::io_signature::make(1, 1, sizeof(float)))
     {
       queue = shared_queue;
-      
-      indexes = index_queue; // Move this to stream tags!
-
       item_size = size;
       preserve = preserve_index; // Does index need to be re-established?
       order = order_data;
@@ -92,43 +93,56 @@ namespace gr {
     {
 
         float *out = (float *) output_items[0]; // output float buffer pointer
-
         std::vector<float> *temp_vector; // Temp vector pointer for popping vectors off of the shared queue
-	int temp = 10; // Max number of windows we want to pop at once (arbitrary for now)
-	std::vector<float> buffer;
-	while(queue->pop(temp_vector)){
-		float index = (*temp_vector)[0];
-		local.push_back(temp_vector);
+		int temp = 10; // Max number of windows we want to pop at once (arbitrary for now)
+		std::vector<float> buffer;
+		while(queue->pop(temp_vector)){
+
+			float index = (*temp_vector)[0];
+			local.push_back(temp_vector);
 		
-		// If we want to preserve the windows' index, we need to push the current window's index to the shared queue
-		// The future queue sink block will grab the index and then reconstruct the window post-computation
-		if(preserve){
-			indexes->push(index);
+			// If we want to preserve the windows' index, we need to write an index stream tag
+			// The future queue sink block will grab the index and then reconstruct the window post-computation
+			if(preserve){
+
+				const size_t item_index = 0; //Let the first item in the stream contain the index tag
+
+				const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
+				pmt::pmt_t key = pmt::pmt_string_to_symbol("index");
+
+				// Have to cast index to long (pmt does not handle floats)
+				pmt::pmt_t value = pmt::from_long((long)index);
+
+				 //write at tag to output port 0 with given absolute item offset
+				 this->add_item_tag(0, offset, key, value);
+			}
+
+			if(temp == 0)
+				break;
+			else
+				temp--;
 		}
-		if(temp == 0)
-			break;
-		else
-			temp--;
-	}
 
 	// If stream must be in correct order...
 	if(order){
 
 		// Use heap and comp() to order by index	
 		//std::make_heap(local.begin(), local.end(), comp);
-	 	//std::sort_heap(local.begin(), local.end());
+ 		//std::sort_heap(local.begin(), local.end());
 
 		// Used stl sort to sort vector
 		std::sort(local.begin(), local.end(), &comp);		
 
 
 		// Push continuous, ordered floats into buffer
-
 		std::vector<float>* tmp;
 		while((float)((*(local[0]))[0]) == global_index){
 			tmp = local.back();
 			local.pop_back();
 			buffer.insert(buffer.end(), tmp->begin(), tmp->end());
+
+			// Increment Global index to next expected index
+			global_index++;
 		}
 	}
 	// If we don't need order, just add floats
@@ -143,7 +157,7 @@ namespace gr {
 
         // Pull data out of window, and pass through flowgraph
         //std::copy(temp_vector->begin(), temp_vector->back(), out);
-	out = (float *)&buffer[0];
+		out = (float *)&buffer[0];
 
         // Tell runtime system how many output items we produced.
         return buffer.size();
@@ -151,4 +165,3 @@ namespace gr {
 
   } /* namespace router */
 } /* namespace gr */
-

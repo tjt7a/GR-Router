@@ -1,3 +1,6 @@
+/*
+	Written by Tommy Tracy II (University of Virginia HPLP)
+*/
 #ifndef ETHERNETCONNECTOR_H
 #define ETHERNETCONNECTOR_H
 

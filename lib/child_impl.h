@@ -1,5 +1,5 @@
 /* -*- c++ -*- */
-/* 
+/* Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ namespace gr {
     {
      private:
 	
-
 	int master_thread_index;
 	boost::mutex index_lock;
 	int get_index();
@@ -44,7 +43,6 @@ namespace gr {
 	int number_of_children;
 	bool d_finished;
 	char * parent_hostname;
-
 
 	boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > in_queue;
 	float in_queue_counter;
@@ -82,7 +80,6 @@ namespace gr {
 	// Global counter increment/decrement functions
 	void increment();
 	void decrement();
-
 
 	// Return global counter value
 	int get_weight();

@@ -1,3 +1,6 @@
+/*
+	Written by Tommy Tracy II (University of Virginia HPLP)
+*/
 #ifndef NETWORKINTERFACE_H
 #define NETWORKINTERFACE_H
 

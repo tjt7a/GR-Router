@@ -1,5 +1,5 @@
 /* -*- c++ -*- */
-/* 
+/* Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,11 +42,7 @@ namespace gr {
       bool order; // Do we need to enforce ordering of leaving Windows' data?
       std::vector<std::vector<float>* > local; // Local vector for ordering
 	
-      boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // shared pointer to queue of windows 
-      
-
-      // From Queue Sink -> GR Blocks -> Queue Sink, the indexes need to be preserved
-      boost::shared_ptr< boost::lockfree::queue< float > > indexes; // shared pointer to FIFO queue of indexes (for ordering)
+      boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // shared pointer to queue of windows
 
       // Right now everything is Floats, but future versions need to support any data type
       int item_size; // size of items to be windowd
@@ -58,7 +54,7 @@ namespace gr {
       //bool comp(const std::vector<float>& a, const std::vector<float>& b);
 
     public:
-      queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, boost::shared_ptr< boost::lockfree::queue<float> > index_queue, bool preserve_index, bool order);
+      queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order);
       ~queue_source_impl();
 
       // Where all the action really happens
@@ -71,4 +67,3 @@ namespace gr {
 } // namespace gr
 
 #endif /* INCLUDED_ROUTER_QUEUE_SOURCE_IMPL_H */
-
