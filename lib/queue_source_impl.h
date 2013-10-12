@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <boost/lockfree/queue.hpp>
 #include <memory>
+#include <gnuradio/tagged_stream_block.h>
 
 namespace gr {
   namespace router {

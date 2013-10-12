@@ -76,14 +76,14 @@ namespace gr {
         // Get the index of the current window
   		  const uint64_t nread = this->nitems_read(0); //number of items read on port 0
   		  const size_t ninput_items = noutput_items; //assumption for sync block, this can change
-  		  pmt::pmt_t key = pmt::pmt_string_to_symbol("index"); // Filter on key
+  		  pmt::pmt_t key = pmt::string_to_symbol("index"); // Filter on key
 
   		  //read all tags associated with port 0 for items in this work function
   		  this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
 
         // Add index if window doesnt already have one
         if(window->size() == 0){
-        	window->push_back(get_index(*tags));
+        	window->push_back(get_index(tags, preserve, index_of_window));
         }
 
         // Determine how many floats we need
@@ -111,7 +111,7 @@ namespace gr {
 			for(int i = 0; i < number_of_windows; i++){
 
 				// Get index
-				window->push_back(get_index(*tags));
+				window->push_back(get_index(tags, preserve, index_of_window));
 
 				// Insert floats into the window		
 				window->insert(window->end(), &in[0], &in[1023]);
@@ -128,7 +128,7 @@ namespace gr {
 		}
 
 		if(window->size() == 0)
-			window->push_back(get_index(*tags));
+			window->push_back(get_index(tags, preserve, index_of_window));
 
 		if(left_over_values > 0){
 			window->insert(window->end(), &in[0], &in[(left_over_values-1)]);
@@ -139,16 +139,18 @@ namespace gr {
         return noutput_items;
     }
 
-    float get_index(std::vector<gr_tag_t> *tags){
+    float get_index(std::vector<gr::tag_t> &tags, bool &preserve, float &index_of_window){
       // If not preserving an index, start from 0 and incremement every window
       if(!preserve)
         return index_of_window++;
 
       // If we do want to preserve index, pull index from stream tags and return
       else{
-        if(tags->size() > 0){
-          index_of_window = (float)((tags->begin()).to_long()); // Grab index(long) - conver to float
-          tags->erase(tags->begin()); // Remove the first tag
+        if(tags.size() > 0){
+          gr::tag_t temp_tag = tags.at(0);
+          pmt::pmt_t temp_value = temp_tag.value;
+          index_of_window = (float)(pmt::to_long(temp_value)); // Grab index(long) - convert to float
+          tags.erase(tags.begin()); // Remove the first tag
           return index_of_window;
         }
         else{

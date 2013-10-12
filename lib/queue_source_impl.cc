@@ -108,7 +108,7 @@ namespace gr {
 				const size_t item_index = 0; //Let the first item in the stream contain the index tag
 
 				const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
-				pmt::pmt_t key = pmt::pmt_string_to_symbol("index");
+				pmt::pmt_t key = pmt::string_to_symbol("index");
 
 				// Have to cast index to long (pmt does not handle floats)
 				pmt::pmt_t value = pmt::from_long((long)index);

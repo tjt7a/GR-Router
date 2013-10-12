@@ -81,7 +81,8 @@
             
             // Threads for parent to receive from all children
     		for(int i = 0; i < number_of_children; i++){
-    			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this), i)));
+    			// _1 is a place holder for the argument of arguments passed to the functor
+    			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
 	   }
         /*
@@ -147,7 +148,10 @@
 
         // Receiver thread; one per child node (instead of sequentially iterating through all nodes)
         void root_impl::receive(int index){
-     	
+     	   
+        	// remove this
+        	//int index = 0;
+
      	  int size = 0;
      	  float * buffer = new float[1025];
      	  std::vector<float> *temp;
