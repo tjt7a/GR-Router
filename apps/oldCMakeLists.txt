@@ -17,25 +17,9 @@
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
 
-include_directories(
-        ${GR_AUDIO_INCLUDE_DIRS}
-        ${GR_ANALOG_INCLUDE_DIRS}
-        ${GNURADIO_RUNTIME_INCLUDE_DIRS}
-        ${Boost_INCLUDE_DIRS}
-)
+include(GrPython)
 
-#add_executable(dial_tone dial_tone.cc)
-add_executable(dial_tone ${CMAKE_CURRENT_SOURCE_DIR}/dial_tone.cc)
-#add_executable(fft_ifft_test ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft_test.cc)
-
-target_link_libraries(dial_tone
-  gnuradio-runtime gnuradio-audio gnuradio-analog)
-#target_link_libraries(dial_tone
-#  gr-router)
-
-#target_link_libraries(dial_tone gr-router)
-
-INSTALL(TARGETS
-    dial_tone 
-    DESTINATION "."
+GR_PYTHON_INSTALL(
+    PROGRAMS
+    DESTINATION bin
 )
