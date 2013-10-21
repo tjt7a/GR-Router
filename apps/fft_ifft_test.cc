@@ -46,19 +46,19 @@ int main(int argc, char **argv)
    // Construct a top block that will contain flowgraph blocks.  Alternatively,
   // one may create a derived class from top_block and hold instantiated blocks
   // as member data for later manipulation.
-  top_block_sptr tb = make_top_block("fft_ifft");
+  gr::top_block_sptr tb = gr::make_top_block("fft_ifft");
   int window_size = 1024;
   int fft_count = 50;
   const char* in_file_name = "input.in";
   const char* out_file_name = "output.out";
 
   // Wavfile source to read in the input WAV file
-  gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(file_name, false);
-  gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(gr_float), out_file_name);
+  gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(in_file_name, false);
+  gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(float), out_file_name);
 
-  std::vector<fft_ifft> ffts;
+  std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < fft_count; i++){
-  	ffts.push_back(FFT_IFFT(1024));
+  	ffts.push_back(fft_ifft_make(1024));
   	if(i == 0){
   		tb->connect(wavfile_source, 0, ffts[0], 0);
   	}

@@ -21,12 +21,11 @@
 #ifndef INCLUDED_FFT_IFFT_H
 #define INCLUDED_FFT_IFFT_H
 
-#include <gr_hier_block2.h>
+#include <gnuradio/hier_block2.h>
 
 class fft_ifft;
 
 typedef boost::shared_ptr<fft_ifft> fft_ifft_sptr;
-
 
 /*!
  * \brief Return a shared_ptr to a new instance of fft_ifft.
@@ -35,18 +34,16 @@ typedef boost::shared_ptr<fft_ifft> fft_ifft_sptr;
  * of raw pointers, fcd_source_c's constructor is private.
  * fft_make_ifft is the public interface for creating new instances.
  */
-fft_ifft_sptr fft_make_ifft(int size);
+
+fft_ifft_sptr fft_ifft_make(int size);
 
 // Hier2 block for fft_ifft block
-class fft_ifft : public gr_hier_block2
+class fft_ifft : public gr::hier_block2
 {
 
 public:
-    fft_make_ifft(int size);
-    ~fft_ifft();
-
-private:
-
+   fft_ifft(int size); 
+   ~fft_ifft();
 };
 
 #endif /* INCLUDED_FFT_IFFT_H */

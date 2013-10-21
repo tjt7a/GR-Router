@@ -91,8 +91,9 @@ find_package(CppUnit)
 # of GR_REQUIRED_COMPONENTS (in all caps) and change "version" to the
 # minimum API compatible version required.
 #
-# set(GR_REQUIRED_COMPONENTS RUNTIME BLOCKS FILTER ...)
-# find_package(Gnuradio "version")
+# Included REQUIRED COMPONENTS
+ set(GR_REQUIRED_COMPONENTS RUNTIME BLOCKS FILTER ANALOG AUDIO)
+ find_package(Gnuradio)
 
 if(NOT GNURADIO_RUNTIME_FOUND)
     message(FATAL_ERROR "GnuRadio Runtime required to compile router")
@@ -118,6 +119,8 @@ link_directories(
     ${Boost_LIBRARY_DIRS}
     ${CPPUNIT_LIBRARY_DIRS}
     ${GNURADIO_RUNTIME_LIBRARY_DIRS}
+    ${GR_AUDIO_INCLUDE_DIRS}
+    ${GR_ANALOG_INCLUDE_DIRS}
 )
 
 # Set component parameters
