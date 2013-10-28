@@ -25,12 +25,9 @@ include_directories(
 	${GR_BLOCKS_INCLUDE_DIRS}
 )
 
-#add_executable(dial_tone dial_tone.cc)
 add_executable(dial_tone ${CMAKE_CURRENT_SOURCE_DIR}/dial_tone.cc)
 add_executable(fft_ifft_test ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft_test.cc ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft.cc)
-
-#target_link_libraries(dial_tone
-#  gnuradio-runtime gnuradio-audio gnuradio-analog)
+add_executable(router_fft_test_parent ${CMAKE_CURRENT_SOURCE_DIR}/router_fft_test_parent.cc ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft.cc)
 
 target_link_libraries(dial_tone
   ${Boost_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES})
@@ -38,7 +35,10 @@ target_link_libraries(dial_tone
 target_link_libraries(fft_ifft_test
   ${BOOST_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${GR_ROUTER_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_FFT_LIBRARIES} ${GNURADIO_PMT_LIBRARIES} ${GNURADIO_FILTER_LIBRARIES} )
 
+target_link_libraries(router_fft_test_parent
+  ${BOOST_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${GR_ROUTER_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_FFT_LIBRARIES} ${GNURADIO_PMT_LIBRARIES} ${GNURADIO_FILTER_LIBRARIES} )
+
 INSTALL(TARGETS
-    dial_tone fft_ifft_test  
+    dial_tone fft_ifft_test router_fft_test_parent 
     DESTINATION "."
 )

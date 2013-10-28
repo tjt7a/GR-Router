@@ -23,6 +23,7 @@
 
 #include <gnuradio/io_signature.h>
 #include "queue_sink_impl.h"
+#include <stdio.h>
 
 namespace gr {
   namespace router {
@@ -55,7 +56,7 @@ namespace gr {
 		  item_size = size; // Set size of items
 		  preserve = preserve_index; // Does index need to be preserved?
 		  index_of_window = 0; // Set window index -- only relavent if we are not preserving a previously-defined index
-	 }
+    }
 
     /*
      * Our virtual destructor.
@@ -63,7 +64,7 @@ namespace gr {
     queue_sink_impl::~queue_sink_impl()
     {
     	// delete any malloced structures
-
+      // Do I have anything mallocd?
     }
 
     int
@@ -71,15 +72,15 @@ namespace gr {
 			  gr_vector_const_void_star &input_items,
 			  gr_vector_void_star &output_items)
     {
-        const float *in = (const float *) input_items[0]; // Input float buffer pointer
+       const float *in = (const float *) input_items[0]; // Input float buffer pointer
 
         // Get the index of the current window
-  		  const uint64_t nread = this->nitems_read(0); //number of items read on port 0
-  		  const size_t ninput_items = noutput_items; //assumption for sync block, this can change
-  		  pmt::pmt_t key = pmt::string_to_symbol("index"); // Filter on key
+  	   const uint64_t nread = this->nitems_read(0); //number of items read on port 0
+  	   const size_t ninput_items = noutput_items; //assumption for sync block, this can change
+  	   pmt::pmt_t key = pmt::string_to_symbol("index"); // Filter on key
 
-  		  //read all tags associated with port 0 for items in this work function
-  		  this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
+ 	    //read all tags associated with port 0 for items in this work function
+ 	     this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
 
         // Add index if window doesnt already have one
         if(window->size() == 0){
@@ -87,9 +88,9 @@ namespace gr {
         }
 
         // Determine how many floats we need
-		total_floats = window->size() + noutput_items - 1; // Determine number of floats available
-		number_of_windows = total_floats / 1024; // determine number of windows we can make with floats
-		left_over_values = total_floats % 1024; // Whats left after windowing the rest
+		  total_floats = window->size() + noutput_items - 1; // Determine number of floats available
+		  number_of_windows = total_floats / 1024; // determine number of windows we can make with floats
+		  left_over_values = total_floats % 1024; // Whats left after windowing the rest
 
 		int remaining = 1025 - window->size(); // Number of floats needed to fill current window
 
@@ -139,7 +140,7 @@ namespace gr {
         return noutput_items;
     }
 
-    float get_index(std::vector<gr::tag_t> &tags, bool &preserve, float &index_of_window){
+    float queue_sink_impl::get_index(std::vector<gr::tag_t> &tags, bool &preserve, float &index_of_window){
       // If not preserving an index, start from 0 and incremement every window
       if(!preserve)
         return index_of_window++;
@@ -154,11 +155,11 @@ namespace gr {
           return index_of_window;
         }
         else{
+          
           // We're out of tags, so return the last one
           return index_of_window++;
         }
       }
     }
-
   } /* namespace router */
 } /* namespace gr */

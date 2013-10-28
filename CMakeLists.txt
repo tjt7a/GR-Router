@@ -57,11 +57,24 @@ set(Boost_ADDITIONAL_VERSIONS
     "1.60.0" "1.60" "1.61.0" "1.61" "1.62.0" "1.62" "1.63.0" "1.63" "1.64.0" "1.64"
     "1.65.0" "1.65" "1.66.0" "1.66" "1.67.0" "1.67" "1.68.0" "1.68" "1.69.0" "1.69"
 )
-find_package(Boost "1.35" COMPONENTS filesystem system)
+
+#find_package(Boost "1.35" COMPONENTS filesystem system)
+find_package(Boost "1.53" COMPONENTS filesystem system)
 
 if(NOT Boost_FOUND)
     message(FATAL_ERROR "Boost required to compile router")
 endif()
+
+
+set(BOOST_REQUIRED_COMPONENTS
+    date_time
+    program_options
+    filesystem
+    system
+    thread
+    regex
+)
+
 
 ########################################################################
 # Install directories
@@ -85,6 +98,14 @@ set(GRC_BLOCKS_DIR      ${GR_PKG_DATA_DIR}/grc/blocks)
 ########################################################################
 find_package(GnuradioRuntime)
 find_package(CppUnit)
+find_package(Boost)
+#find_package(GnuradioBlocks)
+#find_package(GrRouter)
+#find_package(FFT)
+#find_package(gnuradio-pmt)
+#find_package(GnuradioFilter)
+#${BOOST_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${GR_ROUTER_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_FFT_LIBRARIES} ${GNURADIO_PMT_LIBRARIES} ${GNURADIO_FILTER_LIBRARIES}
+
 
 # To run a more advanced search for GNU Radio and it's components and
 # versions, use the following. Add any components required to the list
@@ -92,7 +113,7 @@ find_package(CppUnit)
 # minimum API compatible version required.
 #
 # Included REQUIRED COMPONENTS
- set(GR_REQUIRED_COMPONENTS RUNTIME BLOCKS FILTER ANALOG AUDIO)
+ set(GR_REQUIRED_COMPONENTS RUNTIME BLOCKS FILTER ANALOG AUDIO FFT FILTER)
  find_package(Gnuradio)
 
 if(NOT GNURADIO_RUNTIME_FOUND)
@@ -126,6 +147,7 @@ link_directories(
 # Set component parameters
 set(GR_ROUTER_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
 set(GR_ROUTER_SWIG_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/swig CACHE INTERNAL "" FORCE)
+
 
 ########################################################################
 # Create uninstall target

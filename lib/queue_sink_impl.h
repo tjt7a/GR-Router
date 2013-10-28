@@ -39,9 +39,8 @@ namespace gr {
       int number_of_windows; // Number of windows we can fill with floats
       int left_over_values; // Remaining floats after filling Windows
       std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
-      
 
-      boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // Pointer to queue where Windows will be sent
+      boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // Pointer to queue of pointers to vectors of floats (where Windows will be sent)
       int queue_counter; // Counter for windows in queue
       int item_size;
   
@@ -52,6 +51,8 @@ namespace gr {
 
       bool preserve; // Re-establish index from source?
 
+      float get_index(std::vector<gr::tag_t> &tags, bool &preserve, float &index_of_window);
+
 
     public:
       queue_sink_impl(int item_size, boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index);
@@ -61,9 +62,6 @@ namespace gr {
       int work(int noutput_items,
 	       gr_vector_const_void_star &input_items,
 	       gr_vector_void_star &output_items);
-
-      // Get index
-      int get_index(std::vector<gr::tag_t> &tags, bool &preserve, float &index_of_window);
     };
 
   } // namespace router
