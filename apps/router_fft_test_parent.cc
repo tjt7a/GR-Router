@@ -70,22 +70,26 @@ int main(int argc, char **argv)
   gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, true);
 
   tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
-
+  std::cout << "Connected Wavfile_source to input_queue_sink" << std::endl;
+  
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < fft_count; i++){
   	ffts.push_back(fft_ifft_make(1024));
   	if(i == 0){
-  		tb_1->connect(input_queue_source, 0, ffts[0], 0);
+  		tb_1->connect(input_queue_source, 0, ffts.at(0), 0);
   	}
   	else{
-  		tb_1->connect(ffts[i-1], 0, ffts[i], 0);
+  		tb_1->connect(ffts.at(i-1), 0, ffts.at(i), 0);
   	}
   }
+  std::cout << "Connected chain of FFT/IFFTs" << std::endl;
 
-  tb_1->connect(wavfile_source, 0, output_queue_sink, 0);
+  tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
+  std::cout << "Connected FFT chain to output_queue_sink" << std::endl;
+  
 
   tb_1->connect(output_queue_source, 0, file_sink, 0);
-  printf("Finished building tb_1\n");
+  std::cout << "Connected output_queue_source to file_sink" << std::endl;
 
   tb_1->run();
   // Exit normally.
