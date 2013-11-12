@@ -37,8 +37,9 @@ namespace gr {
 
       int total_floats; // Number of available floats
       int number_of_windows; // Number of windows we can fill with floats
-      int left_over_values; // Remaining floats after filling Windows
       std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
+
+      bool VERBOSE = true;
 
       //boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // Pointer to queue of pointers to vectors of floats (where Windows will be sent)
       boost::lockfree::queue< std::vector<float>* > *queue;
@@ -46,6 +47,7 @@ namespace gr {
       int item_size;
   
       // window buffer
+      std::vector< std::vector <float> > window_vector;
       std::vector<float> *window; // Window buffer for building windows
 
       std::vector<float> *index_vector; // Vector of tags
