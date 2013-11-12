@@ -37,7 +37,9 @@
 #include <gnuradio/blocks/wavfile_source.h>
 #include <gnuradio/blocks/file_sink.h>
 #include <vector>
+#include <gnuradio/filter/firdes.h>
 #include "fft_ifft.h"
+#include <stdio.h>
 
 using namespace gr;
 
@@ -52,6 +54,16 @@ int main(int argc, char **argv)
   const char* in_file_name = "input.in";
   const char* out_file_name = "output.out";
 
+  char message_buffer[64];
+
+
+  const std::vector< float >  window = gr::filter::firdes::window(gr::filter::firdes::WIN_BLACKMAN_HARRIS, 1024, NULL);
+
+  for(int i = 0; i < window.size(); i++){
+      std::cout << i << ": " << window.at(i) << std::endl;
+  }
+  /*
+
   // Wavfile source to read in the input WAV file
   gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(in_file_name, false);
   gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(float), out_file_name);
@@ -60,16 +72,21 @@ int main(int argc, char **argv)
   for(int i = 0; i < fft_count; i++){
   	ffts.push_back(fft_ifft_make(1024));
   	if(i == 0){
-  		tb->connect(wavfile_source, 0, ffts[0], 0);
+      //GR_LOG_INFO(d_logger, "Connected wavfile_source to first fft/ifft block");
+  		tb->connect(wavfile_source, 0, ffts.at(0), 0);
   	}
   	else{
-  		tb->connect(ffts[i-1], 0, ffts[i], 0);
+      //sprintf(message_buffer, "Connected fft/ifft block #%d to fft/ifft block #%d", (i-1), (i));
+      //GR_LOG_INFO(d_logger, message_buffer);
+  		tb->connect(ffts.at(i-1), 0, ffts.at(i), 0);
   	}
   }
+*/
+  //sprintf(message_buffer, "Connected fft/ifft block #%d to file_sink", fft_count-1);
+  //GR_LOG_INFO(d_logger, message_buffer);
+  //tb->connect(ffts.at(fft_count-1), 0, file_sink, 0);
 
-  tb->connect(ffts[fft_count - 1], 0, file_sink, 0);
-
-  tb->run();
+  //tb->run();
 
   // Exit normally.
   return 0;

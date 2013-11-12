@@ -40,5 +40,5 @@ target_link_libraries(router_fft_test_parent
 
 INSTALL(TARGETS
     dial_tone fft_ifft_test router_fft_test_parent 
-    DESTINATION "."
+    DESTINATION "/home/tjt7a/Src/new/gr-router/bin"
 )

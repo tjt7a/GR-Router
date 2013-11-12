@@ -23,6 +23,7 @@
 
 #include <gnuradio/io_signature.h>
 #include "queue_source_impl.h"
+#include <stdio.h>
 
 namespace gr {
   namespace router {
@@ -35,7 +36,8 @@ namespace gr {
 
     */
     queue_source::sptr
-    queue_source::make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order)
+    //queue_source::make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order)
+    queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order)
     {
       return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order));
     }
@@ -47,16 +49,19 @@ namespace gr {
      * preserve_index (boolean): Use stream tags to forward along window index
      * order_data (boolean): If we need to order the windows by index
      */
-    queue_source_impl::queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order_data)
+    //queue_source_impl::queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order_data)
+    queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order_data)
       : gr::sync_block("queue_source",
 		      gr::io_signature::make(0, 0, 0),
 		      gr::io_signature::make(1, 1, sizeof(float)))
     {
-      queue = shared_queue;
+      queue = &shared_queue;
       item_size = size;
       preserve = preserve_index; // Does index need to be re-established?
       order = order_data;
       global_index = 0; // Zero is the initial index used for ordering
+
+      GR_LOG_INFO(d_logger, "Building new Queue Source");
     }
 
     /*
@@ -75,7 +80,7 @@ namespace gr {
 
      // Function used by std::sort to sort vector of Windows
      bool comp(const std::vector<float>* a, const std::vector<float>* b){
-        return (a[0] >= b[0]);
+        return (a->at(0) >= b->at(0));
      }
 
 
@@ -91,15 +96,22 @@ namespace gr {
 			  gr_vector_const_void_star &input_items,
 			  gr_vector_void_star &output_items)
     {
-
+    	char message_buffer[64];
         float *out = (float *) output_items[0]; // output float buffer pointer
         std::vector<float> *temp_vector; // Temp vector pointer for popping vectors off of the shared queue
 		int temp = 10; // Max number of windows we want to pop at once (arbitrary for now)
 		std::vector<float> buffer;
+
+		GR_LOG_INFO(d_logger, "About to pop this queue!");
 		while(queue->pop(temp_vector)){
 
-			float index = (*temp_vector)[0];
-			local.push_back(temp_vector);
+			float index = temp_vector->at(0); // index of the current window
+
+       		sprintf(message_buffer, "Source :: Index of Window Received: %d", index);
+       		GR_LOG_INFO(d_logger, message_buffer);
+
+
+			local.push_back(temp_vector); // Push the temp vector into local
 		
 			// If we want to preserve the windows' index, we need to write an index stream tag
 			// The future queue sink block will grab the index and then reconstruct the window post-computation
@@ -108,13 +120,13 @@ namespace gr {
 				const size_t item_index = 0; //Let the first item in the stream contain the index tag
 
 				const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
-				pmt::pmt_t key = pmt::string_to_symbol("index");
+				pmt::pmt_t key = pmt::string_to_symbol("index"); // Key associated with the index
 
 				// Have to cast index to long (pmt does not handle floats)
 				pmt::pmt_t value = pmt::from_long((long)index);
 
 				 //write at tag to output port 0 with given absolute item offset
-				 this->add_item_tag(0, offset, key, value);
+				 this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
 			}
 
 			if(temp == 0)
@@ -136,7 +148,7 @@ namespace gr {
 
 		// Push continuous, ordered floats into buffer
 		std::vector<float>* tmp;
-		while((float)((*(local[0]))[0]) == global_index){
+		while((float)(((local.at(0)))->at(0)) == global_index){
 			tmp = local.back();
 			local.pop_back();
 			buffer.insert(buffer.end(), tmp->begin(), tmp->end());

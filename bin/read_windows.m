@@ -33,4 +33,4 @@ differences = python_values - cpp_values;
 subplot(2, 1, 2)
 plot(x, differences);
 title("Difference Between Python and C++ Blackmanharris Windows")
-pause
+pauses

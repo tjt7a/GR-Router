@@ -24,22 +24,22 @@ def test(in_filename, out_filename, fft_count):
 			fft_forward = fft.fft_vfc(window_size, True, (fft.blackmanharris(window_size)), 1)
 			fft_backward = fft.fft_vcc(window_size, False, (fft.blackmanharris(window_size)), False, 1)
 			constant = analog.sig_source_c(0, analog.GR_CONST_WAVE, 0, 0, window_size)
-        
-			print("1. Connect self to stream_to_vector")
+
+			#print("1. Connect self to stream_to_vector")
 			self.connect((self, 0), (stream_to_vector, 0))
-			print("2. Connect stream_to_vector to fft_forward")
+			#print("2. Connect stream_to_vector to fft_forward")
 			self.connect((stream_to_vector, 0), (fft_forward, 0))
-			print("3. Connect fft_forward to fft_backward")
+			#print("3. Connect fft_forward to fft_backward")
 			self.connect((fft_forward, 0), (fft_backward, 0))
-			print("4. Connect fft_backward to vector_to_stream")
+			#print("4. Connect fft_backward to vector_to_stream")
 			self.connect((fft_backward, 0), (vector_to_stream, 0))
-			print("5. Connect vector_to_stream to port 0 of divide")
+			#print("5. Connect vector_to_stream to port 0 of divide")
 			self.connect((vector_to_stream, 0), (divide, 0))
-			print("6. Connect constant to port 1 of divide")
+			#print("6. Connect constant to port 1 of divide")
 			self.connect(constant, (divide, 1))
-			print("7. Connect divide to complex_to_float")
+			#print("7. Connect divide to complex_to_float")
 			self.connect((divide, 0), (complex_to_float, 0))
-			print("8. Connect complex_to_float to self")
+			#print("8. Connect complex_to_float to self")
 			self.connect((complex_to_float, 0), (self, 0))
 
 	class fft_test(gr.top_block):
@@ -49,7 +49,7 @@ def test(in_filename, out_filename, fft_count):
 			
 			windowSize = 1024
 
-			print "FFT Count: ", fft_count
+			#print "FFT Count: ", fft_count
 			 
 			self.wavfile_source = blocks.wavfile_source(in_filename, False)
 			self.file_sink = blocks.file_sink(gr.sizeof_float, out_filename)
@@ -66,16 +66,20 @@ def test(in_filename, out_filename, fft_count):
 			self.connect((ffts[fft_count-1], 0), (self.file_sink, 0))
 
 	tb = fft_test(in_filename, out_filename, fft_count)
-	start = time()
 	tb.run()
-	end = time()
-	print str(end-start)
 
 import sys
-# Parse Input
-in_file = "input.in" #str(sys.argv[1])
-out_file = "output.out" #str(sys.argv[2])
-fft_count = 50 #int(sys.argv[3])
+from gnuradio import fft
 
-# Execute test
-test(in_file, out_file, fft_count)
+# Parse Input
+#in_file = "input.in" #str(sys.argv[1])
+#out_file = "output.out" #str(sys.argv[2])
+#fft_count = 50 #int(sys.argv[3])
+
+
+#Execute test
+#test(in_file, out_file, fft_count)
+window  = (fft.blackmanharris(1024))
+
+for i in range(len(window)):
+	print i, ": ", window[i]

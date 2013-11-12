@@ -43,7 +43,8 @@ namespace gr {
       bool order; // Do we need to enforce ordering of leaving Windows' data?
       std::vector<std::vector<float>* > local; // Local vector for ordering
 	
-      boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // shared pointer to queue of windows
+      //boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > *queue; // shared pointer to queue of windows
+      boost::lockfree::queue< std::vector<float>* > *queue;
 
       // Right now everything is Floats, but future versions need to support any data type
       int item_size; // size of items to be windowd
@@ -55,7 +56,8 @@ namespace gr {
       //bool comp(const std::vector<float>& a, const std::vector<float>& b);
 
     public:
-      queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order);
+      //queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order);
+      queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order);
       ~queue_source_impl();
 
       // Where all the action really happens

@@ -61,7 +61,7 @@ fft_ifft_sptr fft_ifft_make(int size)
     gr::blocks::complex_to_float::sptr complex_to_float = gr::blocks::complex_to_float::make(1);
 	
     // Create windowing function for fft_forward
-	const std::vector< float > forward_window = gr::filter::firdes::window(gr::filter::firdes::WIN_BLACKMAN_HARRIS, SIZE, 6.76);
+    const std::vector< float > forward_window = gr::filter::firdes::window(gr::filter::firdes::WIN_BLACKMAN_HARRIS, SIZE, 6.76);
 
     gr::fft::fft_vfc::sptr fft_forward = gr::fft::fft_vfc::make(SIZE, true, forward_window, num_threads); // Window might be wrong
 
@@ -72,13 +72,21 @@ fft_ifft_sptr fft_ifft_make(int size)
     gr::analog::sig_source_c::sptr constant = gr::analog::sig_source_c::make(0, gr::analog::GR_CONST_WAVE, 0, SIZE, 0);
 
     // Connect the blocks in the hierarchical block
+    //GR_LOG_INFO(d_logger, "1. Connecting self to stream_to_vector");
     connect(self(), 0, stream_to_vector, 0);
+    //GR_LOG_INFO(d_logger, "2. Connecting stream_to_vector to fft_forward");
     connect(stream_to_vector, 0, fft_forward, 0);
+    //GR_LOG_INFO(d_logger, "3. Connecting fft_forward to fft_reverse");
     connect(fft_forward, 0, fft_reverse, 0);
+    //GR_LOG_INFO(d_logger, "4. Connecting fft_reverse to vector_to_stream");
     connect(fft_reverse, 0, vector_to_stream, 0);
-    connect(vector_to_stream, 0, divide, 0);  
+    //GR_LOG_INFO(d_logger, "5. Connecting vector_to_stream to port 0 of divide");
+    connect(vector_to_stream, 0, divide, 0); 
+    //GR_LOG_INFO(d_logger, "6. Connecting constant to port 1 of divide"); 
     connect(constant, 0, divide, 1);
+    //GR_LOG_INFO(d_logger, "7. Connecting divide to complex_to_float");
     connect(divide, 0, complex_to_float, 0);
+    //GR_LOG_INFO(d_logger, "8. Connecting complex_to_float to self");
     connect(complex_to_float, 0, self(), 0);
  }
 

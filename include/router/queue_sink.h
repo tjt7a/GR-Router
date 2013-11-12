@@ -50,8 +50,9 @@ namespace gr {
         * class. router::queue_sink::make is the public interface for
         * creating new instances.
         */
-       static sptr make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float> *> > shared_queue, bool preserve_index);
-    };
+       //static sptr make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float> *> > shared_queue, bool preserve_index);
+        static sptr make(int item_size, boost::lockfree::queue< std::vector<float> *> &shared_queue, bool preserve_index);
+   };
 
   } // namespace router
 } // namespace gr
