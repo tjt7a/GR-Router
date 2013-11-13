@@ -29,47 +29,43 @@
 #include <gnuradio/tagged_stream_block.h>
 
 namespace gr {
-  namespace router {
+namespace router {
 
-    class queue_sink_impl : public queue_sink
-    {
-    private:
+class queue_sink_impl : public queue_sink
+{
+private:
 
-      int total_floats; // Number of available floats
-      int number_of_windows; // Number of windows we can fill with floats
-      std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
+	int total_floats; // Number of available floats
+	int number_of_windows; // Number of windows we can fill with floats
+	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
 
-      bool VERBOSE = true;
+	bool VERBOSE = false;
 
-      //boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > queue; // Pointer to queue of pointers to vectors of floats (where Windows will be sent)
-      boost::lockfree::queue< std::vector<float>* > *queue;
-      int queue_counter; // Counter for windows in queue
-      int item_size;
-  
-      // window buffer
-      std::vector< std::vector <float> > window_vector;
-      std::vector<float> *window; // Window buffer for building windows
+	boost::lockfree::queue< std::vector<float>* > *queue; // Pointer to shared queue
+	int queue_counter; // Counter for windows in queue
+	int item_size;
 
-      std::vector<float> *index_vector; // Vector of tags
+	std::vector< std::vector <float> > window_vector; // Vector of window buffers
+	std::vector<float> *window; // Window buffer for building windows
 
-      float index_of_window; // window indexing if not preserved
+	std::vector<float> *index_vector; // Vector of stream tags; used as indexes
 
-      bool preserve; // Re-establish index from source?
+	float index_of_window; // window indexing if not preserved from stream tags
+	bool preserve; // Re-establish index from source?
 
-      float get_index();
+	float get_index(); // Returns the next index
 
-    public:
-      	//queue_sink_impl(int item_size, boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index);
-        queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index);
-	     ~queue_sink_impl();
+public:
+	queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index);
+	~queue_sink_impl();
 
-      // Where all the action really happens
-      int work(int noutput_items,
-	       gr_vector_const_void_star &input_items,
-	       gr_vector_void_star &output_items);
-    };
+	// Where all the action really happens
+	int work(int noutput_items,
+			gr_vector_const_void_star &input_items,
+			gr_vector_void_star &output_items);
+};
 
-  } // namespace router
+} // namespace router
 } // namespace gr
 
 #endif /* INCLUDED_ROUTER_QUEUE_SINK_IMPL_H */
