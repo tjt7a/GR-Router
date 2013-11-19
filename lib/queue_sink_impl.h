@@ -34,7 +34,6 @@ namespace router {
 class queue_sink_impl : public queue_sink
 {
 private:
-
 	int total_floats; // Number of available floats
 	int number_of_windows; // Number of windows we can fill with floats
 	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
@@ -45,9 +44,7 @@ private:
 	int queue_counter; // Counter for windows in queue
 	int item_size;
 
-	std::vector< std::vector <float> > window_vector; // Vector of window buffers
 	std::vector<float> *window; // Window buffer for building windows
-
 	std::vector<float> *index_vector; // Vector of stream tags; used as indexes
 
 	float index_of_window; // window indexing if not preserved from stream tags

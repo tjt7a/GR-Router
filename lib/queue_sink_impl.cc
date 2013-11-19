@@ -29,8 +29,8 @@ namespace gr {
 namespace router {
 
 /*
-	For LTE: Need to change shared queues to a generic 'events' type.
-	For the last queue_sink in the system (on root router), index will need to be preserved.
+ *	For LTE: Need to change shared queues to a generic 'events' type.
+ *	For the last queue_sink in the system (on root router), index will need to be preserved.
  */
 
 queue_sink::sptr
@@ -46,7 +46,7 @@ queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>* > &s
  * shared_queue: pointer to lockfree queue to drop packets into
  * preserve_index: whether or not to preserve the index located in stream tag (if any)
  */
-queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float> * > &shared_queue, bool preserve_index)
+queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index)
 : gr::sync_block("queue_sink",
 		gr::io_signature::make(1, 1, sizeof(float)),
 		gr::io_signature::make(0, 0, 0))
@@ -57,7 +57,7 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	item_size = size; // Set size of items
 	preserve = preserve_index; // Does index need to be preserved?
 	index_of_window = 0; // Set window index -- only relevant if we are not preserving a previously-defined index
-	window = new std::vector<float>(); // Create a new vector for window pointer to point at; this will serve as our
+	window = new std::vector<float>(); // Create a new vector for window pointer to point at
 	index_vector = new std::vector<float>(); // vector of indexes (floats)
 	if(VERBOSE)
 		GR_LOG_INFO(d_logger, "*Calling Queue_Sink Constructor*");
@@ -69,7 +69,7 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 queue_sink_impl::~queue_sink_impl()
 {
 	// delete any malloced structures
-	// Do I have anything mallocd?
+	// Do I have anything mallocd (that I want to delete)?
 	GR_LOG_INFO(d_logger, "*Calling Queue_Sink Destructor*");
 }
 
@@ -128,18 +128,15 @@ queue_sink_impl::work(int noutput_items,
 
 	if(number_of_windows > 0){
 
-		// To see whats in the window
-		//std::cout << window->at(0) << "-----------------------------------" << std::endl;
-		//for(int i = 0; i < 1024; i++)
-		//	std::cout << in[i];
-		//std::cout << std::endl;
-
+		// Put next 1024 floats into the window
 		window->insert(window->end(), &in[0], &in[1024]);
 
 		in += 1024; // Update pointer to move 1024 samples in the future (next window)
 
-		window_vector.push_back(*window); // push current window into window_vector
-		queue->push(&window_vector.back()); // Push window reference into queue
+		// Keey trying to push until successful
+		while(!queue->push(window)){
+			queue->push(window);
+		} // Push window reference into queue
 
 		queue_counter++;
 		number_of_windows--;
@@ -160,9 +157,11 @@ queue_sink_impl::work(int noutput_items,
 			// Insert floats into the window
 			window->insert(window->end(), &in[0], &in[1024]);
 
-			// Push window onto queue
-			window_vector.push_back(*window); // push current window into window_vector
-			queue->push(&window_vector.back());
+			// Keep trying to push window onto queue
+			while(!queue->push(window)){
+				queue->push(window);
+			}
+
 			queue_counter++;
 
 			/*
