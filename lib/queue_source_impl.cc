@@ -110,15 +110,15 @@ queue_source_impl::work(int noutput_items,
 		index = temp_vector->at(0); // index of the current window
 
 		if(VERBOSE){
-			//sprintf(message_buffer, "Source :: Index of Window Received: %f", index);
-			//GR_LOG_INFO(d_logger, message_buffer);
+			sprintf(message_buffer, "Source :: Index of Window Received: %f", index);
+			GR_LOG_INFO(d_logger, message_buffer);
 		}
 
 		// If we strictly care about the ordering of the Windows...
 		if(order){
 
 			if(VERBOSE){
-				sprintf(message_buffer, "Source :: Waiting for window index %f; received %f", global_index, index);
+				sprintf(message_buffer, "Source :: Waiting for window index %d; received %d", (int)global_index, (int)index);
 				GR_LOG_INFO(d_logger, message_buffer);
 			}
 
@@ -128,8 +128,17 @@ queue_source_impl::work(int noutput_items,
 			// Use stl sort to sort vector
 			std::sort(local.begin(), local.end(), order_window);
 
+			for(int i = 0; i < local.size(); i++){
+				std::cout << local.at(i)->at(0) << std::endl;
+			}
+
+			if(VERBOSE){
+				sprintf(message_buffer, "Source :: The first index in sorted is: %d\n", (int)((local.at(0)->at(0))));
+				GR_LOG_INFO(d_logger, message_buffer);
+			}
+
 			// If the window with the lowest index is present...
-			if((float)((local.at(0))->at(0)) == global_index){
+			if((int)((local.at(0))->at(0)) == (int)global_index){
 				temp_vector = local.front();
 				buffer.insert(buffer.end(), temp_vector->begin()+1, temp_vector->end()); // Copy the contents of the temp_vector to the buffer minus the index
 				delete temp_vector; // Delete the window; don't need anymore
@@ -140,7 +149,7 @@ queue_source_impl::work(int noutput_items,
 
 					const size_t item_index = 0; //Let the first item in the stream contain the index tag
 					const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
-					pmt::pmt_t key = pmt::string_to_symbol("index"); // Key associated with the index
+					pmt::pmt_t key = pmt::string_to_symbol("i"); // Key associated with the index
 
 					// Have to cast index to long (pmt does not handle floats)
 					pmt::pmt_t value = pmt::from_long((long)global_index);
@@ -154,14 +163,15 @@ queue_source_impl::work(int noutput_items,
 					}
 				}
 
-				//Increment Global index to next expected index
+				memcpy(out, &(buffer[0]), sizeof(float)*1024);
 				global_index++;
+				return 1024;
+
 			}
+			else
+				return 0;
 
-			memcpy(out, &(buffer[0]), sizeof(float)*1024);
-			return 1024;
 		}
-
 		else{
 			buffer.insert(buffer.end(), temp_vector->begin()+1, temp_vector->end());
 			memcpy(out, &(buffer[0]), sizeof(float)*1024);
@@ -170,13 +180,20 @@ queue_source_impl::work(int noutput_items,
 
 				const size_t item_index = 0; //Let the first item in the stream contain the index tag
 				const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
-				pmt::pmt_t key = pmt::string_to_symbol("index"); // Key associated with the index
+				pmt::pmt_t key = pmt::string_to_symbol("i"); // Key associated with the index
 
 				// Have to cast index to long (pmt does not handle floats)
 				pmt::pmt_t value = pmt::from_long((long)index);
 
+
+				gr::tag_t temp_tag;
+				temp_tag.key = key;
+				temp_tag.value = value;
+				temp_tag.offset = offset;
+
 				//write at tag to output port 0 with given absolute item offset
-				this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
+				//this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
+				this->add_item_tag(0, temp_tag);
 
 			}
 			return 1024;

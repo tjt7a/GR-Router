@@ -52,12 +52,10 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 		gr::io_signature::make(0, 0, 0))
 {
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024!
-
 	queue = &shared_queue; // Set shared_ptr queue
 	item_size = size; // Set size of items
 	preserve = preserve_index; // Does index need to be preserved?
 	index_of_window = 0; // Set window index -- only relevant if we are not preserving a previously-defined index
-	window = new std::vector<float>(); // Create a new vector for window pointer to point at
 	index_vector = new std::vector<float>(); // vector of indexes (floats)
 	if(VERBOSE)
 		GR_LOG_INFO(d_logger, "*Calling Queue_Sink Constructor*");
@@ -70,7 +68,8 @@ queue_sink_impl::~queue_sink_impl()
 {
 	// delete any malloced structures
 	// Do I have anything mallocd (that I want to delete)?
-	GR_LOG_INFO(d_logger, "*Calling Queue_Sink Destructor*");
+	if(VERBOSE)
+		GR_LOG_INFO(d_logger, "*Calling Queue_Sink Destructor*");
 }
 
 int
@@ -84,14 +83,14 @@ queue_sink_impl::work(int noutput_items,
 	// Pointer to input
 	const float *in = (const float *) input_items[0]; // Input float buffer pointer
 
-	// Do we want to pull indexes from the stream tags and use those for window indexes
+	// Do we want to pull indexes from the stream tags and use those for window indexes?
 	if(preserve){
 
 		// Get the index of the current window
 		const uint64_t nread = this->nitems_read(0); //number of items read on port 0 up until the start of this work function (index of first sample)
 		const size_t ninput_items = noutput_items; //assumption for sync block, this can change
 
-		pmt::pmt_t key = pmt::string_to_symbol("index"); // Filter on key
+		pmt::pmt_t key = pmt::string_to_symbol("i"); // Filter on key
 
 		//read all tags associated with port 0 for items in this work function
 		this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
@@ -100,7 +99,7 @@ queue_sink_impl::work(int noutput_items,
 		if(tags.size() > 0){
 
 			for(int i = 0; i < tags.size(); i++){
-				gr::tag_t temp_tag = tags.at(0);
+				gr::tag_t temp_tag = tags.at(i);
 				pmt::pmt_t temp_value = temp_tag.value;
 
 				if(temp_value != NULL){
@@ -117,17 +116,23 @@ queue_sink_impl::work(int noutput_items,
 		}
 	}
 
-	// Add index if window doesn't already have one; this is a new window (we cannot assume that our input always passes 1024 values)
-	if(window->size() == 0){
-		window->push_back(get_index());
+	// Determine how many windows worth of floats we have available
+	number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
+
+	if(VERBOSE){
+		sprintf(message_buffer, "Number of windows to push: %d", number_of_windows);
+		GR_LOG_INFO(d_logger, message_buffer);
 	}
 
-	// Determine how many floats we need to add to the window
-	total_floats = window->size() + noutput_items - 1; // Determine number of floats available
-	number_of_windows = total_floats / 1024; // determine number of windows we can make with floats
+	for(int i = 0; i < number_of_windows; i++){
 
+		window = new std::vector<float>(); // Create a new vector for window pointer to point at
+		window->push_back(get_index());
 
-	if(number_of_windows > 0){
+		if(VERBOSE){
+			sprintf(message_buffer, "Pushing window with index: %f", window->at(0));
+			GR_LOG_INFO(d_logger, message_buffer);
+		}
 
 		// Put next 1024 floats into the window
 		window->insert(window->end(), &in[0], &in[1024]);
@@ -140,38 +145,12 @@ queue_sink_impl::work(int noutput_items,
 		} // Push window reference into queue
 
 		queue_counter++;
-		number_of_windows--;
-
-		window = new std::vector<float>(); // Create a new vector
-
-		// Populate windows and push into queue
-		for(int i = 0; i < number_of_windows; i++){
-
-			// Get index
-			window->push_back(get_index());
-
-			if(VERBOSE){
-				sprintf(message_buffer, "Pushing window with index: %f", window->at(0));
-				GR_LOG_INFO(d_logger, message_buffer);
-			}
-
-			// Insert floats into the window
-			window->insert(window->end(), &in[0], &in[1024]);
-
-			// Keep trying to push window onto queue
-			while(!queue->push(window)){
-				queue->push(window);
-			}
-
-			queue_counter++;
-
-			window = new std::vector<float>();
-			in += 1024;
-		}
-
-		// Put remaining floats in window array for next work execution
 	}
 
+	if(VERBOSE){
+			sprintf(message_buffer, "Number of items read: %d", noutput_items);
+			GR_LOG_INFO(d_logger, message_buffer);
+	}
 	return noutput_items;
 }
 
@@ -190,7 +169,7 @@ float queue_sink_impl::get_index(){
 		}
 
 		else{
-			// We're out of tags... so return one from 0
+			// We're out of tags... so return one from [0, inf]
 			GR_LOG_WARN(d_logger, "**Looking to preserve index found in stream, but there are none!");
 			return index_of_window++;
 		}
