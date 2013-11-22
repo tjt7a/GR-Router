@@ -110,8 +110,8 @@ queue_source_impl::work(int noutput_items,
 		index = temp_vector->at(0); // index of the current window
 
 		if(VERBOSE){
-			sprintf(message_buffer, "Source :: Index of Window Received: %f", index);
-			GR_LOG_INFO(d_logger, message_buffer);
+			//sprintf(message_buffer, "Source :: Index of Window Received: %f", index);
+			//GR_LOG_INFO(d_logger, message_buffer);
 		}
 
 		// If we strictly care about the ordering of the Windows...
@@ -119,7 +119,7 @@ queue_source_impl::work(int noutput_items,
 
 			if(VERBOSE){
 				sprintf(message_buffer, "Source :: Waiting for window index %f; received %f", global_index, index);
-				GR_LOG_INFO(d_logger, "message_buffer");
+				GR_LOG_INFO(d_logger, message_buffer);
 			}
 
 			// Add pointer to window to local vector for sorting
@@ -147,6 +147,11 @@ queue_source_impl::work(int noutput_items,
 
 					//write at tag to output port 0 with given absolute item offset
 					this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
+
+					if(VERBOSE){
+						sprintf(message_buffer, "Wrote index:%f to offset:%d to stream", global_index, offset);
+						GR_LOG_INFO(d_logger, message_buffer);
+					}
 				}
 
 				//Increment Global index to next expected index
@@ -160,12 +165,26 @@ queue_source_impl::work(int noutput_items,
 		else{
 			buffer.insert(buffer.end(), temp_vector->begin()+1, temp_vector->end());
 			memcpy(out, &(buffer[0]), sizeof(float)*1024);
+
+			if(preserve){
+
+				const size_t item_index = 0; //Let the first item in the stream contain the index tag
+				const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
+				pmt::pmt_t key = pmt::string_to_symbol("index"); // Key associated with the index
+
+				// Have to cast index to long (pmt does not handle floats)
+				pmt::pmt_t value = pmt::from_long((long)index);
+
+				//write at tag to output port 0 with given absolute item offset
+				this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
+
+			}
 			return 1024;
 		}
 	}
 	// If there is nothing available yet, return 0
 	else{
-		GR_LOG_INFO(d_logger, "There's nothing in the queue!");
+		//GR_LOG_INFO(d_logger, "There's nothing in the queue!");
 		return 0;
 	}
 }

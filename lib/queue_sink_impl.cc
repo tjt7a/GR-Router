@@ -84,12 +84,13 @@ queue_sink_impl::work(int noutput_items,
 	// Pointer to input
 	const float *in = (const float *) input_items[0]; // Input float buffer pointer
 
-	// Get the index of the current window
-	const uint64_t nread = this->nitems_read(0); //number of items read on port 0 up until the start of this work function (index of first sample)
-	const size_t ninput_items = noutput_items; //assumption for sync block, this can change
-
 	// Do we want to pull indexes from the stream tags and use those for window indexes
 	if(preserve){
+
+		// Get the index of the current window
+		const uint64_t nread = this->nitems_read(0); //number of items read on port 0 up until the start of this work function (index of first sample)
+		const size_t ninput_items = noutput_items; //assumption for sync block, this can change
+
 		pmt::pmt_t key = pmt::string_to_symbol("index"); // Filter on key
 
 		//read all tags associated with port 0 for items in this work function
@@ -163,17 +164,6 @@ queue_sink_impl::work(int noutput_items,
 			}
 
 			queue_counter++;
-
-			/*
-          if(window_vector.size() == 1000){
-            for(int i = 0; i < 1000; i++){
-              for(int j = 0; j < 1025; j++){
-                std::cout << window_vector.at(i).at(j);
-              }
-              std::cout << std::endl;
-            }
-          }
-			 */
 
 			window = new std::vector<float>();
 			in += 1024;
