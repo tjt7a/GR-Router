@@ -28,6 +28,8 @@ include_directories(
 add_executable(dial_tone ${CMAKE_CURRENT_SOURCE_DIR}/dial_tone.cc)
 add_executable(fft_ifft_test ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft_test.cc ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft.cc)
 add_executable(router_fft_test_parent ${CMAKE_CURRENT_SOURCE_DIR}/router_fft_test_parent.cc ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft.cc)
+add_executable(router_fft_test_child ${CMAKE_CURRENT_SOURCE_DIR}/router_fft_test_child.cc ${CMAKE_CURRENT_SOURCE_DIR}/fft_ifft.cc)
+add_executable(transparent ${CMAKE_CURRENT_SOURCE_DIR}/transparent.cc)
 
 target_link_libraries(dial_tone
   ${Boost_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES})
@@ -38,7 +40,13 @@ target_link_libraries(fft_ifft_test
 target_link_libraries(router_fft_test_parent
   ${BOOST_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${GR_ROUTER_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_FFT_LIBRARIES} ${GNURADIO_PMT_LIBRARIES} ${GNURADIO_FILTER_LIBRARIES} )
 
+target_link_libraries(router_fft_test_child
+ ${BOOST_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${GR_ROUTER_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_FFT_LIBRARIES} ${GNURADIO_PMT_LIBRARIES} ${GNURADIO_FILTER_LIBRARIES} )
+
+target_link_libraries(transparent
+	${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${Boost_LIBRARIES})
+
 INSTALL(TARGETS
-    dial_tone fft_ifft_test router_fft_test_parent 
+    dial_tone fft_ifft_test router_fft_test_parent router_fft_test_child transparent 
     DESTINATION "/home/tjt7a/Src/new/gr-router/bin"
 )
