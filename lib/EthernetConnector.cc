@@ -10,11 +10,16 @@ EthernetConnector::EthernetConnector(int count, int port){
 	numChildren = count;
 
 	// If node has > 0 children, create array of children
+	if(V)
+		std::cout <<"\tEthernetConnector: Creating array of " << numChildren << " children nodes" << std::endl;
+
+
 	// Set local file descriptor
 	if(numChildren > 0){
 
 		// Create array of Children Nodes
 		children = new Node[numChildren];
+
 		
 		// Create a local node and set port, then set FD 
 		local.port = port;
@@ -25,7 +30,8 @@ EthernetConnector::EthernetConnector(int count, int port){
 // Destructor
 EthernetConnector::~EthernetConnector(){
 
-	if(V)printf("Calling EthernetConnector Destructor\n");
+	if(V)
+		std::cout <<"\tEthernetConnector: Calling EthernetConnector Destructor" << std::endl;
 	stop();
 	exit(0);
 }
@@ -38,7 +44,7 @@ bool EthernetConnector::set_local_fd(){
 
 	// We could not get a socket FD
     if(local.socket_fd < 0){
-    	if(V)printf("Serious Error: Could not create a local socket!\n");
+    	if(V) std::cout << "\tEthernetConnector: Serious Error: Could not create a local socket!" << std::endl;
         return false;
     }
 	
@@ -50,11 +56,12 @@ bool EthernetConnector::set_local_fd(){
     local.address.sin_port = htons(local.port);
 
     if(bind(local.socket_fd, (struct sockaddr *) &local.address,(local.length)) < 0){
-    	if(V)printf("Serious Error: Could not bind to port %d\n", local.port);
+    	if(V)printf("\tEthernetConnector: Serious Error: Could not bind to port %d\n", local.port);
     	return false;
     }
     
-    if(V)printf("Set Local Socket and bound to port %d\n", local.port);
+    if(V)
+    	printf("\tEthernetConnector: Set Local Socket and bound to port %d\n", local.port);
     return true;
 }
 
@@ -62,8 +69,16 @@ bool EthernetConnector::set_local_fd(){
 // Wait for connection from child
 bool EthernetConnector::connect_to_child(int index, int port){
 
+
+	if(V)
+		std::cout << "\tEthernetConnector: Attempting to connect to child at index: " << index << " on port " << port << std::endl;
+
 	if(index > (numChildren - 1)){
-		if(V)printf("index > number of children - 1\n");
+		if(V) 
+			std::cout << "Number of Children=" << numChildren << " index of child accessed=" << index << std::endl;
+
+
+			printf("index > number of children - 1\n");
 		return false;
 	}
 
@@ -72,7 +87,8 @@ bool EthernetConnector::connect_to_child(int index, int port){
 
 	(children[index]).length = sizeof((children[index].address));
 
-	if(V) printf("Waiting for Child %d to connect...\n", index);
+	if(V) 
+		printf("Waiting for Child %d to connect...\n", index);
 
 	(children[index]).socket_fd = accept(local.socket_fd,
 						(sockaddr *) &(children[index].address),
@@ -92,7 +108,7 @@ bool EthernetConnector::connect_to_child(int index, int port){
 // Write to the child at index Children[index] the msg of size size
 int EthernetConnector::write_child(int index, char * inbuf, unsigned long size){
 	if(index > (numChildren - 1)){
-		if(V)printf("index > number of children - 1\n");
+		if(V)printf("\tEthernetConnector: index > number of children - 1\n");
 		return false;
 	}
 
@@ -108,6 +124,8 @@ int EthernetConnector::read_child(int index, char * outbuf, int size){
 	
 	// Read from child file descriptor
 	read_child_mutex.lock();
+
+	std::cout << "\tEthernetConnector: Reading from Child[" << index << "]" <<std::endl;
 	ssize_t r = read((children[index]).socket_fd, outbuf, size);
 	read_child_mutex.unlock();
 	return r;
@@ -123,19 +141,20 @@ bool EthernetConnector::connect_to_parent(char* hostname, int port){
 
         // Create socket for parent
         if(!set_parent_fd()){
-                if(V)printf("Could not create parent socket\n");
+                if(V)printf("\tEthernetConnector: Could not create parent socket\n");
                 return false;
         }
 
-        if(V) printf("Attempting to connect to parent...\n");
+        if(V) 
+        	std::cout << "\tEthernetConnector: Attempting to connect to parent=" << hostname << ":" << port << std::endl;
 
         // Attempt to connect to parent
         if(connect(parent.socket_fd, (sockaddr *)&parent.address, sizeof(parent.address))){
-                if(V)printf("Serious Error: Failed connecting to Parent\n");
+                if(V)printf("\tEthernetConnector: Serious Error: Failed connecting to Parent\n");
                 return false;
         }
 
-        if(V)printf("Connected to parent\n");
+        if(V)printf("\tEthernetConnector: Connected to parent\n");
         return true;
 }
 
@@ -143,14 +162,15 @@ bool EthernetConnector::connect_to_parent(char* hostname, int port){
 bool EthernetConnector::set_parent_fd(){
 	
 	if(parent.host == NULL){
-			if(V)printf("Serious Error: No such host (%s)\n", (char *)parent.host);
+			if(V)
+				printf("\tEthernetConnector: Serious Error: No such host (%s)\n", (char *)parent.host);
 			close(parent.socket_fd);
 			return false;
 	}
 
 	parent.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(parent.socket_fd < 0){
-		if(V)printf("Serious Error: Could not create parent socket!\n");
+		if(V)std::cout << "\tEthernetConnector: Serious Error: Could not create parent socket!" << std::endl;
 		return false;
 	}
 
@@ -162,13 +182,17 @@ bool EthernetConnector::set_parent_fd(){
 			parent.host->h_length);
 	parent.address.sin_port = htons(parent.port);
 
-	if(V)printf("Set parent socket fd\n");
+	if(V)
+		std::cout << "\tEthernetConnector: Set parent socket fd" << std::endl;
+
 	return true;
 }
 
 // Write the msg to parent
 int EthernetConnector::write_parent(char * msg, int size){
 	
+	std::cout << "\tEthernetConnector: Writing to (size=" << size << " bytes)" << std::endl;
+
 	// Critical section, we dont want threads writing to the same FD at the same time
 	write_parent_mutex.lock();
 	ssize_t r = write(parent.socket_fd,msg,size);
@@ -178,8 +202,11 @@ int EthernetConnector::write_parent(char * msg, int size){
 
 // Read message of size size from parent
 int EthernetConnector::read_parent(char * outbuf, int size){
+
+	std::cout << "\tEthernetConnector: Reading from parent (size=" << size << " bytes)" << std::endl;
+
 	read_parent_mutex.lock();	
-	int r = read((parent.socket_fd),outbuf,size);
+	int r = read((parent.socket_fd), outbuf, size);
 	read_parent_mutex.unlock();
 	return r;
 }
