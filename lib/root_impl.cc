@@ -29,7 +29,7 @@
 
         // This is the public shared-pointer constructor; it is called by the Scheduler at creation time
  		root::sptr
- 		root::make(int number_of_children, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > input_queue, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > output_queue)
+ 		root::make(int number_of_children, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
  		{
  			return gnuradio::get_initial_sptr (new root_impl(number_of_children, input_queue, output_queue));
  		}
@@ -39,7 +39,7 @@
         * 1 inputs: 1 from source
         * 1 outputs: 1 to sink
         */
-        root_impl::root_impl(int numberofchildren, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > input_queue, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > output_queue)
+        root_impl::root_impl(int numberofchildren, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
         : gr::sync_block("root",
      	gr::io_signature::make(0,0,0),
      	gr::io_signature::make(0,0,0))
@@ -47,12 +47,15 @@
 
          	master_thread_index = 0;
 
-    		// Set global counter; no need to lock -> no contention:wq
+            // Number of children for root node
+            number_of_children = numberofchildren;
+
+    		// Set global counter; no need to lock -> no contention
          	global_counter = 0;
 
             // Pointers to input/output queue of packets
-    		in_queue = input_queue;
-    		out_queue = output_queue;
+    		in_queue = &input_queue;
+    		out_queue = &output_queue;
 
             // Communication connector between nodes
     		connector =  new NetworkInterface(sizeof(float), number_of_children, 8080, true);
@@ -64,11 +67,8 @@
     		in_queue_counter = 0;
     		out_queue_counter = 0;
 
-    	    // Number of children for root node
-    		number_of_children = numberofchildren;
-
     	  	// Array of weights values for each child + local (index 0)
-    		weights = new double[number_of_children];
+    		weights = new float[number_of_children];
 
     	   	// Finished flag for threads(true if finished)
     		d_finished = false;
@@ -108,26 +108,14 @@
          int
          root_impl::work(int noutput_items, gr_vector_const_void_star &input_items, gr_vector_void_star &output_items)
          {
-         	return noutput_items;
+         	//return noutput_items;
+            return 0;
          }
-
-
-
-        // To work around trying to pass arguments to boost, I'm going to have all threads grab their index from a master index repo
-        int root_impl::get_index(){
-     	  int ret;
-
-     	  index_lock.lock();
-     	  ret = master_thread_index++;
-     	  index_lock.unlock();
-
-     	  return ret;
-        }
 
         // Sender thread; It's sole purpose is to send windows when available
         void root_impl::send(){
 
-     	  float * buffer = new float[1025];
+     	  float *buffer = new float[1025];
      	  std::vector<float> *temp;
      	  int packet_size;
 
@@ -135,13 +123,19 @@
      	  while(!d_finished){
      	
      		// Grab index of next target node
-     		int index = get_index();
+     		int index = min();
 
      		// If there is a window available, send it to indexed node
      		if(in_queue->pop(temp)){
      			packet_size = 1025 * 4; // (float = 4 bytes) * 1025 floats = 1024 size window + 1 for index
-     			connector->send(index, (char*)(temp->data()), packet_size);
-     			increment(); // incremenet global counter (how many windows are out there?)
+     			
+                std::cout << "Sending packet index=" << temp->data()[0] << " to child= " << index << std::endl;
+
+                connector->send(index, (char*)(temp->data()), packet_size);
+
+                delete temp;
+
+     			increment(); // increment global counter (how many windows are out there?)
      		}
      	  }
         }
@@ -149,9 +143,6 @@
         // Receiver thread; one per child node (instead of sequentially iterating through all nodes)
         void root_impl::receive(int index){
      	   
-        	// remove this
-        	//int index = 0;
-
      	  int size = 0;
      	  float * buffer = new float[1025];
      	  std::vector<float> *temp;
@@ -160,12 +151,14 @@
      	  while(!d_finished){
 
             // Wait until there's something to receive
-     		while(size < 1)
+     		while(size < 1){
      			size = connector->receive(index, (char*) buffer, (1025*4));
+            }
+
 
      		// Received weight (need to figure out how else to differentiate)
      		if(size == 8){
-     			int i = (int)buffer[0];
+     			float i = (float)buffer[0];
 
      			// We received valid 'weight' packet
 				if((i > 0) && (i < number_of_children)){
@@ -173,7 +166,7 @@
 					weights[index] = buffer[1];
 				}
 				else{
-					printf("ERROR: Received broken packet\n");
+					std::cout << "ERROR: Received unsupported packet\n" << std::endl;
 				}
      		}
 
@@ -181,7 +174,9 @@
      		if(size == (1025*4)){
      			std::vector<float> *arrival;
 				arrival->assign(((float*)buffer), ((float*)buffer)+1025);
-				out_queue->push(arrival);
+				
+                out_queue->push(arrival); // May need to do this multiple times
+
 				decrement(); // One fewer window is out with children
      		}
      	}
@@ -193,7 +188,7 @@
     	// Might want to use a better algorithm for this
     	// Configurable based on application
 		int root_impl::min(){
-			int min = weights[0];
+			float min = weights[0];
 			int index = 0;
 			for(int i = 1; i < number_of_children; i++){
 				if(weights[i] < min){

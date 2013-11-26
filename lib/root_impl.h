@@ -42,10 +42,10 @@
  			bool d_finished;
 
 			// Shared pointer to queues (input, output)
- 			boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > in_queue;
+ 			boost::lockfree::queue< std::vector<float>* > *in_queue;
  			float in_queue_counter;
 
- 			boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > out_queue;
+ 			boost::lockfree::queue< std::vector<float>* > *out_queue;
  			float out_queue_counter;
 
  			int global_counter;
@@ -61,7 +61,7 @@
  			std::vector<boost::shared_ptr< boost::thread > > thread_vector;
 
 			// Weights for each child
- 			double * weights;
+ 			float * weights;
 
 			// Connector used for networking between nodes
  			NetworkInterface *connector;
@@ -94,12 +94,8 @@
  			void increment();
  			void decrement();
 
-
-			// To get around passing arguments, I'm going to have an index repository
- 			int get_index();
-
  		public:
- 			root_impl(int number_of_children, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > in_queue, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > out_queue);
+ 			root_impl(int number_of_children, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue);
  			~root_impl();
 
       		// Where all the action really happens

@@ -29,7 +29,7 @@
 
  		// Return a shared pointer to the Scheduler; this public constructor calls the private constructor
  		child::sptr
- 		child::make(int number_of_children, int child_index, char * hostname, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > input_queue, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > output_queue)
+ 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
  		{
  			return gnuradio::get_initial_sptr (new child_impl(number_of_children, child_index, hostname, input_queue, output_queue));
  		}
@@ -37,12 +37,13 @@
     /*
      * The private constructor
      */
-     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > input_queue, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > output_queue)
+     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
      : gr::sync_block("child",
      	gr::io_signature::make(0, 0, 0),
      	gr::io_signature::make(0, 0, 0))
      {
 
+          GR_LOG_INFO(d_logger, "Calling private Child constructor");
 		// Set index of the child
      	child_index = index;
 
@@ -50,8 +51,14 @@
      	global_counter = 0;
      	// These queues serve as the input/output queues for packetized data
      	// Assign queue pointers
-		in_queue = input_queue; 
-		out_queue = output_queue;
+		in_queue = &input_queue; 
+		out_queue = &output_queue;
+
+          // Connect to Localhost
+          connector = new NetworkInterface(sizeof(float), 0, 8080, false);
+          connector->connect("localhost");
+
+          GR_LOG_INFO(d_logger, "Finished pointing to the two queues");
 
 		// Used to kill all threads
 		d_finished = false;
@@ -60,7 +67,7 @@
 		parent_hostname = hostname; // What is the hostname of this child's parent?
 		
 		// Weights table to keep track of the 'business' of child nodes
-		weights = new double[number_of_children];
+		weights = new float[number_of_children];
 
 		// Create a thread per child for listeners (future work)
 		//for(int i = 0; i < number_of_children; i++){
@@ -70,9 +77,13 @@
 		// Create single thread for sending windows back to root
 		d_thread_send_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::send_root, this)));
 
+          GR_LOG_INFO(d_logger, "Finished making d_thread_send_root");
+
 		// Create single thread for receiving messages from root
 		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
-	}
+	
+          GR_LOG_INFO(d_logger, "Finished making d_thread_receive_root");
+     }
 
     /*
      * Our virtual destructor.
@@ -101,28 +112,18 @@
      	return noutput_items;
      }
 
-    // To work around trying to pass arguments to boost, I'm going to have all threads grab their index from a master index repo
-     int child_impl::get_index(){
-     	int ret;
-
-     	index_lock.lock();
-     	ret = master_thread_index++;
-     	index_lock.unlock();
-
-     	return ret;
-     }
-
 
      // Thread receive function receives from root
      void child_impl::receive_root(){
 
+          GR_LOG_INFO(d_logger, "RECEIVE_ROOT:: Howdy");
      	float *buffer = new float[1025];
 
      	while(!d_finished){
 
      		int size = 0;
 
-     		// Spin weight; might want to change this later to interrupt handler
+     		// Spin wait; might want to change this later to interrupt handler
      		while(size < 1)
      			size = connector->receive(-1, (char*)buffer, (4*1025));
 
@@ -136,17 +137,20 @@
      			if(size == (1025 * 4)){
      				std::vector<float> *arrival;
      				arrival->assign((float*)buffer, (float*)buffer + 1025);
-     				in_queue->push(arrival);
+
+     				in_queue->push(arrival); // May need to try this multiple times
+
      				increment();
      			}
      			else
-     				printf("This is no good; we are receiving data of unexpected size: %d\n", size);
+     				std::cout << "This is no good; we are receiving data of unexpected size: " << size << std::endl;
      		}
      	}
      }
 
      // Thread send function
      void child_impl::send_root(){
+          GR_LOG_INFO(d_logger, "SEND_ROOT:: Howdy");
      	std::vector<float> *temp;
 
      	while(!d_finished){
@@ -157,7 +161,9 @@
      			decrement();
 
      			// Send weight
-     			temp->clear();
+                    delete temp;
+     			//temp->clear();
+
      			temp->push_back((float)child_index);
      			temp->push_back((float)get_weight());
      			connector->send(-1, (char*)temp->data(), (2*4));
@@ -180,7 +186,7 @@
     // Determine child with minimum weight (big_o(n)) -- not really a big deal with few children
     // Determine better solution
 	int child_impl::min(){
-		int min = weights[0];
+		float min = weights[0];
 		int index = 0;
 		for(int i = 1; i < number_of_children; i++){
 			if(weights[i] < min){

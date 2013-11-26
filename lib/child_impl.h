@@ -36,7 +36,6 @@ namespace gr {
 	
 	int master_thread_index;
 	boost::mutex index_lock;
-	int get_index();
 
 	int child_index;
 
@@ -44,10 +43,10 @@ namespace gr {
 	bool d_finished;
 	char * parent_hostname;
 
-	boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > in_queue;
+	boost::lockfree::queue< std::vector<float>* > *in_queue;
 	float in_queue_counter;
 
-	boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > out_queue;
+	boost::lockfree::queue< std::vector<float>* > *out_queue;
 	float out_queue_counter;
 
 	int global_counter;
@@ -58,7 +57,7 @@ namespace gr {
 	boost::shared_ptr< boost::thread > d_thread_receive_root;
 	boost::shared_ptr< boost::thread > d_thread_send_root;
 
-	double * weights;
+	float * weights;
 
 	NetworkInterface *connector;
 
@@ -88,8 +87,7 @@ namespace gr {
 	//bool compare_by_index(const vector<float> &a, const vector<float> &b);
 
      public:
-      child_impl(int number_of_children, int child_index, char* hostname, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > in_queue,
-	boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > out_queue);
+      child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue);
       ~child_impl();
 
       // Where all the action really happens
