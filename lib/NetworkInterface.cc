@@ -15,7 +15,7 @@
 
 
 // Default Constructor
-NetworkInterface::NetworkInterface(int itemsize, int children_count, int port_arg=8080, bool root_arg=false){
+NetworkInterface::NetworkInterface(int itemsize, int children_count, int port_arg, bool root_arg){
 
 	d_itemsize = itemsize; // The size of each element in the packet; going to be using bytes = 1
 	children = children_count;  // Number of children
@@ -44,8 +44,9 @@ bool NetworkInterface::connect(char* parent_hostname){
 			if(V)printf("Attempting to connect to child %d...\n", i);
 
 			// Keep attempting to connect to children
-			while(!connector->connect_to_child(port, i)){
-				if(V)printf("Failed to connect to child %d...\n", i);
+			while(!connector->connect_to_child(i, port)){
+				if(V)
+					printf("Failed to connect to child %d...\n", i);
 				sleep(1);
 			}
 		}
@@ -67,7 +68,7 @@ bool NetworkInterface::connect(char* parent_hostname){
 
 			if(V)printf("Attempting to connect to child %d...\n", i);
 
-			while(!connector->connect_to_child(port, i)){
+			while(!connector->connect_to_child(i, port)){
 				if(V)printf("Failed to connect to child %d...\n", i);
 				sleep(1);
 			}
@@ -80,6 +81,8 @@ bool NetworkInterface::connect(char* parent_hostname){
 // Used to read items from packet and rebuild stream
 int NetworkInterface::read_items(int index, char *buf, int nitems){
 	
+	std::cout << "\t\tNetworkInterface: Reading Items (index=" << index << " nitems=" << nitems << ")" << std::endl;
+
 	int r;
 	assert(nitems > 0);
 	assert(d_residue_len < d_itemsize);
