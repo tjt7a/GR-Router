@@ -21,8 +21,8 @@ def test(in_filename, out_filename, fft_count):
 			stream_to_vector = blocks.stream_to_vector(gr.sizeof_float, window_size)
 			divide = blocks.divide_cc(1)
 			complex_to_float = blocks.complex_to_float(1)
-			fft_forward = fft.fft_vfc(window_size, True, (fft.blackmanharris(window_size)), 1)
-			fft_backward = fft.fft_vcc(window_size, False, (fft.blackmanharris(window_size)), False, 1)
+			fft_forward = fft.fft_vfc(window_size, True, (fft.window.blackmanharris(window_size)), 1)
+			fft_backward = fft.fft_vcc(window_size, False, (fft.window.blackmanharris(window_size)), False, 1)
 			constant = analog.sig_source_c(0, analog.GR_CONST_WAVE, 0, 0, window_size)
 
 			#print("1. Connect self to stream_to_vector")
@@ -48,12 +48,10 @@ def test(in_filename, out_filename, fft_count):
 			gr.top_block.__init__(self, "Fft Test")
 			
 			windowSize = 1024
-
-			#print "FFT Count: ", fft_count
+			print "FFT Count: ", fft_count
 			 
 			self.wavfile_source = blocks.wavfile_source(in_filename, False)
 			self.file_sink = blocks.file_sink(gr.sizeof_float, out_filename)
-			#self.file_sink.set_unbuffered(False)
 
 			ffts = []
 			for i in range(fft_count):
@@ -64,6 +62,7 @@ def test(in_filename, out_filename, fft_count):
 					self.connect((ffts[i-1], 0), (ffts[i], 0))
 
 			self.connect((ffts[fft_count-1], 0), (self.file_sink, 0))
+			#self.connect((self.wavfile_source, 0), (self.file_sink, 0))
 
 	tb = fft_test(in_filename, out_filename, fft_count)
 	tb.run()
@@ -72,14 +71,9 @@ import sys
 from gnuradio import fft
 
 # Parse Input
-#in_file = "input.in" #str(sys.argv[1])
-#out_file = "output.out" #str(sys.argv[2])
-#fft_count = 50 #int(sys.argv[3])
-
+in_file = "inputs/out.wav" #str(sys.argv[1])
+out_file = "tr_fft_out" #str(sys.argv[2])
+fft_count = 50 #int(sys.argv[3])
 
 #Execute test
-#test(in_file, out_file, fft_count)
-window  = (fft.blackmanharris(1024))
-
-for i in range(len(window)):
-	print i, ": ", window[i]
+test(in_file, out_file, fft_count)

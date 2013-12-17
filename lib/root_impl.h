@@ -76,8 +76,6 @@
 			// window buffer
  			std::vector<float> window;
 
-			// Thread programs
-
 			// Thread program for sending messages to children
  			void send();
 
