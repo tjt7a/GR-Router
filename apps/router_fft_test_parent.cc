@@ -18,7 +18,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
 // Include header files for each block used in flowgraph
 #include <gnuradio/top_block.h>
 #include <gnuradio/blocks/wavfile_source.h>
@@ -39,13 +38,18 @@ int main(int argc, char **argv)
   /*
   * Create a Top Block for the flowgraph
   */
+
   gr::top_block_sptr tb_1 = gr::make_top_block("fft_ifft_parent");
 
   int window_size = 1024;
   int fft_count = 50;
   const char* in_file_name = "inputs/out.wav";
   const char* out_file_name = "output.out";
+  int number_of_children = 1;
 
+  if(argc > 1){
+	number_of_children = atoi(argv[1]);
+  }	
 
   /*
   * Input wavfile source for streaming data into the flowgraph
@@ -69,7 +73,7 @@ int main(int argc, char **argv)
   * Load Balancing Router to distribute windows to children
   */
 
-  gr::router::root::sptr root_router = gr::router::root::make(1, input_queue, output_queue); // parent router [1 child, input queue, output queue]
+  gr::router::root::sptr root_router = gr::router::root::make(number_of_children, input_queue, output_queue); // parent router [1 child, input queue, output queue]
   
   /*
   * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on an index, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
