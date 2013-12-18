@@ -31,6 +31,7 @@
 #include "fft_ifft.h"
 #include <cstdio>
 #include "fft_ifft.h"
+#include <string>
 
 using namespace gr;
 
@@ -44,6 +45,10 @@ int main(int argc, char **argv)
 
   int window_size = 1024;
   int fft_count = 50;
+  char* parent_name = "10.0.0.11";
+
+  if(argc > 1)
+  	parent_name = argv[1];
 
   /*
   * Input and Output queues to hold 'windows' of 1025 floats. 1 index, and 1024 samples
@@ -56,7 +61,7 @@ int main(int argc, char **argv)
   * Load Balancing Router to receive windows from parent
   */
 
-  gr::router::child::sptr child_router = gr::router::child::make(0, 0, "localhost", input_queue, output_queue);
+  gr::router::child::sptr child_router = gr::router::child::make(0, 0, parent_name, input_queue, output_queue);
 
   /*
   * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on an index, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
