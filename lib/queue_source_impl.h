@@ -39,7 +39,7 @@ private:
 	int left_over_values; // Values left after filling Windows
 	int global_index; // Current Index to maintain ordering
 
-	bool VERBOSE = true; // Verbosity flag
+	bool VERBOSE; // Verbosity flag
 
 	bool order; // Do we need to enforce ordering of leaving Windows' data?
 	std::vector<std::vector<float>* > local; // Local vector for ordering

@@ -64,6 +64,7 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 		gr::io_signature::make(0, 0, 0),
 		gr::io_signature::make(1, 1, sizeof(float)))
 {
+	VERBOSE = true;
 	queue = &shared_queue;
 	item_size = size; // Set size of samples (float)
 	preserve = preserve_index; // Does index need to be re-established?

@@ -38,7 +38,7 @@ private:
 	int number_of_windows; // Number of windows we can fill with floats
 	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
 
-	bool VERBOSE = false;
+	bool VERBOSE;
 
 	boost::lockfree::queue< std::vector<float>* > *queue; // Pointer to shared queue
 	int queue_counter; // Counter for windows in queue

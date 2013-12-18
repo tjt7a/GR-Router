@@ -51,6 +51,7 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 		gr::io_signature::make(1, 1, sizeof(float)),
 		gr::io_signature::make(0, 0, 0))
 {
+	VERBOSE = true;
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024!
 	queue = &shared_queue; // Set shared_ptr queue
 	item_size = size; // Set size of items
