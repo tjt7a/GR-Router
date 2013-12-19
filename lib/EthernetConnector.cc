@@ -33,6 +33,7 @@ EthernetConnector::~EthernetConnector(){
 	if(V)
 		std::cout <<"\tEthernetConnector: Calling EthernetConnector Destructor" << std::endl;
 	stop();
+	delete[] children;
 	exit(0);
 }
 

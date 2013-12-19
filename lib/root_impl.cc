@@ -133,7 +133,7 @@
 
                 connector->send(index, (char*)(temp->data()), packet_size);
 
-                delete temp;
+                delete temp; // Delete vector<float> that temp is pointing to
 
      			increment(); // increment global counter (how many windows are out there?)
      		}
@@ -157,7 +157,7 @@
 
 
      		// Received weight (need to figure out how else to differentiate)
-     		if(size == 8){
+     		if(size == (2*4)){
      			float i = (float)buffer[0];
 
      			// We received valid 'weight' packet
@@ -179,6 +179,10 @@
 
 				decrement(); // One fewer window is out with children
      		}
+
+            else{
+                std::cout << "ERROR: Received unsupported packet of size: " << size << std::endl;
+            }
      	}
 
      	delete [] buffer; // We're done with our buffer

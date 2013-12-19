@@ -49,6 +49,7 @@
 
 		// Initialize global_counter for router 
      	global_counter = 0;
+
      	// These queues serve as the input/output queues for packetized data
      	// Assign queue pointers
 		in_queue = &input_queue; 
@@ -127,7 +128,7 @@
      		while(size < 1)
      			size = connector->receive(-1, (char*)buffer, (4*1025));
 
-     		if(size == 8){
+     		if(size == (2*4)){
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];
@@ -138,19 +139,24 @@
      				std::vector<float> *arrival;
      				arrival->assign((float*)buffer, (float*)buffer + 1025);
 
-     				in_queue->push(arrival); // May need to try this multiple times
+
+                         bool pushed = false;
+                         pushed = in_queue->push(arrival);
+     				while(!pushed)
+                              pushed = in_queue->push(arrival);
 
      				increment();
      			}
-     			else
-     				std::cout << "This is no good; we are receiving data of unexpected size: " << size << std::endl;
-     		}
+     			else{
+     				std::cout << "This is no good; we are receiving data of unexpected size: " << size << std::endl;     		
+                    }
+
+               }
      	}
      }
 
      // Thread send function
      void child_impl::send_root(){
-          GR_LOG_INFO(d_logger, "SEND_ROOT:: Howdy");
      	std::vector<float> *temp;
 
      	while(!d_finished){
