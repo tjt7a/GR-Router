@@ -60,7 +60,7 @@ bool NetworkInterface::connect(char* parent_hostname){
 
 		while(!connector->connect_to_parent(parent_hostname, port)){
 			if(V)printf("Failed to connect to Parent...\n");
-			sleep(5);
+			sleep(1);
 		}
 
 		// Connect down to all children
@@ -81,7 +81,7 @@ bool NetworkInterface::connect(char* parent_hostname){
 // Used to read items from packet and rebuild stream
 int NetworkInterface::read_items(int index, char *buf, int nitems){
 	
-	std::cout << "\t\tNetworkInterface: Reading Items (index=" << index << " nitems=" << nitems << ")" << std::endl;
+	//std::cout << "\t\tNetworkInterface: Reading Items (index=" << index << " nitems=" << nitems << ")" << std::endl;
 
 	int r;
 	assert(nitems > 0);
@@ -142,7 +142,7 @@ int NetworkInterface::receive(int child_index, char * outbuf, int noutput_items)
 			if(errno == EINTR)
 				continue;
 			else{
-				perror("NetworkInterface::receive");
+				perror("\t\tNetworkInterface::receive");
 				return -1;
 			}
 		}

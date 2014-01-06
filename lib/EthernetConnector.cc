@@ -56,7 +56,7 @@ bool EthernetConnector::set_local_fd(){
     local.address.sin_addr.s_addr = INADDR_ANY;
     local.address.sin_port = htons(local.port);
 
-    if(bind(local.socket_fd, (struct sockaddr *) &local.address,(local.length)) < 0){
+    if(bind(local.socket_fd, (struct sockaddr *) &local.address, local.length) < 0){
     	if(V)printf("\tEthernetConnector: Serious Error: Could not bind to port %d\n", local.port);
     	return false;
     }
@@ -126,7 +126,7 @@ int EthernetConnector::read_child(int index, char * outbuf, int size){
 	// Read from child file descriptor
 	read_child_mutex.lock();
 
-	std::cout << "\tEthernetConnector: Reading from Child[" << index << "]" <<std::endl;
+	//std::cout << "\tEthernetConnector: Reading from Child[" << index << "]" <<std::endl;
 	ssize_t r = read((children[index]).socket_fd, outbuf, size);
 	read_child_mutex.unlock();
 	return r;
@@ -192,7 +192,7 @@ bool EthernetConnector::set_parent_fd(){
 // Write the msg to parent
 int EthernetConnector::write_parent(char * msg, int size){
 	
-	std::cout << "\tEthernetConnector: Writing to (size=" << size << " bytes)" << std::endl;
+	//std::cout << "\tEthernetConnector: Writing to (size=" << size << " bytes)" << std::endl;
 
 	// Critical section, we dont want threads writing to the same FD at the same time
 	write_parent_mutex.lock();
@@ -204,7 +204,7 @@ int EthernetConnector::write_parent(char * msg, int size){
 // Read message of size size from parent
 int EthernetConnector::read_parent(char * outbuf, int size){
 
-	std::cout << "\tEthernetConnector: Reading from parent (size=" << size << " bytes)" << std::endl;
+	//std::cout << "\tEthernetConnector: Reading from parent (size=" << size << " bytes)" << std::endl;
 
 	read_parent_mutex.lock();	
 	int r = read((parent.socket_fd), outbuf, size);

@@ -111,7 +111,7 @@ queue_source_impl::work(int noutput_items,
 		index = temp_vector->at(0); // index of the current window
 
 		if(VERBOSE){
-			sprintf(message_buffer, "Source :: Index of Window Received: %f", index);
+			sprintf(message_buffer, "QUEUE_Source :: Index of Window Received: %f", index);
 			GR_LOG_INFO(d_logger, message_buffer);
 		}
 
@@ -119,7 +119,7 @@ queue_source_impl::work(int noutput_items,
 		if(order){
 
 			if(VERBOSE){
-				sprintf(message_buffer, "Source :: Waiting for window index %d; received %d", (int)global_index, (int)index);
+				sprintf(message_buffer, "QUEUE_Source :: Waiting for window index %d; received %d; want %d", (int)global_index, (int)index, global_index);
 				GR_LOG_INFO(d_logger, message_buffer);
 			}
 
@@ -129,13 +129,15 @@ queue_source_impl::work(int noutput_items,
 			// Use stl sort to sort vector
 			std::sort(local.begin(), local.end(), order_window);
 
-			for(int i = 0; i < local.size(); i++){
-				std::cout << local.at(i)->at(0) << std::endl;
-			}
+
+			//for(int i = 0; i < local.size(); i++){
+			//	std::cout << local.at(i)->at(0) << std::endl;
+			//}
 
 			if(VERBOSE){
-				sprintf(message_buffer, "Source :: The first index in sorted is: %d\n", (int)((local.at(0)->at(0))));
+				sprintf(message_buffer, "QUEUE_Source :: The first index in sorted is: %d\n", (int)((local.at(0)->at(0))));
 				GR_LOG_INFO(d_logger, message_buffer);
+				//std::cout << "What we're looking for is: " << global_index << std::endl;
 			}
 
 			// If the window with the lowest index is present...

@@ -117,7 +117,6 @@
      // Thread receive function receives from root
      void child_impl::receive_root(){
 
-          GR_LOG_INFO(d_logger, "RECEIVE_ROOT:: Howdy");
      	float *buffer = new float[1025];
 
      	while(!d_finished){
@@ -128,7 +127,11 @@
      		while(size < 1)
      			size = connector->receive(-1, (char*)buffer, (4*1025));
 
+               std::cout << "\t\t\t\tChild received packet of size=" << size << std::endl;
+
+               // Given this application; this should not happen
      		if(size == (2*4)){
+                    std:: cout << "We are in the CHILD and getting weights... not good" << std::endl;
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];
@@ -203,7 +206,7 @@
 		return index;
 	}
 
-    // Calculate weight of subtree (how many packets are out for computation?)
+    // Calculate weight of subtree (1-deep star architecture) -- how many packets are out for computation at the current node?
 	inline int child_impl::get_weight(){
 
 		//For simple application with no sub-trees, simply return outstandng windows

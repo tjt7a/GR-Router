@@ -81,7 +81,8 @@
             
             // Threads for parent to receive from all children
     		for(int i = 0; i < number_of_children; i++){
-    			// _1 is a place holder for the argument of arguments passed to the functor
+
+    			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
     			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
 	   }
@@ -104,7 +105,7 @@
          }
 
          // This function is required by the agreement we have with the Gnu Radio Scheduler, but
-            // ... it's not required, because work() doesn't do anything
+            // ... it's not required, because work() doesn't do anything... we're using threads, so this is an empty method belonging to the parent thread.
          int
          root_impl::work(int noutput_items, gr_vector_const_void_star &input_items, gr_vector_void_star &output_items)
          {
@@ -113,6 +114,7 @@
          }
 
         // Sender thread; It's sole purpose is to send windows when available
+        // Include packet format information in xml file ... functionality will be added later
         void root_impl::send(){
 
      	  float *buffer = new float[1025];
@@ -129,9 +131,11 @@
      		if(in_queue->pop(temp)){
      			packet_size = 1025 * 4; // (float = 4 bytes) * 1025 floats = 1024 size window + 1 for index
      			
-                std::cout << "Sending packet index=" << temp->data()[0] << " to child= " << index << std::endl;
+                std::cout << "Sending packet index=" << temp->data()[0] << " to child=" << index << " size=" << temp->size() << std::endl;
 
                 connector->send(index, (char*)(temp->data()), packet_size);
+
+                // Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
                 delete temp; // Delete vector<float> that temp is pointing to
 
@@ -140,7 +144,7 @@
      	  }
         }
 
-        // Receiver thread; one per child node (instead of sequentially iterating through all nodes)
+        // Receiver thread; one per child node (instead of sequentially iterating through all nodes or using interrupts)
         void root_impl::receive(int index){
      	   
      	  int size = 0;
@@ -155,6 +159,7 @@
      			size = connector->receive(index, (char*) buffer, (1025*4));
             }
 
+                std::cout << "\t\tRoot Received:: size=" << size << std::endl;
 
      		// Received weight (need to figure out how else to differentiate)
      		if(size == (2*4)){
@@ -166,7 +171,7 @@
 					weights[index] = buffer[1];
 				}
 				else{
-					std::cout << "ERROR: Received unsupported packet\n" << std::endl;
+					std::cout << "ERROR: Received unsupported packet of size=" << size << std::endl;
 				}
      		}
 
@@ -181,7 +186,7 @@
      		}
 
             else{
-                std::cout << "ERROR: Received unsupported packet of size: " << size << std::endl;
+                std::cout << "ERROR: Received unsupported packet of size=" << size << std::endl;
             }
      	}
 
@@ -190,7 +195,7 @@
 
     	// Find index of child with minimum weight BIG_OH(N)
     	// Might want to use a better algorithm for this
-    	// Configurable based on application
+    	// Configurable based on application (include XML for this)
 		int root_impl::min(){
 			float min = weights[0];
 			int index = 0;
@@ -210,6 +215,7 @@
   	//}	
 
 	// These functions are intended for a multi-threaded implementation; locking is not necessary with a single thread
+    // Increments/decrements the outstanding windows
 
 	//Decrement global counter
 		void root_impl::decrement(){
