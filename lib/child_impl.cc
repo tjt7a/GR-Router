@@ -57,9 +57,9 @@
 
           // Connect to Localhost
           connector = new NetworkInterface(sizeof(float), 0, 8080, false);
-          connector->connect("localhost");
+          connector->connect(hostname);
 
-          GR_LOG_INFO(d_logger, "Finished pointing to the two queues");
+          std::cout << "Finished connecting to hostname=" << hostname << std::endl;
 
 		// Used to kill all threads
 		d_finished = false;
