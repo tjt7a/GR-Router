@@ -117,6 +117,8 @@
      // Thread receive function receives from root
      void child_impl::receive_root(){
 
+
+          std::cout << "Created New Child!" << std::endl;
      	float *buffer = new float[1025];
 
      	while(!d_finished){

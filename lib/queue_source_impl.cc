@@ -176,8 +176,20 @@ queue_source_impl::work(int noutput_items,
 
 		}
 		else{
+
+			if(VERBOSE){
+				sprintf(message_buffer, "QUEUE_Source :: Not ordered; inserting data into buffer; size=%d", temp_vector->size());
+				GR_LOG_INFO(d_logger, message_buffer);
+			}
+
 			buffer.insert(buffer.end(), temp_vector->begin()+1, temp_vector->end());
 			memcpy(out, &(buffer[0]), sizeof(float)*1024);
+
+			if(VERBOSE){
+				sprintf(message_buffer, "QUEUE_Source :: Finished inserting data into buffer");
+				GR_LOG_INFO(d_logger, message_buffer);
+			}
+
 
 			if(preserve){
 
