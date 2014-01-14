@@ -27,6 +27,8 @@
 #include <boost/lockfree/queue.hpp>
 #include <memory>
 #include <gnuradio/tagged_stream_block.h>
+#include <iostream>
+#include <fstream>
 
 namespace gr {
 namespace router {
@@ -34,11 +36,16 @@ namespace router {
 class queue_sink_impl : public queue_sink
 {
 private:
+
+	bool VERBOSE; // Write debug information to std::out
+
+	std::ofstream myfile; // output file stream
+
 	int total_floats; // Number of available floats
 	int number_of_windows; // Number of windows we can fill with floats
-	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
+	int left_over; // What's left after filling window segments
 
-	bool VERBOSE;
+	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
 
 	boost::lockfree::queue< std::vector<float>* > *queue; // Pointer to shared queue
 	int queue_counter; // Counter for windows in queue

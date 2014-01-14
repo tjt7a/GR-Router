@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+ /*
+			Format of Segments
+		|
+			< index :: [0] > -- contains the index of the window
+			< data :: [1,1024] > -- contains data followed by zeros
+			< size :: [1025] > -- contains the size of the data in the data field
+		|
+ */
+
+/*
+	Important Note
+		This code functions on groups of 1024 float values. Any subsequent floats that cannot complete such a set are thrown away.
+		This can be modified in the future.
+*/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -51,15 +66,30 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 		gr::io_signature::make(1, 1, sizeof(float)),
 		gr::io_signature::make(0, 0, 0))
 {
-	VERBOSE = true;
-	set_output_multiple(1024); // Guarantee inputs in multiples of 1024!
+
+	/*
+	Read from XML to get size information
+	*/
+	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size
+
+	myfile.open("queue_sink.data"); // Dump information to file
+	VERBOSE = true; // Dump information to Std::out
+
 	queue = &shared_queue; // Set shared_ptr queue
-	item_size = size; // Set size of items
-	preserve = preserve_index; // Does index need to be preserved?
-	index_of_window = 0; // Set window index -- only relevant if we are not preserving a previously-defined index
-	index_vector = new std::vector<float>(); // vector of indexes (floats)
-	if(VERBOSE)
-		GR_LOG_INFO(d_logger, "*Calling Queue_Sink Constructor*");
+	item_size = size; // Set size of individual item, not window size
+
+	preserve = preserve_index; // Does index need to be preserved? -- Do we pull indexes from the stream tags, or regenerate them?
+
+	index_of_window = 0; // Set window index -- only relevant if we are not preserving a previously-defined index (from stream tags)
+
+	index_vector = new std::vector<float>(); // vector of indexes (floats) -- populated with indexes that we pull from stream tag
+
+	left_over = 0; // Initialize left-over count to 0 (what's left in the window after a work() call)
+
+	total_floats = 0;
+
+	myfile << "Calling Queue_Sink Constructor\n";
+
 }
 
 /*
@@ -69,8 +99,8 @@ queue_sink_impl::~queue_sink_impl()
 {
 	// delete any malloced structures
 	// Do I have anything mallocd (that I want to delete)?
-	if(VERBOSE)
-		GR_LOG_INFO(d_logger, "*Calling Queue_Sink Destructor*");
+	myfile << "Calling Queue_Sink Destructor\n";
+	myfile.close();
 }
 
 int
@@ -78,8 +108,6 @@ queue_sink_impl::work(int noutput_items,
 		gr_vector_const_void_star &input_items,
 		gr_vector_void_star &output_items)
 {
-	// Message buffer for VERBOSE messages
-	char message_buffer[64];
 
 	// Pointer to input
 	const float *in = (const float *) input_items[0]; // Input float buffer pointer
@@ -91,7 +119,7 @@ queue_sink_impl::work(int noutput_items,
 		const uint64_t nread = this->nitems_read(0); //number of items read on port 0 up until the start of this work function (index of first sample)
 		const size_t ninput_items = noutput_items; //assumption for sync block, this can change
 
-		pmt::pmt_t key = pmt::string_to_symbol("i"); // Filter on key
+		pmt::pmt_t key = pmt::string_to_symbol("i"); // Filter on key (i is for index)
 
 		//read all tags associated with port 0 for items in this work function
 		this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
@@ -104,13 +132,15 @@ queue_sink_impl::work(int noutput_items,
 				pmt::pmt_t temp_value = temp_tag.value;
 
 				if(temp_value != NULL){
+
 					float temp_index = (float)(pmt::to_long(temp_value));
+
+					if(VERBOSE)
+						std::cout << "Got tag=" << temp_index << std::endl;
+
+					// After pushing tags into the index_vector, we can pull from here when constructing window segments
 					index_vector->push_back(temp_index);
 
-					if(VERBOSE){
-						sprintf(message_buffer, "Got a tag!: %d", temp_index);
-						GR_LOG_INFO(d_logger, message_buffer);
-					}
 				}
 			}
 			tags.clear();
@@ -119,40 +149,90 @@ queue_sink_impl::work(int noutput_items,
 
 	// Determine how many windows worth of floats we have available
 	number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
+	left_over = noutput_items % 1024;
 
-	if(VERBOSE){
-		sprintf(message_buffer, "Number of windows to push: %d", number_of_windows);
-		GR_LOG_INFO(d_logger, message_buffer);
-	}
+	if(VERBOSE)
+		std::cout << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl;
 
+	// Build window segments, and push into queue
 	for(int i = 0; i < number_of_windows; i++){
 
 		window = new std::vector<float>(); // Create a new vector for window pointer to point at
 		window->push_back(get_index());
-
-		if(VERBOSE){
-			sprintf(message_buffer, "Pushing window with index: %f", window->at(0));
-			GR_LOG_INFO(d_logger, message_buffer);
-		}
 
 		// Put next 1024 floats into the window
 		window->insert(window->end(), &in[0], &in[1024]);
 
 		in += 1024; // Update pointer to move 1024 samples in the future (next window)
 
-		// Keey trying to push until successful
-		while(!queue->push(window)){
-			queue->push(window);
-		} // Push window reference into queue
+		window->push_back(1024); // Append the number of floats in the segment
 
+		total_floats += 1024;
+
+		// Grab index and data size
+		int data_size = window->at(1025);
+		int index = window ->at(0);
+
+		// Write segment information to file.
+		myfile << "index=" << index << ": size=" << data_size << ": ";
+		for(int z = 1; z<= data_size; z++)
+			myfile << window->at(z) << " ";
+		myfile << "\n";
+
+		// Keep trying to push segment into queue until successful
+		bool success = false;
+		do{
+			success = queue->push(window);
+		} while(!success);// Push window reference into queue
+
+		// NULL pointer to segment and incremement queue_counter
+		window = NULL;
 		queue_counter++;
 	}
 
-	if(VERBOSE){
-			sprintf(message_buffer, "Number of items read: %d", noutput_items);
-			GR_LOG_INFO(d_logger, message_buffer);
+	return number_of_windows*1024;
+
+/*
+	if(left_over > 0){
+		window = new std::vector<float>();
+		window->push_back(get_index());
+
+		// Put next left_over into the window
+		window->insert(window->end(), &in[0], &in[left_over]);
+		int window_size = window->size();
+		in += left_over;
+
+		total_floats += left_over;
+
+		for(int i = window_size; i < 1025; i++)
+			window->push_back(0);
+
+		window->push_back(window_size-1);
+
+		int data_size = window->at(1025);
+		int index = window ->at(0);
+
+		myfile << "index=" << index << ": size=" << data_size << ": ";
+
+		for(int i = 1; i<= data_size; i++)
+			myfile << window->at(i) << " ";
+		myfile << "\n";
+
+
+		// Keep trying to push until successful
+		bool success = false;
+		do{
+			success = queue->push(window);
+		}while(!success);
+
+		window = NULL;
+		queue_counter++;
 	}
+
+	std::cout << "\t\t\t Total Floats: " << total_floats << std::endl;
+
 	return noutput_items;
+	*/
 }
 
 float queue_sink_impl::get_index(){
@@ -164,19 +244,18 @@ float queue_sink_impl::get_index(){
 	// If we do want to preserve index, pull index from stream tags and return the next one!
 	else{
 		if(index_vector->size() > 0){
-			float temp_float = index_vector->at(0);
+			index_of_window = index_vector->at(0);
 			index_vector->erase(index_vector->begin());
-			return temp_float;
 		}
 
 		else{
 			// We're out of tags... so return one from [0, inf]
-			GR_LOG_WARN(d_logger, "**Looking to preserve index found in stream, but there are none!");
-			return index_of_window++;
+			if(VERBOSE)
+				GR_LOG_WARN(d_logger, "**Looking to preserve index found in stream, but there are none!");
 		}
-	}
 
-	return 0;
+		return index_of_window++;
+	}
 }
 } /* namespace router */
 } /* namespace gr */
