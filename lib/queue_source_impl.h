@@ -27,6 +27,8 @@
 #include <boost/lockfree/queue.hpp>
 #include <memory>
 #include <gnuradio/tagged_stream_block.h>
+#include <iostream>
+#include <fstream>
 
 namespace gr {
 namespace router {
@@ -35,11 +37,15 @@ class queue_source_impl : public queue_source
 {
 private:
 
+	bool VERBOSE; // Verbosity flag
+	std::ofstream myfile; // output file stream
+
 	int number_of_windows; // Number of Windows we can construct from available samples
 	int left_over_values; // Values left after filling Windows
 	int global_index; // Current Index to maintain ordering
 
-	bool VERBOSE; // Verbosity flag
+	int total_floats; // Number of available floats
+
 
 	bool order; // Do we need to enforce ordering of leaving Windows' data?
 	std::vector<std::vector<float>* > local; // Local vector for ordering
@@ -49,6 +55,7 @@ private:
 
 	// Right now everything is Floats, but future versions need to support any data type
 	int item_size; // size of items to be windowd
+	int data_size; // Number of floats in the segment
 
 	std::vector<float> window; // Window buffer
 	bool preserve; // Preserve indexes across flow graph
