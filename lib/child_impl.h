@@ -26,72 +26,72 @@
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
 #include <vector>
+#include <fstream>
 
 namespace gr {
   namespace router {
 
     class child_impl : public child
     {
-     private:
+    private:
 	
-	int master_thread_index;
-	boost::mutex index_lock;
+    	bool VERBOSE; // VERBOSITY flag
+    	std::ofstream myfile; // Output file stream for debugging
 
-	int child_index;
+		int master_thread_index;
+		boost::mutex index_lock;
 
-	int number_of_children;
-	bool d_finished;
-	char * parent_hostname;
+		int child_index;
 
-	boost::lockfree::queue< std::vector<float>* > *in_queue;
-	float in_queue_counter;
+		int number_of_children;
+		bool d_finished;
+		char * parent_hostname;
 
-	boost::lockfree::queue< std::vector<float>* > *out_queue;
-	float out_queue_counter;
+		// Queues used to read from and write to
+		boost::lockfree::queue< std::vector<float>* > *in_queue;
+		float in_queue_counter;
 
-	int global_counter;
-	boost::mutex global_lock;
+		boost::lockfree::queue< std::vector<float>* > *out_queue;
+		float out_queue_counter;
 
-	std::vector< std::vector <float> > out_vector;	
+		int global_counter;
+		boost::mutex global_lock;
 
-	boost::shared_ptr< boost::thread > d_thread_receive_root;
-	boost::shared_ptr< boost::thread > d_thread_send_root;
 
-	float * weights;
+		// Threads for receiving and sending to Root (parent) Router
+		boost::shared_ptr< boost::thread > d_thread_receive_root;
+		boost::shared_ptr< boost::thread > d_thread_send_root;
 
-	NetworkInterface *connector;
+		// Weights for each child (not used yet)
+		float * weights;
 
-	float current_index;
+		// Connectr used for networking between nodes
+		NetworkInterface *connector;
 
-	int number_of_output_items;
+		// Thread programs
+		void receive_root(); // Receive messages from root
+		void send_root(); // Send messages to root
 
-	int total_floats, number_of_windows, left_over_values;
+		// This is not implemented yet
+		void receive_child(int index);
+		void send_child(int index);
 
-	// Thread programs
-	void receive_root();
-	void send_root();
-	void receive_child(int index);
-	void send_child(int index);
+		// Determine index of min child
+		int min();
 
-	// Determine index of min child
-	int min();
+		// Global counter increment/decrement functions
+		void increment();
+		void decrement();
 
-	// Global counter increment/decrement functions
-	void increment();
-	void decrement();
+		// Return global counter value
+		int get_weight();
 
-	// Return global counter value
-	int get_weight();
+    public:
+     	child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue);
+      	~child_impl();
 
-	// Compare function for SORT -- This functionality has moved to queue_sink
-	//bool compare_by_index(const vector<float> &a, const vector<float> &b);
-
-     public:
-      child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue);
-      ~child_impl();
-
-      // Where all the action really happens
-      int work(int noutput_items,
+     	// Where all the action really happens
+    	int work(int noutput_items,
 	       gr_vector_const_void_star &input_items,
 	       gr_vector_void_star &output_items);
     };

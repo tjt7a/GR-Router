@@ -42,8 +42,9 @@
      	gr::io_signature::make(0, 0, 0),
      	gr::io_signature::make(0, 0, 0))
      {
+          VERBOSE = true; // Used to dump useful information
+          myfile.open("child_router.data");
 
-          GR_LOG_INFO(d_logger, "Calling private Child constructor");
 		// Set index of the child
      	child_index = index;
 
@@ -55,11 +56,14 @@
 		in_queue = &input_queue; 
 		out_queue = &output_queue;
 
-          // Connect to Localhost
+          // Connect to <hostname>
           connector = new NetworkInterface(sizeof(float), 0, 8080, false);
+          
+          // Interconnect all blocks (hostname of Root)
           connector->connect(hostname);
 
-          std::cout << "Finished connecting to hostname=" << hostname << std::endl;
+          if(VERBOSE)
+               std::cout << "\tChild Router Finished connecting to hostname=" << hostname << std::endl;
 
 		// Used to kill all threads
 		d_finished = false;
@@ -78,12 +82,13 @@
 		// Create single thread for sending windows back to root
 		d_thread_send_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::send_root, this)));
 
-          GR_LOG_INFO(d_logger, "Finished making d_thread_send_root");
-
 		// Create single thread for receiving messages from root
 		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
 	
-          GR_LOG_INFO(d_logger, "Finished making d_thread_receive_root");
+          if(VERBOSE)
+               std::cout << "Finished calling Child Router's Constructor" << std::endl;
+
+          myfile << "Calling Child Router Constructor\n";
      }
 
     /*
@@ -91,6 +96,13 @@
      */
      child_impl::~child_impl()
      {
+
+
+          if(VERBOSE)
+               std::cout << "Calling Child Router " << child_index << "'s destructor!" << std::endl;
+
+          myfile << "Calling Child Router Destructor\n";
+
      	d_finished = true;
 
      	// Kill send thread
@@ -117,67 +129,139 @@
      // Thread receive function receives from root
      void child_impl::receive_root(){
 
-
-          std::cout << "Created New Child!" << std::endl;
-     	float *buffer = new float[1025];
+          float * size_buffer = new float[2];
+     	float * buffer;
+          int size_of_message_1;
+          int size_of_message_2;
+          std::vector<float> *arrival;
+          int size;
 
      	while(!d_finished){
 
-     		int size = 0;
-
      		// Spin wait; might want to change this later to interrupt handler
-     		while(size < 1)
-     			size = connector->receive(-1, (char*)buffer, (4*1025));
+               size = 0;
+               while(size < 2)
+                    size += connector->receive(-1, (char*)&(size_buffer[size]), (2-size));
 
-               std::cout << "\t\t\t\tChild received packet of size=" << size << std::endl;
+               size_of_message_1 = (int)size_buffer[0];
+               size_of_message_2 = (int)size_buffer[1];
 
-               // Given this application; this should not happen
-     		if(size == (2*4)){
-                    std:: cout << "We are in the CHILD and getting weights... not good" << std::endl;
+               myfile << "Size message: Got: "<< size << " what we expected: " << "2\n";
+               if(size != 2){
+                    myfile << "ERROR: Expecting size message!\n";
+                    for(int i = 0; i< size; i++)
+                         myfile << size_buffer[i] << " ";
+                    myfile << "\n";
+
+                    return;
+               }
+
+               if(size_of_message_1 != -1){
+                    myfile << "Error: Child did not received size message\n";
+                    buffer = new float[1026];
+                    size_of_message_2 = 1026;
+                    return;
+               }
+               else{
+                    buffer = new float[size_of_message_2];
+               }
+
+               // Receive data message
+               size = 0;
+               while(size < size_of_message_2)
+     		   size += connector->receive(-1, (char*)&(buffer[size]), (size_of_message_2-size)); // * 4
+
+
+               if(size != size_of_message_2){
+                    myfile << "ERROR: Expecting message of size: " << size_of_message_2 << "\n";
+                    for(int i = 0; i < size; i++)
+                         myfile << buffer[i] << " ";
+                    myfile << "\n";
+
+                    return;
+               }
+
+               // Given this application; this should not happen (only if children have children)
+     		if(size_of_message_2 == 2){
+                    std:: cout << "Error: Child is receiving a weight message\n";
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];
      		}
      		else{
      			//If we receive a packet, push to in_queue
-     			if(size == (1025 * 4)){
-     				std::vector<float> *arrival;
-     				arrival->assign((float*)buffer, (float*)buffer + 1025);
+     			if(size_of_message_2 == 1026){
+     				arrival = new std::vector<float>();
+     				arrival->assign((float*)buffer, (float*)buffer + 1026);
+                         delete[] buffer;
 
+                         // Keep trying to push segment into queue until successful
+                         bool success = false;
+                         do{
+                              success = in_queue->push(arrival);
+                          } while(!success);// Push window reference into queue
 
-                         bool pushed = false;
-                         pushed = in_queue->push(arrival);
-     				while(!pushed)
-                              pushed = in_queue->push(arrival);
-
+                         std::cout << "Pushed Arrival: (" << arrival->at(0) << ", " << arrival->at(1025) << ")" << std::endl;
      				increment();
      			}
      			else{
-     				std::cout << "This is no good; we are receiving data of unexpected size: " << size << std::endl;     		
+     				myfile << "Error: We are receiving data of unexpected size: " << size_of_message_1 << "\n";     		
                     }
-
                }
      	}
      }
 
      // Thread send function
      void child_impl::send_root(){
-     	std::vector<float> *temp;
+
+          float * weight_buffer = new float[2];
+          weight_buffer[0] = -1;
+          weight_buffer[1] = 2;
+
+          std::vector<float> *temp; // Pointer to current vector of floats to be sent
+          float *packet_size_buffer = new float[2]; // Pointer to single float array that will be sent before the data, indicating the size of the data segment
 
      	while(!d_finished){
 
      		// If we have windows, send window
-     		if(out_queue->pop(temp)){
-     			connector->send(-1, (char*)temp->data(), (1025*4));
-     			decrement();
 
-     			// Send weight
+     		if(out_queue->pop(temp)){
+
+                    float packet_size = (temp->at(1025))+2; // The size of the segment is located at the last position of the size-1026 array
+                    packet_size_buffer[0] = -1;
+                    packet_size_buffer[1] = packet_size;
+
+                    myfile << "\tSENDING PACKET BACK TO ROOT size=" << packet_size << "\n";
+
+                    int index = -1;
+                    
+                    int sent = 0;
+                    while(sent < 2)
+                         sent += connector->send(index, (char*)&(packet_size_buffer[sent]), (2-sent)); // Send a one-float size message indicating the size of the window to be sent
+     			
+                    sent = 0;
+                    while(sent < packet_size)
+                         sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent)); // *4
+     			
+                    decrement();
+
                     delete temp;
-     			//temp->clear();
+
+                    temp = new std::vector<float>();
 
      			temp->push_back((float)child_index);
      			temp->push_back((float)get_weight());
-     			connector->send(-1, (char*)temp->data(), (2*4));
+
+                    // Send length and then WEIGHT
+                    sent = 0;
+                    while(sent < 2)
+                         sent += connector->send(-1, (char*)&(weight_buffer[sent]), (2-sent)); // Send a one-float size message indicating the size of the window to be sent
+     			
+                    sent = 0;
+                    while(sent < 2)
+                         sent += connector->send(-1, (char*)&((temp->data())[sent]), (2-sent)); // Send the weight buffer
+                    
+                    delete temp;
      		}
      	}
      }
