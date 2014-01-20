@@ -26,6 +26,7 @@
 #include <boost/lockfree/queue.hpp>
 #include <boost/thread.hpp>
 #include <vector>
+#include <fstream>
 
 
  namespace gr {
@@ -35,24 +36,22 @@
  		{
  		private:
 
- 			int master_thread_index;
- 			boost::mutex index_lock;
+ 			bool VERBOSE; // VERBOSITY flag
+ 			std::ofstream myfile; // Output file stream for debugging
 
- 			int number_of_children;	
- 			bool d_finished;
+ 			int number_of_children;	// Set the number of children to listen for
+ 			bool d_finished; // variable for destruction (kill threads)
 
-			// Shared pointer to queues (input, output)
+			// Shared pointer to queues (input, output) and counters (implemented later)
  			boost::lockfree::queue< std::vector<float>* > *in_queue;
  			float in_queue_counter;
 
  			boost::lockfree::queue< std::vector<float>* > *out_queue;
  			float out_queue_counter;
 
+
  			int global_counter;
  			boost::mutex global_lock;
-
-			// Vector for sorting and to buffer between streams
- 			std::vector< std::vector <float> > out_vector;
 
 			// Vector to send
  			boost::shared_ptr< boost::thread > send_thread;
@@ -66,14 +65,10 @@
 			// Connector used for networking between nodes
  			NetworkInterface *connector;
 
- 			float index_of_window;
- 			float current_index;
-
- 			int number_of_output_items;
-
+ 			// Keep track of floats and count for window segments
  			int total_floats, number_of_windows, left_over_values;
 
-			// window buffer
+			// window buffer (used for sending/receiving between children)
  			std::vector<float> window;
 
 			// Thread program for sending messages to children
@@ -85,7 +80,7 @@
 			// Determine index of min child
  			int min();
 
-			// Compare function for SORT
+			// Compare function for SORT (may need to update to heap for speed)
  			bool compare_by_index(const std::vector<float> &a, const std::vector<float> &b);
 
 			// Global counter increment/decrement functions

@@ -45,7 +45,8 @@
      	gr::io_signature::make(0,0,0))
         {
 
-         	master_thread_index = 0;
+            VERBOSE = true; // Used to dump useful information
+            myfile.open("root_router.data");
 
             // Number of children for root node
             number_of_children = numberofchildren;
@@ -57,10 +58,10 @@
     		in_queue = &input_queue;
     		out_queue = &output_queue;
 
-            // Communication connector between nodes
+            // Communication connector between nodes (size of elements, number of children, port number, are we root?)
     		connector =  new NetworkInterface(sizeof(float), number_of_children, 8080, true);
 
-    	   	// Interconnect all blocks
+    	   	// Interconnect all blocks (we're root, so localhost=NULL)
     		connector->connect(NULL);
 
         	// Initialize counters for both queues to 0 (not sure we need this)
@@ -73,9 +74,6 @@
     	   	// Finished flag for threads(true if finished)
     		d_finished = false;
 
-    		// populate window vector with index 0 for first window
-    		index_of_window = 0;
-
             //Thread for parent to send
             send_thread = boost::shared_ptr< boost::thread >(new boost::thread(boost::bind(&root_impl::send, this)));
             
@@ -85,18 +83,30 @@
     			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
     			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
-	   }
+
+            if(VERBOSE)
+                std::cout << "Finished calling Root Router's Constructor" << std::endl;
+
+            myfile << "Calling Root Router Constructor\n";
+	    }
         /*
          * Our virtual destructor.
          */
          root_impl::~root_impl()
          {
 
+            if(VERBOSE)
+                std::cout << "Calling Parent Router Destructor" << std::endl;
+
+            myfile << "Calling Root Router Destructor\n";
+
             d_finished = true;
 
+            // Join the send thread
             send_thread->interrupt();
             send_thread->join();
 
+            // Join all of the child receiver threads
          	for(int i = 0; i < number_of_children; i++){
          		thread_vector[i]->interrupt();
          		thread_vector[i]->join();
@@ -117,27 +127,38 @@
         // Include packet format information in xml file ... functionality will be added later
         void root_impl::send(){
 
-     	  float *buffer = new float[1025];
-     	  std::vector<float> *temp;
-     	  int packet_size;
+          std::vector<float> *temp; // Pointer to current vector of floats to be sent
+          float *packet_size_buffer = new float[2]; // Pointer to single float array that will be sent before the data, indicating the size of the data segment
 
      	  // Until the program exits, continue sending
      	  while(!d_finished){
-     	
-     		// Grab index of next target node
-     		int index = min();
 
      		// If there is a window available, send it to indexed node
      		if(in_queue->pop(temp)){
-     			packet_size = 1025 * 4; // (float = 4 bytes) * 1025 floats = 1024 size window + 1 for index
-     			
-                std::cout << "Sending packet index=" << temp->data()[0] << " to child=" << index << " size=" << temp->size() << std::endl;
 
-                connector->send(index, (char*)(temp->data()), packet_size);
+     			float packet_size = (temp->at(1025))+2; // The size of the segment is located at the last position of the size-1026 array + 2 for index and size
+                
+                // setting the first float to -1 (indicator of a length message)
+                packet_size_buffer[0] = -1;
+                packet_size_buffer[1] = packet_size;
 
-                // Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
+                // Grab index of next target node
+                int index = min();
 
-                delete temp; // Delete vector<float> that temp is pointing to
+                myfile << "Sending packet index=" << temp->at(0) << " to child=" << index << " size=" << packet_size << '\n';
+
+                // Sending 1026 floats, not 1026*4 floats
+                int sent = 0;
+                while(sent < 2)
+                    sent += connector->send(index, (char*)&(packet_size_buffer[sent]), (2-sent)); // Send the size of the segment being sent
+
+                sent = 0;
+                while(sent < packet_size)
+                    sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent)); // Send the segment
+
+                // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
+
+                delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
 
      			increment(); // increment global counter (how many windows are out there?)
      		}
@@ -146,47 +167,75 @@
 
         // Receiver thread; one per child node (instead of sequentially iterating through all nodes or using interrupts)
         void root_impl::receive(int index){
-     	   
-     	  int size = 0;
-     	  float * buffer = new float[1025];
+
+     	  float *size_buffer = new float[1];
+          int size_of_message_1;
+          int size_of_message_2;
+          int size;
+
+     	  float * buffer;
      	  std::vector<float> *temp;
 
      	  // Until the thread is finished
      	  while(!d_finished){
 
             // Wait until there's something to receive
-     		while(size < 1){
-     			size = connector->receive(index, (char*) buffer, (1025*4));
+            size = 0;
+     		while(size < 2)
+                size += connector->receive(index, (char*)&(size_buffer[size]), (2-size));
+
+            size_of_message_1 = (int)size_buffer[0];
+            size_of_message_2 = (int)size_buffer[1];
+
+            if(size_of_message_1 != -1){
+                std::cout << "ERROR: Root received unexpected or corrupted message" << std::endl;
+                std::cout << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")" << std::endl;
             }
 
-                std::cout << "\t\tRoot Received:: size=" << size << std::endl;
+            buffer = new float[size_of_message_2];
+
+            myfile << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")" << std::endl;
+
+            // Receive data
+            size = 0;
+            while(size < size_of_message_2)
+     			size += connector->receive(index, (char*)&(buffer[size]), (size_of_message_2-size));//*4))
 
      		// Received weight (need to figure out how else to differentiate)
-     		if(size == (2*4)){
-     			float i = (float)buffer[0];
+     		if((size_of_message_2-2) == 0){
+     			int i = (int)buffer[0];
 
      			// We received valid 'weight' packet
-				if((i > 0) && (i < number_of_children)){
+				if((i >= 0) && (i < number_of_children)){
                     // Update weights table
 					weights[index] = buffer[1];
+                    myfile << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
 				}
 				else{
-					std::cout << "ERROR: Received unsupported packet of size=" << size << std::endl;
+                    std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
+					std::cout << "ERROR: Received unsupported packet of size=" << size_of_message_2 << std::endl;
 				}
      		}
 
-     		// Received window
-     		if(size == (1025*4)){
-     			std::vector<float> *arrival;
-				arrival->assign(((float*)buffer), ((float*)buffer)+1025);
-				
-                out_queue->push(arrival); // May need to do this multiple times
+     		// Received window segment
+     		else if((size_of_message_2-1026) == 0){
+     			std::vector<float> *arrival = new std::vector<float>();
+				arrival->assign(buffer, buffer+1026);
+
+                myfile << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
+
+                // Keep trying to push segment into queue until successful
+                bool success = false;
+                do{
+                    success = out_queue->push(arrival);
+                } while(!success);// Push window reference into queue
 
 				decrement(); // One fewer window is out with children
      		}
 
             else{
-                std::cout << "ERROR: Received unsupported packet of size=" << size << std::endl;
+                std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
+                std::cout << "ERROR: Received unsupported packet of size=" << size_of_message_2 << " size_of_message=" << size_of_message_2 << " " <<size_of_message_2-2 << std::endl;
             }
      	}
 
@@ -207,12 +256,6 @@
 			} 
 			return index;
 		}
-
-    // Comparison function to sort windows by index
-  	// Compare vector[0] to determine vector with smallest index
-  	//bool root_impl::compare_by_index(const vector<float> &a, const vector<float> &b){
-  	//	return a[0] < b[0];
-  	//}	
 
 	// These functions are intended for a multi-threaded implementation; locking is not necessary with a single thread
     // Increments/decrements the outstanding windows
