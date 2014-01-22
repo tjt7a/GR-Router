@@ -1,3 +1,4 @@
+local*
 build/
 bin/router_fft_test_parent
 bin/fft_ifft_test

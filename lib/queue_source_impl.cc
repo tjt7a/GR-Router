@@ -26,6 +26,12 @@
 		|
  */
 
+/*
+	Important Note
+		This code functions on groups of 1024 float values. Any subsequent floats that cannot complete such a set are thrown away.
+		This can be modified in the future.
+*/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -34,8 +40,19 @@
 #include "queue_source_impl.h"
 #include <stdio.h>
 
+#define BOOLEAN_STRING(b) ((b) ? "true":"false")
+
 namespace gr {
 namespace router {
+
+/*
+	This is the compare function used by std::sort to sort the windows from low to high index.
+	This is a critical function because ordering is necessary for correctness.
+ */
+
+bool order_window(const std::vector<float>* a, const std::vector<float>* b){
+	return (a->at(0) < b->at(0));	
+}
 
 /*
 	Public Constructor
@@ -44,18 +61,10 @@ namespace router {
 	source to sink block. Use ordering for the final source block; this will make sure that the windows are ordered prior to sending samples forward.
  */
 
-/*
-	This is the compare function used by std::sort to sort the windows from low to high index.
-	This is a critical function because ordering is necessary for correctness.
- */
-bool order_window(const std::vector<float>* a, const std::vector<float>* b){
-	return (a->at(0) < b->at(0));
-}
-
 queue_source::sptr
-queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order)
+queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order, bool write_to_file)
 {
-	return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order));
+	return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order, write_to_file));
 }
 
 /*
@@ -66,17 +75,15 @@ queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > 
  * order_data (boolean): If we need to order the windows by index
  */
 
-queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order_data)
+queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order_data, bool write_file)
 : gr::sync_block("queue_source",
 		gr::io_signature::make(0, 0, 0),
 		gr::io_signature::make(1, 1, sizeof(float)))
 {
 
-	VERBOSE = true; // Dump information to Std::out
+	set_output_multiple(1024); // Guarantee outputs in multiples of 1024!
 	myfile.open("queue_source.data"); // Dump information to file
-
-	if(VERBOSE)
-		std::cout << "Calling Queue_Sink Constructor" << std::endl;
+	VERBOSE = true; // Dump information to Std::out
 
 	queue = &shared_queue;
 	item_size = size; // Set size of samples (float)
@@ -84,9 +91,10 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 	order = order_data; // Require that the windows be ordered before dumping their contents to *out
 	global_index = 0; // Zero is the initial index used for ordering. All first Windows must be ordered from index 0
 	
-	set_output_multiple(1024); // Guarantee outputs in multiples of 1024!
+	write_to_file = write_file;
 
-	myfile << "Calling Queue_Source Constructor\n";
+	myfile << "Calling Queue_Source Constructor\n\n";
+	myfile << "Arguments: size=" << size << " preserve index=" << BOOLEAN_STRING(preserve_index) << " order_data=" << BOOLEAN_STRING(order_data) << " write_file=" << BOOLEAN_STRING(write_to_file) << "\n\n";
 }
 
 /*
@@ -95,9 +103,7 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 queue_source_impl::~queue_source_impl()
 {
 	// Any alloc'd structures I need to delete?
-	if(VERBOSE)
-		GR_LOG_INFO(d_logger, "*Calling Queue_Source Destructor*");
-
+	std::cout << "*Calling Queue_Source Destructor*" << std::endl;
 	myfile << "Calling Queue_Source Destructor\n";
 	myfile.close();
 }
@@ -130,11 +136,7 @@ queue_source_impl::work(int noutput_items,
 
 		total_floats += data_size;
 
-		// Write segment information to file
-		myfile << "index=" << index << ": size=" << data_size << ": ";
-		for(int i = 1; i<= data_size; i++)
-			myfile << temp_vector->at(i) << " ";
-		myfile << "\n";
+		myfile << "Popped (first= " << temp_vector->at(0) <<  " 1024th= " << temp_vector->at(1024) << ", last= " <<s temp_vector->at(1025) << ")\n";
 
 		// If we strictly care about the ordering of the Windows...
 		if(order){
@@ -145,15 +147,14 @@ queue_source_impl::work(int noutput_items,
 			// Use stl sort to sort vector
 			std::sort(local.begin(), local.end(), order_window);
 
-			//for(int i = 0; i < local.size(); i++){
-			//	std::cout << local.at(i)->at(0) << std::endl;
-			//}
-
 			// If the window with the lowest index is present...
 			if((int)((local.at(0))->at(0)) == (int)global_index){
 
+				myfile << "Got the next window; index= " << (int)global_index << "\n";
+
 				temp_vector = local.front();
 				buffer.insert(buffer.end(), temp_vector->begin()+1, temp_vector->end()); // Copy the contents of the temp_vector to the buffer minus the index
+				
 				delete temp_vector; // Delete the window; don't need anymore
 				local.erase(local.begin()); // Remove pointer from the local vector
 
@@ -175,6 +176,9 @@ queue_source_impl::work(int noutput_items,
 
 					this->add_item_tag(0, temp_tag); // write <index> to stream at location stream = 0+offset with key = key
 
+					myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n";
+
+
 				}
 
 				memcpy(out, &(buffer[0]), sizeof(float)*1024);
@@ -184,7 +188,7 @@ queue_source_impl::work(int noutput_items,
 			}
 			else{
 				if(VERBOSE)
-					std::cout << "We are looking for: " << global_index << " but received: " << local.at(0)->at(0) << std::endl;
+					myfile << "Looking for: " << global_index << " but our lowest index is: " << local.at(0)->at(0) << "\n";
 				return 0;
 			}
 
@@ -192,9 +196,8 @@ queue_source_impl::work(int noutput_items,
 		else{
 
 			// Insert segment samples from temp_vector to out buffer
-			// Can combine these two into one
-			buffer.insert(buffer.end(), (temp_vector->begin()+1), (temp_vector->begin()+data_size));
-			memcpy(out, &(buffer[0]), sizeof(float) * data_size);
+			myfile << "Queue Source Memcpy size= " << sizeof(float) * data_size << "\n";
+			memcpy(out, &(temp_vector->at(1)), sizeof(float)*data_size);
 
 			if(preserve){
 
@@ -214,10 +217,9 @@ queue_source_impl::work(int noutput_items,
 				//this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
 				this->add_item_tag(0, temp_tag);
 
-			}
+				myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n";
 
-			if(VERBOSE)
-				std::cout << "\t\tTOTAL RECEIVED: " << total_floats << std::endl;
+			}
 
 			return data_size;
 		}

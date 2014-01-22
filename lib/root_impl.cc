@@ -188,13 +188,14 @@
             size_of_message_2 = (int)size_buffer[1];
 
             if(size_of_message_1 != -1){
-                std::cout << "ERROR: Root received unexpected or corrupted message" << std::endl;
-                std::cout << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")" << std::endl;
+                myfile << "ERROR: Root received unexpected or corrupted message\n";
+                myfile << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
+                return 0;
             }
 
             buffer = new float[size_of_message_2];
 
-            myfile << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")" << std::endl;
+            myfile << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
 
             // Receive data
             size = 0;

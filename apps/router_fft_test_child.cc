@@ -18,20 +18,26 @@
  * Boston, MA 02110-1301, USA.
  */
 
+
+ /*
+  This is a test application for the GR-ROUTER library.
+  An input WAV file is read, and the resulting samples are streamed through a series of FFT/IFFT blocks.
+  GR-ROUTER distributes the data out to multiple nodes to increase throughput.
+
+*/
+
 // Include header files for each block used in flowgraph
-#include <gnuradio/top_block.h>
 #include <gnuradio/blocks/wavfile_source.h>
 #include <gnuradio/blocks/file_sink.h>
-#include <vector>
 #include <boost/lockfree/queue.hpp>
-#include <boost/thread.hpp>
-#include <router/queue_sink.h> 
 #include <router/queue_source.h>
+#include <gnuradio/top_block.h>
+#include <router/queue_sink.h>
+#include <boost/thread.hpp> 
 #include <router/child.h>
 #include "fft_ifft.h"
+#include <vector>
 #include <cstdio>
-#include "fft_ifft.h"
-#include <string>
 
 using namespace gr;
 
@@ -41,12 +47,14 @@ int main(int argc, char **argv)
   /*
   * Create a Top Block for the flowgraph
   */
-  gr::top_block_sptr tb = gr::make_top_block("fft_ifft_child");
 
-  int window_size = 1024;
-  int fft_count = 50;
-  char* parent_name = "10.0.0.11";
+  gr::top_block_sptr tb = gr::make_top_block("Child Router");
 
+  int window_size = 1024; // Number of floats per window in FFT
+  int fft_count = 50; // Number of FFT/IFFT pairs in a chain as test computation load
+  char* parent_name = "localhost"; // Default parent on same machine for debuggin
+
+  // If the hostname of the parent is given, use it. Otherwise, use 'localhost'
   if(argc > 1)
   	parent_name = argv[1];
 
@@ -54,8 +62,8 @@ int main(int argc, char **argv)
   * Input and Output queues to hold 'windows' of 1025 floats. 1 index, and 1024 samples
   */
 
-  boost::lockfree::queue< std::vector<float>* > input_queue(1025);
-  boost::lockfree::queue< std::vector<float>* > output_queue(1025);
+  boost::lockfree::queue< std::vector<float>* > input_queue(1026);
+  boost::lockfree::queue< std::vector<float>* > output_queue(1026);
 
   /*
   * Load Balancing Router to receive windows from parent
@@ -68,16 +76,16 @@ int main(int argc, char **argv)
   * Input queue Source: Grabs windows from the input queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarantee order of windows before streaming)
   */
 
-  gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float, input_queue, preserve index after = true)]
-  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
+  //gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float, input_queue, preserve index after = true)]
+  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, true, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
 
   /*
   * Output queue Sink: Takes streams from the flow graph, packetized, slaps on an index, and pushes the result into the output queue; last argument indicates if the index is to be preserved from the stream tags
   * Output queue Source: Grabs windows from the output queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarrantee order of windows befoe streaming)
   */
 
-  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
-  gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false);
+  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, true);
+  //gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, false);
 
   /*
   * Handler Code
@@ -91,11 +99,14 @@ int main(int argc, char **argv)
   		tb->connect(input_queue_source, 0, ffts.at(0), 0);
   	}
   	else{
-  		tb->connect(ffts[i-1], 0, ffts[i], 0);
+  		tb->connect(ffts.at(i-1), 0, ffts.at(i), 0);
   	}
-  }
+  } 
   tb->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
 
+
+  // Let us keep this transparent for now (read from input -> dump to output)
+  //tb->connect(input_queue_source, 0, output_queue_sink, 0);
 
   // Run flowgraph
   tb->run();
@@ -103,4 +114,3 @@ int main(int argc, char **argv)
   // Exit normally.
   return 0;
 }
-

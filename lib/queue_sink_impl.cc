@@ -40,6 +40,9 @@
 #include "queue_sink_impl.h"
 #include <stdio.h>
 
+#define BOOLEAN_STRING(b) ((b) ? "true":"false")
+
+
 namespace gr {
 namespace router {
 
@@ -71,13 +74,11 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	Read from XML to get size information
 	*/
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size
-
 	myfile.open("queue_sink.data"); // Dump information to file
 	VERBOSE = true; // Dump information to Std::out
 
 	queue = &shared_queue; // Set shared_ptr queue
 	item_size = size; // Set size of individual item, not window size
-
 	preserve = preserve_index; // Does index need to be preserved? -- Do we pull indexes from the stream tags, or regenerate them?
 
 	index_of_window = 0; // Set window index -- only relevant if we are not preserving a previously-defined index (from stream tags)
@@ -85,11 +86,11 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	index_vector = new std::vector<float>(); // vector of indexes (floats) -- populated with indexes that we pull from stream tag
 
 	left_over = 0; // Initialize left-over count to 0 (what's left in the window after a work() call)
-
 	total_floats = 0;
+	window = NULL;
 
 	myfile << "Calling Queue_Sink Constructor\n";
-
+	myfile << "Arguments: size=" << size << " preserve index=" << BOOLEAN_STRING(preserve_index) << "\n\n";
 }
 
 /*
@@ -124,6 +125,8 @@ queue_sink_impl::work(int noutput_items,
 		//read all tags associated with port 0 for items in this work function
 		this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
 
+		myfile << "Grabing indexes from stream; got " << tags.size() << "\n";
+
 		//Convert all tags to floats and add to tags_vector
 		if(tags.size() > 0){
 
@@ -135,12 +138,14 @@ queue_sink_impl::work(int noutput_items,
 
 					float temp_index = (float)(pmt::to_long(temp_value));
 
-					if(VERBOSE)
-						std::cout << "Got tag=" << temp_index << std::endl;
+						myfile << "Got tag=" << temp_index << "\n";
 
 					// After pushing tags into the index_vector, we can pull from here when constructing window segments
 					index_vector->push_back(temp_index);
 
+				}
+				else{
+					myfile << "Got NULL tag\n";
 				}
 			}
 			tags.clear();
@@ -149,10 +154,9 @@ queue_sink_impl::work(int noutput_items,
 
 	// Determine how many windows worth of floats we have available
 	number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
-	left_over = noutput_items % 1024;
+	left_over = noutput_items % 1024; // In this case will always be 0
 
-	if(VERBOSE)
-		std::cout << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl;
+	myfile << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl;
 
 	// Build window segments, and push into queue
 	for(int i = 0; i < number_of_windows; i++){
@@ -163,9 +167,11 @@ queue_sink_impl::work(int noutput_items,
 		// Put next 1024 floats into the window
 		window->insert(window->end(), &in[0], &in[1024]);
 
+		myfile << "\t 1024th buffer value= " << in[1023] << std::endl;
+
 		in += 1024; // Update pointer to move 1024 samples in the future (next window)
 
-		window->push_back(1024); // Append the number of floats in the segment
+		window->push_back(1024); // Append the number of floats in the segment at the end
 
 		total_floats += 1024;
 
@@ -173,11 +179,7 @@ queue_sink_impl::work(int noutput_items,
 		int data_size = window->at(1025);
 		int index = window ->at(0);
 
-		// Write segment information to file.
-		myfile << "index=" << index << ": size=" << data_size << ": ";
-		for(int z = 1; z<= data_size; z++)
-			myfile << window->at(z) << " ";
-		myfile << "\n";
+		myfile << "\t Pushing (first= " << window->at(0) << ", 1024th= " << window->at(1024) << ", last= " << window->at(1025) << ")" << std::endl;
 
 		// Keep trying to push segment into queue until successful
 		bool success = false;
@@ -249,9 +251,9 @@ float queue_sink_impl::get_index(){
 		}
 
 		else{
+
 			// We're out of tags... so return one from [0, inf]
-			if(VERBOSE)
-				GR_LOG_WARN(d_logger, "**Looking to preserve index found in stream, but there are none!");
+			myfile << "Error: Looking for tag value, but can't find one!!\n";
 		}
 
 		return index_of_window++;

@@ -23,6 +23,8 @@
 
 #include <gnuradio/io_signature.h>
 #include "child_impl.h"
+#define BOOLEAN_STRING(b) ((b) ? "true":"false")
+
 
  namespace gr {
  	namespace router {
@@ -85,10 +87,10 @@
 		// Create single thread for receiving messages from root
 		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
 	
-          if(VERBOSE)
-               std::cout << "Finished calling Child Router's Constructor" << std::endl;
 
           myfile << "Calling Child Router Constructor\n";
+          myfile << "Arguments: number of children=" << numberofchildren << " index=" << index << " hostname= " << hostname << "\n\n";
+
      }
 
     /*
@@ -157,7 +159,7 @@
                }
 
                if(size_of_message_1 != -1){
-                    myfile << "Error: Child did not received size message\n";
+                    myfile << "ERROR: Child did not received size message\n";
                     buffer = new float[1026];
                     size_of_message_2 = 1026;
                     return;
@@ -183,7 +185,7 @@
 
                // Given this application; this should not happen (only if children have children)
      		if(size_of_message_2 == 2){
-                    std:: cout << "Error: Child is receiving a weight message\n";
+                    std:: cout << "Error: Child is receiving a weight message -- This is not current supported\n";
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];
@@ -201,11 +203,11 @@
                               success = in_queue->push(arrival);
                           } while(!success);// Push window reference into queue
 
-                         std::cout << "Pushed Arrival: (" << arrival->at(0) << ", " << arrival->at(1025) << ")" << std::endl;
+                         myfile << "Pushed Arrival: (" << arrival->at(0) << ", " << arrival->at(1025) << ")\n";
      				increment();
      			}
      			else{
-     				myfile << "Error: We are receiving data of unexpected size: " << size_of_message_1 << "\n";     		
+     				myfile << "ERROR: We are receiving data of unexpected size: " << size_of_message_1 << "\n";     		
                     }
                }
      	}
@@ -231,7 +233,7 @@
                     packet_size_buffer[0] = -1;
                     packet_size_buffer[1] = packet_size;
 
-                    myfile << "\tSENDING PACKET BACK TO ROOT size=" << packet_size << "\n";
+                    myfile << "\tPopped window from output queue size=" << packet_size << "\n";
 
                     int index = -1;
                     
