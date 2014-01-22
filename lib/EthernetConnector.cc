@@ -13,14 +13,12 @@ EthernetConnector::EthernetConnector(int count, int port){
 	if(V)
 		std::cout <<"\tEthernetConnector: Creating array of " << numChildren << " children nodes" << std::endl;
 
-
 	// Set local file descriptor
 	if(numChildren > 0){
 
 		// Create array of Children Nodes
 		children = new Node[numChildren];
 
-		
 		// Create a local node and set port, then set FD 
 		local.port = port;
 		set_local_fd();
@@ -70,7 +68,6 @@ bool EthernetConnector::set_local_fd(){
 // Wait for connection from child
 bool EthernetConnector::connect_to_child(int index, int port){
 
-
 	if(V)
 		std::cout << "\tEthernetConnector: Attempting to connect to child at index: " << index << " on port " << port << std::endl;
 
@@ -78,12 +75,11 @@ bool EthernetConnector::connect_to_child(int index, int port){
 		if(V) 
 			std::cout << "Number of Children=" << numChildren << " index of child accessed=" << index << std::endl;
 
-
 			printf("index > number of children - 1\n");
 		return false;
 	}
 
-	//char buffer[256];
+	//unsigned char buffer[256];
 	listen(local.socket_fd,3);
 
 	(children[index]).length = sizeof((children[index].address));

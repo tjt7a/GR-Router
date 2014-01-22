@@ -190,7 +190,7 @@
             if(size_of_message_1 != -1){
                 myfile << "ERROR: Root received unexpected or corrupted message\n";
                 myfile << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
-                return 0;
+                return;
             }
 
             buffer = new float[size_of_message_2];

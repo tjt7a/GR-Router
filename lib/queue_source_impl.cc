@@ -136,7 +136,7 @@ queue_source_impl::work(int noutput_items,
 
 		total_floats += data_size;
 
-		myfile << "Popped (first= " << temp_vector->at(0) <<  " 1024th= " << temp_vector->at(1024) << ", last= " <<s temp_vector->at(1025) << ")\n";
+		myfile << "Popped (first= " << temp_vector->at(0) <<  " 1024th= " << temp_vector->at(1024) << ", last= " << temp_vector->at(1025) << ")\n";
 
 		// If we strictly care about the ordering of the Windows...
 		if(order){
@@ -177,8 +177,6 @@ queue_source_impl::work(int noutput_items,
 					this->add_item_tag(0, temp_tag); // write <index> to stream at location stream = 0+offset with key = key
 
 					myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n";
-
-
 				}
 
 				memcpy(out, &(buffer[0]), sizeof(float)*1024);

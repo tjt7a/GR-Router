@@ -164,11 +164,11 @@ int NetworkInterface::receive(int child_index, char * outbuf, int noutput_items)
 
 
 // Send function derived from file_descriptor_sink_impl.cc's ::work function
-// This function: send <num> bytes of <msg> data to the child at <child_index>
-int NetworkInterface::send(int child_index, char* msg, int num){
+// This function: send <packet_size> bytes of <msg> data to the child at <child_index>
+int NetworkInterface::send(int child_index, char* msg, int packet_size){
 
 	char *inbuf = msg;
-	unsigned long byte_size = num * d_itemsize;
+	unsigned long byte_size = packet_size * d_itemsize;
 
 	while(byte_size > 0){
 		ssize_t r;
@@ -193,5 +193,5 @@ int NetworkInterface::send(int child_index, char* msg, int num){
 			inbuf += r;
 		}
 	}
-	return num;
+	return packet_size;
 }
