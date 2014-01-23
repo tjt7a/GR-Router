@@ -59,10 +59,15 @@
 		out_queue = &output_queue;
 
           // Connect to <hostname>
+
+          myfile << "Attempting to connect to parent\n";
+
           connector = new NetworkInterface(sizeof(float), 0, 8080, false);
           
           // Interconnect all blocks (hostname of Root)
           connector->connect(hostname);
+
+          myfile << "Connected to parent\n";
 
           if(VERBOSE)
                std::cout << "\tChild Router Finished connecting to hostname=" << hostname << std::endl;

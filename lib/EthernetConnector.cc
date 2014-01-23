@@ -22,6 +22,7 @@ EthernetConnector::EthernetConnector(int count, int port){
 		// Create a local node and set port, then set FD 
 		local.port = port;
 		set_local_fd();
+
 	}
 }
 
@@ -57,6 +58,7 @@ bool EthernetConnector::set_local_fd(){
     if(bind(local.socket_fd, (struct sockaddr *) &local.address, local.length) < 0){
     	if(V)printf("\tEthernetConnector: Serious Error: Could not bind to port %d\n", local.port);
     	return false;
+    	// Throw error here
     }
     
     if(V)

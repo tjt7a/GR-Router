@@ -81,6 +81,7 @@
     		for(int i = 0; i < number_of_children; i++){
 
     			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
+                std::cout << "Spawning new receiver thread for child #" << i << std::endl;
     			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
 
@@ -144,6 +145,7 @@
 
                 // Grab index of next target node
                 int index = min();
+                weights[index]++;
 
                 myfile << "Sending packet index=" << temp->at(0) << " to child=" << index << " size=" << packet_size << '\n';
 
@@ -176,6 +178,8 @@
      	  float * buffer;
      	  std::vector<float> *temp;
 
+          std::cout << "Started receiver thread for child #" << index << std::endl;
+
      	  // Until the thread is finished
      	  while(!d_finished){
 
@@ -203,7 +207,7 @@
      			size += connector->receive(index, (char*)&(buffer[size]), (size_of_message_2-size));//*4))
 
      		// Received weight (need to figure out how else to differentiate)
-     		if(size_of_message_2 == 0){
+     		if(size_of_message_2 == 2){
      			int i = (int)buffer[0];
 
      			// We received valid 'weight' packet
