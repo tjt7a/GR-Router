@@ -3,3 +3,4 @@ build/
 bin/router_fft_test_parent
 bin/fft_ifft_test
 CMakeLists.txt
+apps/CMakeLists.txt
