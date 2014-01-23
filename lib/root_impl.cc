@@ -136,7 +136,7 @@
      		// If there is a window available, send it to indexed node
      		if(in_queue->pop(temp)){
 
-     			float packet_size = (temp->at(1025))+2; // The size of the segment is located at the last position of the size-1026 array + 2 for index and size
+     			float packet_size = (temp->at(1025))+2; // The size off the segment is located at the last position of the size-1026 array + 2 for index and size
                 
                 // setting the first float to -1 (indicator of a length message)
                 packet_size_buffer[0] = -1;
@@ -255,6 +255,7 @@
 					index = i;
 				}
 			} 
+            myfile << "Returning Index: " << index << "\n";
 			return index;
 		}
 
