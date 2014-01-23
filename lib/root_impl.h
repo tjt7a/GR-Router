@@ -53,6 +53,8 @@
  			int global_counter;
  			boost::mutex global_lock;
 
+ 			boost::mutex file_lock;
+
 			// Vector to send
  			boost::shared_ptr< boost::thread > send_thread;
 

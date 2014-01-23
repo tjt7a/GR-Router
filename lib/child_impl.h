@@ -57,6 +57,7 @@ namespace gr {
 		int global_counter;
 		boost::mutex global_lock;
 
+		boost::mutex file_lock;
 
 		// Threads for receiving and sending to Root (parent) Router
 		boost::shared_ptr< boost::thread > d_thread_receive_root;

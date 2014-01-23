@@ -88,7 +88,10 @@
             if(VERBOSE)
                 std::cout << "Finished calling Root Router's Constructor" << std::endl;
 
+            file_lock.lock();
             myfile << "Calling Root Router Constructor\n";
+            myfile << std::flush;
+            file_lock.unlock();
 	    }
         /*
          * Our virtual destructor.
@@ -99,7 +102,10 @@
             if(VERBOSE)
                 std::cout << "Calling Parent Router Destructor" << std::endl;
 
+            file_lock.lock();
             myfile << "Calling Root Router Destructor\n";
+            myfile << std::flush;
+            file_lock.unlock();
 
             d_finished = true;
 
@@ -147,8 +153,10 @@
                 int index = min();
                 weights[index]++;
 
+                file_lock.lock();
                 myfile << "Sending packet index=" << temp->at(0) << " to child=" << index << " size=" << packet_size << '\n';
                 myfile << std::flush;
+                file_lock.unlock();
 
                 // Sending 1026 floats, not 1026*4 floats
                 int sent = 0;
@@ -181,6 +189,7 @@
 
           std::cout << "Started receiver thread for child #" << index << std::endl;
           std::cout << std::flush;
+
      	  // Until the thread is finished
      	  while(!d_finished){
 
@@ -193,16 +202,20 @@
             size_of_message_2 = (int)size_buffer[1];
 
             if(size_of_message_1 != -1){
+                file_lock.lock();
                 myfile << "ERROR: Root received unexpected or corrupted message\n";
                 myfile << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
                 myfile << std::flush;
+                file_lock.unlock();
                 return;
             }
 
             buffer = new float[size_of_message_2];
 
+            file_lock.lock();
             myfile << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
             myfile << std::flush;
+            file_lock.unlock();
             // Receive data
             size = 0;
             while(size < size_of_message_2)
@@ -216,8 +229,10 @@
 				if((i >= 0) && (i < number_of_children)){
                     // Update weights table
 					weights[index] = buffer[1];
+                    file_lock.lock();
                     myfile << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
                     myfile << std::flush;
+                    file_lock.unlock();
 				}
 				else{
                     std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
@@ -230,8 +245,10 @@
      			std::vector<float> *arrival = new std::vector<float>();
 				arrival->assign(buffer, buffer+1026);
 
+                file_lock.lock();
                 myfile << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
                 myfile << std::flush;
+                file_lock.unlock();
 
                 // Keep trying to push segment into queue until successful
                 bool success = false;
@@ -263,8 +280,10 @@
 					index = i;
 				}
 			} 
+            file_lock.lock();
             myfile << "Returning Index: " << index << "\n";
             myfile << std::flush;
+            file_lock.unlock();
 			return index;
 		}
 

@@ -60,14 +60,18 @@
 
           // Connect to <hostname>
 
+          file_lock.lock();
           myfile << "Attempting to connect to parent\n";
+          file_lock.unlock();
 
           connector = new NetworkInterface(sizeof(float), 0, 8080, false);
           
           // Interconnect all blocks (hostname of Root)
           connector->connect(hostname);
 
+          file_lock.lock();
           myfile << "Connected to parent\n";
+          file_lock.unlock();
 
           if(VERBOSE)
                std::cout << "\tChild Router Finished connecting to hostname=" << hostname << std::endl;
@@ -92,11 +96,11 @@
 		// Create single thread for receiving messages from root
 		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
 	
-
+          file_lock.lock();
           myfile << "Calling Child Router Constructor\n";
           myfile << "Arguments: number of children=" << numberofchildren << " index=" << index << " hostname= " << hostname << "\n\n";
           myfile << std::flush;
-
+          file_lock.unlock();
      }
 
     /*
@@ -109,8 +113,10 @@
           if(VERBOSE)
                std::cout << "Calling Child Router " << child_index << "'s destructor!" << std::endl;
 
+          file_lock.lock();
           myfile << "Calling Child Router Destructor\n";
           myfile << std::flush;
+          file_lock.unlock();
 
      	d_finished = true;
 
@@ -155,21 +161,28 @@
                size_of_message_1 = (int)size_buffer[0];
                size_of_message_2 = (int)size_buffer[1];
 
+               file_lock.lock();
                myfile << "Size message: Got: "<< size << " what we expected: " << "2\n";
                myfile << std::flush;
+               file_lock.unlock();
+
                if(size != 2){
+                    file_lock.lock();
                     myfile << "ERROR: Expecting size message!\n";
                     myfile << std::flush;
                     for(int i = 0; i< size; i++)
                          myfile << size_buffer[i] << " ";
                     myfile << "\n";
+                    file_lock.unlock();
 
                     return;
                }
 
                if(size_of_message_1 != -1){
+                    file_lock.lock();
                     myfile << "ERROR: Child did not received size message\n";
                     myfile << std::flush;
+                    file_lock.unlock();
                     buffer = new float[1026];
                     size_of_message_2 = 1026;
                     return;
@@ -185,19 +198,23 @@
 
 
                if(size != size_of_message_2){
+                    file_lock.lock();
                     myfile << "ERROR: Expecting message of size: " << size_of_message_2 << "\n";
                     myfile << std::flush;
                     for(int i = 0; i < size; i++)
                          myfile << buffer[i] << " ";
                     myfile << "\n";
+                    file_lock.unlock();
 
                     return;
                }
 
                // Given this application; this should not happen (only if children have children)
      		if(size_of_message_2 == 2){
+                    file_lock.lock();
                     std:: cout << "Error: Child is receiving a weight message -- This is not current supported\n";
                     myfile << std::flush;
+                    file_lock.unlock();
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];
@@ -215,13 +232,17 @@
                               success = in_queue->push(arrival);
                           } while(!success);// Push window reference into queue
 
+                         file_lock.lock();
                          myfile << "Pushed Arrival: (" << arrival->at(0) << ", " << arrival->at(1025) << ")\n";
                          myfile << std::flush;
+                         file_lock.unlock();
      				increment();
      			}
      			else{
+                         file_lock.lock();
      				myfile << "ERROR: We are receiving data of unexpected size: " << size_of_message_1 << "\n";
-                         myfile << std::flush;		
+                         myfile << std::flush;
+                         file_lock.unlock();		
                     }
                }
      	}
@@ -247,9 +268,6 @@
                     packet_size_buffer[0] = -1;
                     packet_size_buffer[1] = packet_size;
 
-                    myfile << "\tPopped window from output queue size=" << packet_size << "\n";
-                    myfile << std::flush;
-
                     int index = -1;
                     
                     int sent = 0;
@@ -259,6 +277,11 @@
                     sent = 0;
                     while(sent < packet_size)
                          sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent)); // *4
+
+                    file_lock.lock();
+                    myfile << "Popped and Sending packet index=" << temp->at(0) << " to parent with size =" <<temp->at(1025) << "\n";
+                    myfile << std::flush;
+                    file_lock.unlock();
      			
                     decrement();
 
@@ -269,8 +292,10 @@
      			temp->push_back((float)child_index);
      			temp->push_back((float)get_weight());
 
+                    file_lock.lock();
                     myfile << "\tSending weight message (index,weight): (" << temp->at(0) << ", " << temp->at(1) << ")\n";
                     myfile << std::flush;
+                    file_lock.unlock();
 
                     // Send length and then WEIGHT
                     sent = 0;
