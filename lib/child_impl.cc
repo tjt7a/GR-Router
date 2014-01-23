@@ -254,6 +254,8 @@
      			temp->push_back((float)child_index);
      			temp->push_back((float)get_weight());
 
+                    myfile << "\tSending weight message (index,weight): (" << temp->at(0) << ", " << temp->at(1) << ")\n";
+
                     // Send length and then WEIGHT
                     sent = 0;
                     while(sent < 2)

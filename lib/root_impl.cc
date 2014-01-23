@@ -203,7 +203,7 @@
      			size += connector->receive(index, (char*)&(buffer[size]), (size_of_message_2-size));//*4))
 
      		// Received weight (need to figure out how else to differentiate)
-     		if((size_of_message_2-2) == 0){
+     		if(size_of_message_2 == 0){
      			int i = (int)buffer[0];
 
      			// We received valid 'weight' packet
@@ -219,7 +219,7 @@
      		}
 
      		// Received window segment
-     		else if((size_of_message_2-1026) == 0){
+     		else if(size_of_message_2 == 1026){
      			std::vector<float> *arrival = new std::vector<float>();
 				arrival->assign(buffer, buffer+1026);
 
