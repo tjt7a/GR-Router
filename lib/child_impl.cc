@@ -95,6 +95,7 @@
 
           myfile << "Calling Child Router Constructor\n";
           myfile << "Arguments: number of children=" << numberofchildren << " index=" << index << " hostname= " << hostname << "\n\n";
+          myfile << std::flush;
 
      }
 
@@ -109,6 +110,7 @@
                std::cout << "Calling Child Router " << child_index << "'s destructor!" << std::endl;
 
           myfile << "Calling Child Router Destructor\n";
+          myfile << std::flush;
 
      	d_finished = true;
 
@@ -154,8 +156,10 @@
                size_of_message_2 = (int)size_buffer[1];
 
                myfile << "Size message: Got: "<< size << " what we expected: " << "2\n";
+               myfile << std::flush;
                if(size != 2){
                     myfile << "ERROR: Expecting size message!\n";
+                    myfile << std::flush;
                     for(int i = 0; i< size; i++)
                          myfile << size_buffer[i] << " ";
                     myfile << "\n";
@@ -165,6 +169,7 @@
 
                if(size_of_message_1 != -1){
                     myfile << "ERROR: Child did not received size message\n";
+                    myfile << std::flush;
                     buffer = new float[1026];
                     size_of_message_2 = 1026;
                     return;
@@ -181,6 +186,7 @@
 
                if(size != size_of_message_2){
                     myfile << "ERROR: Expecting message of size: " << size_of_message_2 << "\n";
+                    myfile << std::flush;
                     for(int i = 0; i < size; i++)
                          myfile << buffer[i] << " ";
                     myfile << "\n";
@@ -191,6 +197,7 @@
                // Given this application; this should not happen (only if children have children)
      		if(size_of_message_2 == 2){
                     std:: cout << "Error: Child is receiving a weight message -- This is not current supported\n";
+                    myfile << std::flush;
      			int index = (int)buffer[0];
      			if((index >= 0) && (index < number_of_children))
      				weights[index] = buffer[1];
@@ -209,10 +216,12 @@
                           } while(!success);// Push window reference into queue
 
                          myfile << "Pushed Arrival: (" << arrival->at(0) << ", " << arrival->at(1025) << ")\n";
+                         myfile << std::flush;
      				increment();
      			}
      			else{
-     				myfile << "ERROR: We are receiving data of unexpected size: " << size_of_message_1 << "\n";     		
+     				myfile << "ERROR: We are receiving data of unexpected size: " << size_of_message_1 << "\n";
+                         myfile << std::flush;		
                     }
                }
      	}
@@ -239,6 +248,7 @@
                     packet_size_buffer[1] = packet_size;
 
                     myfile << "\tPopped window from output queue size=" << packet_size << "\n";
+                    myfile << std::flush;
 
                     int index = -1;
                     
@@ -260,6 +270,7 @@
      			temp->push_back((float)get_weight());
 
                     myfile << "\tSending weight message (index,weight): (" << temp->at(0) << ", " << temp->at(1) << ")\n";
+                    myfile << std::flush;
 
                     // Send length and then WEIGHT
                     sent = 0;

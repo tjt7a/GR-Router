@@ -148,6 +148,7 @@
                 weights[index]++;
 
                 myfile << "Sending packet index=" << temp->at(0) << " to child=" << index << " size=" << packet_size << '\n';
+                myfile << std::flush;
 
                 // Sending 1026 floats, not 1026*4 floats
                 int sent = 0;
@@ -179,7 +180,7 @@
      	  std::vector<float> *temp;
 
           std::cout << "Started receiver thread for child #" << index << std::endl;
-
+          std::cout << std::flush;
      	  // Until the thread is finished
      	  while(!d_finished){
 
@@ -194,13 +195,14 @@
             if(size_of_message_1 != -1){
                 myfile << "ERROR: Root received unexpected or corrupted message\n";
                 myfile << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
+                myfile << std::flush;
                 return;
             }
 
             buffer = new float[size_of_message_2];
 
             myfile << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
-
+            myfile << std::flush;
             // Receive data
             size = 0;
             while(size < size_of_message_2)
@@ -215,6 +217,7 @@
                     // Update weights table
 					weights[index] = buffer[1];
                     myfile << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
+                    myfile << std::flush;
 				}
 				else{
                     std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
@@ -228,6 +231,7 @@
 				arrival->assign(buffer, buffer+1026);
 
                 myfile << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
+                myfile << std::flush;
 
                 // Keep trying to push segment into queue until successful
                 bool success = false;
@@ -260,6 +264,7 @@
 				}
 			} 
             myfile << "Returning Index: " << index << "\n";
+            myfile << std::flush;
 			return index;
 		}
 
