@@ -262,6 +262,9 @@
                     out_queue_lock.lock();
                     success = out_queue->push(arrival);
                     out_queue_lock.unlock();
+
+                    thread_file << "Done Pushing arrival on queue" << std::endl;
+                    thread_file << std::flush;
                 } while(!success);// Push window reference into queue
 
 				decrement(); // One fewer window is out with children
