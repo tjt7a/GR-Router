@@ -238,9 +238,12 @@
                          file_lock.unlock();
      				increment();
 
-                         std::cout << "\033[2J\033[1;1H" << std::flush;
+                         std::cout << "\033[1;1H";
                          std::cout << "We have " << global_counter << " messages in the queue right now" << std::endl;
-
+                         std::cout << "\033[2;2H" << "[";
+                         for(int i =0; i < global_counter/10; i++)
+                              std::cout << "X";
+                         std::cout << "]" << std::endl;
      			}
      			else{
                          file_lock.lock();
@@ -289,9 +292,12 @@
      			
                     decrement();
 
-                    std::cout << "\033[2J\033[1;1H" << std::flush;
+                    std::cout << "\033[1;1H" << std::flush;
                     std::cout << "We have " << global_counter << " messages in the queue right now" << std::endl;
-
+                    std::cout << "\033[2;2H" << "[";
+                    for(int i =0; i < global_counter/10; i++)
+                         std::cout << "X";
+                    std::cout << "]" << std::endl;
                     delete temp;
 
                     temp = new std::vector<float>();
