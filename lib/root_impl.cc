@@ -211,20 +211,16 @@
             size_of_message_2 = (int)size_buffer[1];
 
             if(size_of_message_1 != -1){
-                file_lock.lock();
                 thread_file << "ERROR: Root received unexpected or corrupted message\n";
                 thread_file << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
                 thread_file << std::flush;
-                file_lock.unlock();
                 return;
             }
 
             buffer = new float[size_of_message_2];
 
-            file_lock.lock();
             thread_file << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
             thread_file << std::flush;
-            file_lock.unlock();
             // Receive data
             size = 0;
             while(size < size_of_message_2){
@@ -240,10 +236,8 @@
 				if((i >= 0) && (i < number_of_children)){
                     // Update weights table
 					weights[index] = buffer[1];
-                    file_lock.lock();
                     thread_file << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
                     thread_file << std::flush;
-                    file_lock.unlock();
 				}
 				else{
                     std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
@@ -256,10 +250,8 @@
      			std::vector<float> *arrival = new std::vector<float>();
 				arrival->assign(buffer, buffer+1026);
 
-                file_lock.lock();
                 thread_file << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
                 thread_file << std::flush;
-                file_lock.unlock();
 
                 // Keep trying to push segment into queue until successful
                 bool success = false;
@@ -296,10 +288,6 @@
 					index = i;
 				}
 			} 
-            file_lock.lock();
-            myfile << "Returning Index: " << index << "\n";
-            myfile << std::flush;
-            file_lock.unlock();
 			return index;
 		}
 
