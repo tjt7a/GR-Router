@@ -201,11 +201,10 @@
      	  // Until the thread is finished
      	  while(!d_finished){
 
-            // Wait until there's something to receive
+            // Wait until there's something to receive (may want to replace with something more efficient than a spinning wait)
             size = 0;
      		while(size < 2){
                 size += connector->receive(index, (char*)&(size_buffer[size]), (2-size));
-                thread_file << "Still receiving size message\n" << std::flush;
             }
 
             size_of_message_1 = (int)size_buffer[0];

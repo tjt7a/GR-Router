@@ -38,6 +38,7 @@
 #include "fft_ifft.h"
 #include <vector>
 #include <cstdio>
+#include <stdlib.h>
 
 using namespace gr;
 
@@ -54,9 +55,14 @@ int main(int argc, char **argv)
   int fft_count = 50; // Number of FFT/IFFT pairs in a chain as test computation load
   char* parent_name = "localhost"; // Default parent on same machine for debuggin
 
+  int child_index = 0;
+
   // If the hostname of the parent is given, use it. Otherwise, use 'localhost'
   if(argc > 1)
   	parent_name = argv[1];
+
+  if(argc > 2)
+    child_index = atoi(argv[2]);
 
   /*
   * Input and Output queues to hold 'windows' of 1025 floats. 1 index, and 1024 samples
@@ -69,7 +75,7 @@ int main(int argc, char **argv)
   * Load Balancing Router to receive windows from parent
   */
 
-  gr::router::child::sptr child_router = gr::router::child::make(0, 0, parent_name, input_queue, output_queue);
+  gr::router::child::sptr child_router = gr::router::child::make(0, child_index, parent_name, input_queue, output_queue);
 
   /*
   * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on an index, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
