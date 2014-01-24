@@ -285,6 +285,8 @@
      			
                     decrement();
 
+                    std::cout << "We have " << global_counter << " messages in the queue right now" << std::endl;
+
                     delete temp;
 
                     temp = new std::vector<float>();
@@ -299,12 +301,18 @@
 
                     // Send length and then WEIGHT
                     sent = 0;
-                    while(sent < 2)
+                    while(sent < 2){
                          sent += connector->send(-1, (char*)&(weight_buffer[sent]), (2-sent)); // Send a one-float size message indicating the size of the window to be sent
+                         myfile << "Attempting to send weight message length\n" << std::flush;
+                    }
      			
                     sent = 0;
-                    while(sent < 2)
+                    while(sent < 2){
                          sent += connector->send(-1, (char*)&((temp->data())[sent]), (2-sent)); // Send the weight buffer
+                         myfile << "Attempting to send weight message\n" << std::flush;
+                    }
+
+                    myfile << "\tFinished sending weight message\n" << std::flush;
                     
                     delete temp;
      		}
