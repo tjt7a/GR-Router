@@ -189,10 +189,12 @@ queue_sink_impl::work(int noutput_items,
 		// Keep trying to push segment into queue until successful
 		bool success = false;
 		do{
-			success = queue->push(window);
+			success = queue ->push(window);
 			myfile << "\t Pushing (first= " << window->at(0) << ", 1024th= " << window->at(1024) << ", last= " << window->at(1025) << ")" << std::endl;
 			myfile << std::flush;
 		} while(!success);// Push window reference into queue
+
+		myfile << "\t Push completed\n" << std::flush;
 
 		// NULL pointer to segment and incremement queue_counter
 		window = NULL;
