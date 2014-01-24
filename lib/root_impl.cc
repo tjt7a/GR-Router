@@ -253,7 +253,9 @@
                 // Keep trying to push segment into queue until successful
                 bool success = false;
                 do{
+                    out_queue_lock.lock();
                     success = out_queue->push(arrival);
+                    out_queue_lock.unlock();
                 } while(!success);// Push window reference into queue
 
 				decrement(); // One fewer window is out with children

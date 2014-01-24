@@ -55,6 +55,8 @@
 
  			boost::mutex file_lock;
 
+ 			boost::mutex out_queue_lock;
+
 			// Vector to send
  			boost::shared_ptr< boost::thread > send_thread;
 
