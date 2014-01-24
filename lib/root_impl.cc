@@ -160,12 +160,14 @@
 
                 // Sending 1026 floats, not 1026*4 floats
                 int sent = 0;
-                while(sent < 2)
+                while(sent < 2){
                     sent += connector->send(index, (char*)&(packet_size_buffer[sent]), (2-sent)); // Send the size of the segment being sent
+                }
 
                 sent = 0;
-                while(sent < packet_size)
+                while(sent < packet_size){
                     sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent)); // Send the segment
+                }
 
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
@@ -184,6 +186,10 @@
           int size_of_message_2;
           int size;
 
+          char name_buff[32];
+          sprintf(name_buff, "root_router_%d.data", index);
+          thread_file.open(name_buff);
+
      	  float * buffer;
      	  std::vector<float> *temp;
 
@@ -195,17 +201,19 @@
 
             // Wait until there's something to receive
             size = 0;
-     		while(size < 2)
+     		while(size < 2){
                 size += connector->receive(index, (char*)&(size_buffer[size]), (2-size));
+                thread_file << "Still receiving size message\n" << std::flush;
+            }
 
             size_of_message_1 = (int)size_buffer[0];
             size_of_message_2 = (int)size_buffer[1];
 
             if(size_of_message_1 != -1){
                 file_lock.lock();
-                myfile << "ERROR: Root received unexpected or corrupted message\n";
-                myfile << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
-                myfile << std::flush;
+                thread_file << "ERROR: Root received unexpected or corrupted message\n";
+                thread_file << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
+                thread_file << std::flush;
                 file_lock.unlock();
                 return;
             }
@@ -213,13 +221,15 @@
             buffer = new float[size_of_message_2];
 
             file_lock.lock();
-            myfile << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
-            myfile << std::flush;
+            thread_file << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
+            thread_file << std::flush;
             file_lock.unlock();
             // Receive data
             size = 0;
-            while(size < size_of_message_2)
+            while(size < size_of_message_2){
      			size += connector->receive(index, (char*)&(buffer[size]), (size_of_message_2-size));//*4))
+                thread_file << "Still receiving data message\n" << std::flush;
+            }
 
      		// Received weight (need to figure out how else to differentiate)
      		if(size_of_message_2 == 2){
@@ -230,8 +240,8 @@
                     // Update weights table
 					weights[index] = buffer[1];
                     file_lock.lock();
-                    myfile << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
-                    myfile << std::flush;
+                    thread_file << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
+                    thread_file << std::flush;
                     file_lock.unlock();
 				}
 				else{
@@ -246,13 +256,16 @@
 				arrival->assign(buffer, buffer+1026);
 
                 file_lock.lock();
-                myfile << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
-                myfile << std::flush;
+                thread_file << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
+                thread_file << std::flush;
                 file_lock.unlock();
 
                 // Keep trying to push segment into queue until successful
                 bool success = false;
                 do{
+
+                    thread_file << "Pushing arrival on queue" << std::endl;
+                    thread_file << std::flush;
                     out_queue_lock.lock();
                     success = out_queue->push(arrival);
                     out_queue_lock.unlock();
