@@ -186,6 +186,8 @@
           int size_of_message_2;
           int size;
 
+          std::ofstream thread_file;
+
           char name_buff[32];
           sprintf(name_buff, "root_router_%d.data", index);
           thread_file.open(name_buff);

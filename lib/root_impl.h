@@ -39,8 +39,6 @@
  			bool VERBOSE; // VERBOSITY flag
  			std::ofstream myfile; // Output file stream for debugging
 
- 			std::ofstream thread_file;
-
  			int number_of_children;	// Set the number of children to listen for
  			bool d_finished; // variable for destruction (kill threads)
 
@@ -50,7 +48,6 @@
 
  			boost::lockfree::queue< std::vector<float>* > *out_queue;
  			float out_queue_counter;
-
 
  			int global_counter;
  			boost::mutex global_lock;
