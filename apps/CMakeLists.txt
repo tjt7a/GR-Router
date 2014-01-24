@@ -48,5 +48,5 @@ target_link_libraries(transparent
 
 INSTALL(TARGETS
     dial_tone fft_ifft_test router_fft_test_parent router_fft_test_child transparent 
-    DESTINATION "/home/tjt7a/src/GR-Router/bin"
+    DESTINATION "/home/tjt7a/src/git/GR-Router/bin"
 )
