@@ -91,6 +91,7 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 
 	myfile << "Calling Queue_Sink Constructor\n";
 	myfile << "Arguments: size=" << size << " preserve index=" << BOOLEAN_STRING(preserve_index) << "\n\n";
+	myfile << std::flush;
 }
 
 /*
@@ -101,6 +102,7 @@ queue_sink_impl::~queue_sink_impl()
 	// delete any malloced structures
 	// Do I have anything mallocd (that I want to delete)?
 	myfile << "Calling Queue_Sink Destructor\n";
+	myfile << std::flush;
 	myfile.close();
 }
 
@@ -126,6 +128,7 @@ queue_sink_impl::work(int noutput_items,
 		this->get_tags_in_range(tags, 0, nread, nread + ninput_items, key);
 
 		myfile << "Grabing indexes from stream; got " << tags.size() << "\n";
+		myfile << std::flush;
 
 		//Convert all tags to floats and add to tags_vector
 		if(tags.size() > 0){
@@ -138,7 +141,8 @@ queue_sink_impl::work(int noutput_items,
 
 					float temp_index = (float)(pmt::to_long(temp_value));
 
-						myfile << "Got tag=" << temp_index << "\n";
+					myfile << "Got tag=" << temp_index << "\n";
+					myfile << std::flush;
 
 					// After pushing tags into the index_vector, we can pull from here when constructing window segments
 					index_vector->push_back(temp_index);
@@ -146,6 +150,7 @@ queue_sink_impl::work(int noutput_items,
 				}
 				else{
 					myfile << "Got NULL tag\n";
+					myfile << std::flush;
 				}
 			}
 			tags.clear();
@@ -157,6 +162,7 @@ queue_sink_impl::work(int noutput_items,
 	left_over = noutput_items % 1024; // In this case will always be 0
 
 	myfile << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl;
+	myfile << std::flush;
 
 	// Build window segments, and push into queue
 	for(int i = 0; i < number_of_windows; i++){
@@ -168,6 +174,7 @@ queue_sink_impl::work(int noutput_items,
 		window->insert(window->end(), &in[0], &in[1024]);
 
 		myfile << "\t 1024th buffer value= " << in[1023] << std::endl;
+		myfile << std::flush;
 
 		in += 1024; // Update pointer to move 1024 samples in the future (next window)
 
@@ -179,12 +186,12 @@ queue_sink_impl::work(int noutput_items,
 		int data_size = window->at(1025);
 		int index = window ->at(0);
 
-		myfile << "\t Pushing (first= " << window->at(0) << ", 1024th= " << window->at(1024) << ", last= " << window->at(1025) << ")" << std::endl;
-
 		// Keep trying to push segment into queue until successful
 		bool success = false;
 		do{
 			success = queue->push(window);
+			myfile << "\t Pushing (first= " << window->at(0) << ", 1024th= " << window->at(1024) << ", last= " << window->at(1025) << ")" << std::endl;
+			myfile << std::flush;
 		} while(!success);// Push window reference into queue
 
 		// NULL pointer to segment and incremement queue_counter
@@ -254,6 +261,7 @@ float queue_sink_impl::get_index(){
 
 			// We're out of tags... so return one from [0, inf]
 			myfile << "Error: Looking for tag value, but can't find one!!\n";
+			myfile << std::flush;
 		}
 
 		return index_of_window++;

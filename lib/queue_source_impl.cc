@@ -95,6 +95,7 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 
 	myfile << "Calling Queue_Source Constructor\n\n";
 	myfile << "Arguments: size=" << size << " preserve index=" << BOOLEAN_STRING(preserve_index) << " order_data=" << BOOLEAN_STRING(order_data) << " write_file=" << BOOLEAN_STRING(write_to_file) << "\n\n";
+	myfile << std::flush;
 }
 
 /*
@@ -105,6 +106,7 @@ queue_source_impl::~queue_source_impl()
 	// Any alloc'd structures I need to delete?
 	std::cout << "*Calling Queue_Source Destructor*" << std::endl;
 	myfile << "Calling Queue_Source Destructor\n";
+	myfile << std::flush;
 	myfile.close();
 }
 
@@ -137,6 +139,7 @@ queue_source_impl::work(int noutput_items,
 		total_floats += data_size;
 
 		myfile << "Popped (first= " << temp_vector->at(0) <<  " 1024th= " << temp_vector->at(1024) << ", last= " << temp_vector->at(1025) << ")\n";
+		myfile << std::flush;
 
 		// If we strictly care about the ordering of the Windows...
 		if(order){
@@ -151,6 +154,7 @@ queue_source_impl::work(int noutput_items,
 			if((int)((local.at(0))->at(0)) == (int)global_index){
 
 				myfile << "Got the next window; index= " << (int)global_index << "\n";
+				myfile << std::flush;
 
 				temp_vector = local.front();
 				buffer.insert(buffer.end(), temp_vector->begin()+1, temp_vector->end()); // Copy the contents of the temp_vector to the buffer minus the index
@@ -177,6 +181,7 @@ queue_source_impl::work(int noutput_items,
 					this->add_item_tag(0, temp_tag); // write <index> to stream at location stream = 0+offset with key = key
 
 					myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n";
+					myfile << std::flush;
 				}
 
 				memcpy(out, &(buffer[0]), sizeof(float)*1024);
@@ -185,8 +190,8 @@ queue_source_impl::work(int noutput_items,
 
 			}
 			else{
-				if(VERBOSE)
-					myfile << "Looking for: " << global_index << " but our lowest index is: " << local.at(0)->at(0) << "\n";
+				myfile << "Looking for: " << global_index << " but our lowest index is: " << local.at(0)->at(0) << "\n";
+				myfile << std::flush;
 				return 0;
 			}
 
@@ -195,6 +200,7 @@ queue_source_impl::work(int noutput_items,
 
 			// Insert segment samples from temp_vector to out buffer
 			myfile << "Queue Source Memcpy size= " << sizeof(float) * data_size << "\n";
+			myfile << std::flush;
 			memcpy(out, &(temp_vector->at(1)), sizeof(float)*data_size);
 
 			if(preserve){
@@ -216,7 +222,7 @@ queue_source_impl::work(int noutput_items,
 				this->add_item_tag(0, temp_tag);
 
 				myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n";
-
+				myfile << std::flush;
 			}
 
 			return data_size;
