@@ -136,6 +136,9 @@ int NetworkInterface::receive(int child_index, char * outbuf, int noutput_items)
 	char *o = outbuf;
 	int nread = 0;
 
+	std::cout << "\t\t\t\tNetworkInterface Receiving from child " << child_index << std::endl;
+	std::cout << std::flush;
+
 	while(1){
 		int r = read_items(child_index, o, noutput_items - nread);
 		if(r == -1){
@@ -159,6 +162,9 @@ int NetworkInterface::receive(int child_index, char * outbuf, int noutput_items)
 	if(nread == 0) // eof!
 		return -1;
 
+	std::cout << "\t\t\t\tNetworkInterface done receiving from child " << child_index << std::endl;
+	std::cout << std::flush;
+
 	return nread;
 }
 
@@ -169,6 +175,9 @@ int NetworkInterface::send(int child_index, char* msg, int packet_size){
 
 	char *inbuf = msg;
 	unsigned long byte_size = packet_size * d_itemsize;
+
+	std::cout << "\t\t\t\tNetworkInterface Sending to child " << child_index << std::endl;
+	std::cout << std::flush;
 
 	while(byte_size > 0){
 		ssize_t r;
@@ -193,5 +202,8 @@ int NetworkInterface::send(int child_index, char* msg, int packet_size){
 			inbuf += r;
 		}
 	}
-	return packet_size;
+
+	std::cout << "\t\t\t\tNetworkInterface done sending to child " << child_index << std::endl;
+ 	std::cout << std::flush;
+ 	return packet_size;
 }
