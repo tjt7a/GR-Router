@@ -112,9 +112,9 @@ int EthernetConnector::write_child(int index, char * inbuf, unsigned long size){
 	}
 
 	// Write to child file descriptor
-	write_child_mutex.lock();	
+	//write_child_mutex.lock();	
 	ssize_t r = write((children[index]).socket_fd, inbuf, size);
-	write_child_mutex.unlock();
+	//write_child_mutex.unlock();
 	return r;
 }
 
@@ -122,11 +122,11 @@ int EthernetConnector::write_child(int index, char * inbuf, unsigned long size){
 int EthernetConnector::read_child(int index, char * outbuf, int size){
 	
 	// Read from child file descriptor
-	read_child_mutex.lock();
+	//read_child_mutex.lock();
 
 	//std::cout << "\tEthernetConnector: Reading from Child[" << index << "]" <<std::endl;
 	ssize_t r = read((children[index]).socket_fd, outbuf, size);
-	read_child_mutex.unlock();
+	//read_child_mutex.unlock();
 	return r;
 }
 
