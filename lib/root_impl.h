@@ -40,6 +40,10 @@
  			std::ofstream myfile; // Output file stream for debugging
 
  			int number_of_children;	// Set the number of children to listen for
+
+ 			int num_killed;
+ 			boost::mutex killed_lock;
+
  			bool d_finished; // variable for destruction (kill threads)
 
 			// Shared pointer to queues (input, output) and counters (implemented later)

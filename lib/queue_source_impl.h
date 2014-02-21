@@ -40,11 +40,13 @@ private:
 	bool VERBOSE; // Verbosity flag
 	std::ofstream myfile; // output file stream
 
+	bool dead;
+
 	int number_of_windows; // Number of Windows we can construct from available samples
 	int left_over_values; // Values left after filling Windows
 	int global_index; // Current Index to maintain ordering
 
-	int total_floats; // Number of available floats
+	bool found_kill; // Received kill message
 
 
 	bool order; // Do we need to enforce ordering of leaving Windows' data?

@@ -17,6 +17,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/*
+            Format of type-1 Segments
+        |
+            < type :: [0] > -- contains the message type
+            < index :: [1] > -- contains the index of the window
+            < size :: [2] > -- contains the size of the data in the data field to come next
+            < data :: [3,1026] > -- contains data followed by zeros
+
+*/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -46,10 +56,14 @@
         {
 
             VERBOSE = true; // Used to dump useful information
-            myfile.open("root_router.data");
+
+            if(VERBOSE)
+                myfile.open("root_router.data");
 
             // Number of children for root node
             number_of_children = numberofchildren;
+
+            num_killed = 0;
 
     		// Set global counter; no need to lock -> no contention
          	global_counter = 0;
@@ -81,17 +95,15 @@
     		for(int i = 0; i < number_of_children; i++){
 
     			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
-                std::cout << "Spawning new receiver thread for child #" << i << std::endl;
+                if(VERBOSE)
+                    std::cout << "Spawning new receiver thread for child #" << i << std::endl;
     			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
 
-            if(VERBOSE)
+            if(VERBOSE){
                 std::cout << "Finished calling Root Router's Constructor" << std::endl;
-
-            file_lock.lock();
-            myfile << "Calling Root Router Constructor\n";
-            myfile << std::flush;
-            file_lock.unlock();
+                myfile << "Calling Root Router Constructor\n" << std::flush;
+            }
 	    }
         /*
          * Our virtual destructor.
@@ -99,13 +111,10 @@
          root_impl::~root_impl()
          {
 
-            if(VERBOSE)
+            if(VERBOSE){
                 std::cout << "Calling Parent Router Destructor" << std::endl;
-
-            file_lock.lock();
-            myfile << "Calling Root Router Destructor\n";
-            myfile << std::flush;
-            file_lock.unlock();
+                myfile << "Calling Root Router Destuctor\n" << std::flush;
+            }
 
             d_finished = true;
 
@@ -119,6 +128,9 @@
          		thread_vector[i]->join();
          	}	
 
+            delete connector;
+            delete[] weights;
+
          }
 
          // This function is required by the agreement we have with the Gnu Radio Scheduler, but
@@ -127,7 +139,13 @@
          root_impl::work(int noutput_items, gr_vector_const_void_star &input_items, gr_vector_void_star &output_items)
          {
          	//return noutput_items;
-            return 0;
+            if(d_finished || (num_killed == number_of_children)){
+                d_finished = true;
+                return -1; // We're done
+            }
+            else{
+                return 0;
+            }
          }
 
         // Sender thread; It's sole purpose is to send windows when available
@@ -135,7 +153,10 @@
         void root_impl::send(){
 
           std::vector<float> *temp; // Pointer to current vector of floats to be sent
-          float *packet_size_buffer = new float[2]; // Pointer to single float array that will be sent before the data, indicating the size of the data segment
+          int packet_type = 0;
+          int index = 0;
+          int packet_size = 0;
+          int sent = 0;
 
      	  // Until the program exits, continue sending
      	  while(!d_finished){
@@ -143,137 +164,150 @@
      		// If there is a window available, send it to indexed node
      		if(in_queue->pop(temp)){
 
-     			float packet_size = (temp->at(1025))+2; // The size off the segment is located at the last position of the size-1026 array + 2 for index and size
-                
-                // setting the first float to -1 (indicator of a length message)
-                packet_size_buffer[0] = -1;
-                packet_size_buffer[1] = packet_size;
+                packet_type = (int)temp->at(0); // Get packet type
 
-                // Grab index of next target node
-                int index = min();
-                weights[index]++;
+                // Switch on the packet_type
+                switch(packet_type){
+                    case 1:
+                        index = min(); // Grab index of next target
+                        weights[index]++;
 
-                file_lock.lock();
-                myfile << "Sending packet index=" << temp->at(0) << " to child=" << index << " size=" << packet_size << '\n';
-                myfile << std::flush;
-                file_lock.unlock();
+                        packet_size = (temp->at(2) + 3); // The size of the segment is located at index 2
 
-                // Sending 1026 floats, not 1026*4 floats
-                int sent = 0;
-                while(sent < 2){
-                    sent += connector->send(index, (char*)&(packet_size_buffer[sent]), (2-sent)); // Send the size of the segment being sent
-                }
+                        if(VERBOSE)
+                            myfile << "Sending packet index=" << temp->at(1) << " to child=" << index << std::endl;
 
-                sent = 0;
-                while(sent < packet_size){
-                    sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent)); // Send the segment
+                        sent = 0;
+                        while(sent < packet_size)
+                            sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent));
+
+                        increment();
+                        break;
+                    case 3:
+                        for(int i = 0; i < number_of_children; i++){
+                            sent = 0;
+                            while(sent < 1)
+                                sent += connector->send(i, (char*)&((temp->data())[sent]), (1-sent)); // Send the segment
+                        }
+
+                        break;
+
+                    default:
+                        std::cout << "ERROR: Parent Router is trying to parse an incorrectly formatted packet" << std::endl;
+                        break;
                 }
 
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
 
-     			increment(); // increment global counter (how many windows are out there?)
      		}
      	  }
         }
 
+
+        /*
+            Format of type-2 Segments
+        |
+            < type :: [0] > -- contains the message type
+            < index :: [1] > -- contains the index of the window
+            < size :: [2] > -- contains the size of the data in the data field to come next
+            < data :: [3,1026] > -- contains data followed by zeros
+            < weight :: [1027] > -- contains the weight of the sending child
+        */
+
+        /*
+            Format of type-3 Segments
+        |
+            < type :: [0] > -- contains the message type
+        */
+
+
+
         // Receiver thread; one per child node (instead of sequentially iterating through all nodes or using interrupts)
         void root_impl::receive(int index){
 
-     	  float *size_buffer = new float[1];
-          int size_of_message_1;
-          int size_of_message_2;
-          int size;
-
+          /* Output file Setup */
           std::ofstream thread_file;
-
           char name_buff[32];
           sprintf(name_buff, "root_router_%d.data", index);
           thread_file.open(name_buff);
 
+
+          float * tempbuffer = new float[1];
      	  float * buffer;
      	  std::vector<float> *temp;
+          int size = 0;
+          int packet_type = 0;
+          bool success = false;
+          std::vector<float>*arrival;
 
-          std::cout << "Started receiver thread for child #" << index << std::endl;
-          std::cout << std::flush;
+          if(VERBOSE)
+            std::cout << "Started receiver thread for child #" << index << std::endl;
 
      	  // Until the thread is finished
      	  while(!d_finished){
 
             // Wait until there's something to receive (may want to replace with something more efficient than a spinning wait)
             size = 0;
-     		while(size < 2){
-                size += connector->receive(index, (char*)&(size_buffer[size]), (2-size));
+     		while(size < 1){
+                size += connector->receive(index, (char*)&(tempbuffer[size]), (1-size));
+                if(size == 0 && d_finished)
+                    return; // We're done
             }
 
-            size_of_message_1 = (int)size_buffer[0];
-            size_of_message_2 = (int)size_buffer[1];
+            packet_type = (int)tempbuffer[0];
 
-            if(size_of_message_1 != -1){
-                thread_file << "ERROR: Root received unexpected or corrupted message\n";
-                thread_file << "length message: (" << size_of_message_1 << ", " << size_of_message_2 << ")\n";
-                thread_file << std::flush;
-                return;
+            switch(packet_type){
+                case 1:
+                    std::cout << "ERROR: Right now we're not supporting this format from the child routers" << std::endl;
+                    break;
+                case 2:
+                    buffer = new float[1027];
+                    size = 0;
+                    while(size < 1027)
+                        size += connector->receive(index, (char*)&(buffer[size]), (1027-size)); // Receive the data
+
+                    arrival = new std::vector<float>();
+                    arrival->push_back(2);
+                    arrival->assign(buffer+1, buffer+1027);
+
+                    if(VERBOSE)
+                        thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
+
+                    success = false;
+                    do{
+                        success = out_queue->push(arrival);
+                    } while(!success);
+
+                    decrement();
+
+                    weights[index] = buffer[1027];
+                    delete[] buffer;
+                    break;
+                case 3:
+                    killed_lock.lock();
+                    num_killed++;
+                    killed_lock.unlock();
+
+                    if(num_killed == number_of_children){
+                        std::vector<float> *kill_msg = new std::vector<float>();
+                        kill_msg->push_back(3);
+                        if(VERBOSE)
+                            thread_file << "Pushing kill message" << std::endl;
+
+                        success = false;
+                        do{
+                            success = out_queue->push(kill_msg);
+                        }while(!success);
+                    }
+                    return;
+                    break;
+                default:
+                    std::cout << "ERROR: Receiving unacceptable image format" << std::endl;
+                    break;
             }
 
-            buffer = new float[size_of_message_2];
-
-            thread_file << "Got a length message : Size= (" << size_of_message_1 << ", "<< size_of_message_2 << ")\n";
-            thread_file << std::flush;
-            // Receive data
-            size = 0;
-            while(size < size_of_message_2){
-     			size += connector->receive(index, (char*)&(buffer[size]), (size_of_message_2-size));//*4))
-                thread_file << "Still receiving data message\n" << std::flush;
-            }
-
-     		// Received weight (need to figure out how else to differentiate)
-     		if(size_of_message_2 == 2){
-     			int i = (int)buffer[0];
-
-     			// We received valid 'weight' packet
-				if((i >= 0) && (i < number_of_children)){
-                    // Update weights table
-					weights[index] = buffer[1];
-                    thread_file << "Got a weight message : (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
-                    thread_file << std::flush;
-				}
-				else{
-                    std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
-					std::cout << "ERROR: Received unsupported packet of size=" << size_of_message_2 << std::endl;
-				}
-     		}
-
-     		// Received window segment
-     		else if(size_of_message_2 == 1026){
-     			std::vector<float> *arrival = new std::vector<float>();
-				arrival->assign(buffer, buffer+1026);
-
-                thread_file << "Got a window segment : start=" << arrival->at(0) << " end=" << arrival->at(1025) <<  std::endl; 
-                thread_file << std::flush;
-
-                // Keep trying to push segment into queue until successful
-                bool success = false;
-                do{
-
-                    thread_file << "Pushing arrival on queue" << std::endl;
-                    thread_file << std::flush;
-                    out_queue_lock.lock();
-                    success = out_queue->push(arrival);
-                    out_queue_lock.unlock();
-
-                    thread_file << "Done Pushing arrival on queue" << std::endl;
-                    thread_file << std::flush;
-                } while(!success);// Push window reference into queue
-
-				decrement(); // One fewer window is out with children
-     		}
-
-            else{
-                std::cout << "ROOT RECEIVED (" << buffer[0] << ", " << buffer[1] << ")" << std::endl;
-                std::cout << "ERROR: Received unsupported packet of size=" << size_of_message_2 << " size_of_message=" << size_of_message_2 << " " <<size_of_message_2-2 << std::endl;
-            }
      	}
 
      	delete [] buffer; // We're done with our buffer

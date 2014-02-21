@@ -41,7 +41,6 @@ private:
 
 	std::ofstream myfile; // output file stream
 
-	int total_floats; // Number of available floats
 	int number_of_windows; // Number of windows we can fill with floats
 	int left_over; // What's left after filling window segments
 
