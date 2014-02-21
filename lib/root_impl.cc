@@ -241,6 +241,7 @@
           int packet_type = 0;
           bool success = false;
           std::vector<float>*arrival;
+          std::vector<float> *kill_msg;
 
           if(VERBOSE)
             std::cout << "Started receiver thread for child #" << index << std::endl;
@@ -270,7 +271,7 @@
 
                     arrival = new std::vector<float>();
                     arrival->push_back(2);
-                    arrival->assign(buffer, buffer+1027);
+                    arrival->insert(arrival->end(), &buffer[0], &buffer[1027]);
 
                     if(VERBOSE)
                         thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
@@ -291,7 +292,7 @@
                     killed_lock.unlock();
 
                     if(num_killed == number_of_children){
-                        std::vector<float> *kill_msg = new std::vector<float>();
+                        kill_msg = new std::vector<float>();
                         kill_msg->push_back(3);
                         if(VERBOSE)
                             thread_file << "Pushing kill message" << std::endl;

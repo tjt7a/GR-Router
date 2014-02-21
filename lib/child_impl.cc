@@ -147,7 +147,6 @@
           float * temp_buffer = new float[1];
      	float * buffer;
           bool success = false;
-
           std::vector<float> *arrival;
           int size;
 
@@ -164,7 +163,6 @@
                }
 
                int packet_type = (int)temp_buffer[0];
-               delete[] temp_buffer;
 
                switch(packet_type){
                     case 1:
@@ -175,7 +173,7 @@
                          
                          arrival = new std::vector<float>();
                          arrival->push_back(1);
-                         arrival->assign(buffer, buffer+1026);
+                         arrival->insert(arrival->end(), &buffer[0], &buffer[1026]);
 
                          if(VERBOSE)
                               myfile << "Got a window segment : index=" << arrival->at(1) << std::endl;
@@ -187,7 +185,6 @@
 
                          increment();
 
-                         delete[] buffer;
                          break;
                     case 2:
                          std::cout << "ERROR: Right now we're not supporting this format" << std::endl;
