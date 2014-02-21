@@ -278,8 +278,8 @@
                         size += connector->receive(index, (char*)&(buffer[size]), (1027-size)); // Receive the data
 
                     arrival = new std::vector<float>();
-                    arrival->push_back(2);
-                    arrival->insert(arrival->end(), &buffer[0], &buffer[1027]);
+                    arrival->push_back(1);
+                    arrival->insert(arrival->end(), &buffer[0], &buffer[1026]);
 
                     if(VERBOSE)
                         thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
