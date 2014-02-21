@@ -102,7 +102,7 @@
 
             if(VERBOSE){
                 std::cout << "Finished calling Root Router's Constructor" << std::endl;
-                myfile << "Calling Root Router Constructor\n" << std::flush;
+                myfile << "Calling Root Router Constructor v.2\n" << std::flush;
             }
 	    }
         /*
@@ -166,6 +166,9 @@
 
                 packet_type = (int)temp->at(0); // Get packet type
 
+                if(VERBOSE)
+                    myfile << "Packet type: packet_type" << std::endl;
+
                 // Switch on the packet_type
                 switch(packet_type){
                     case 1:
@@ -180,6 +183,9 @@
                         sent = 0;
                         while(sent < packet_size)
                             sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent));
+
+                        if(VERBOSE)
+                            myfile << "Finished sending" << std::endl;
 
                         increment();
                         break;
@@ -199,7 +205,9 @@
 
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
+                myfile << "Delecting reference " << std::endl;
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
+                myfile << "Done" << std::endl;
 
      		}
      	  }

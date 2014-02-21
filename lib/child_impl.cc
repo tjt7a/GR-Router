@@ -96,7 +96,7 @@
 	
           if(VERBOSE){
                file_lock.lock();
-               myfile << "Calling Child Router Constructor\n";
+               myfile << "Calling Child Router Constructor v.2\n";
                myfile << "Arguments: number of children=" << numberofchildren << " index=" << index << " hostname= " << hostname << "\n\n" << std::flush;
                file_lock.unlock();
           }
