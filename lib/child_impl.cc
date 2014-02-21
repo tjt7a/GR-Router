@@ -175,7 +175,7 @@
                          
                          arrival = new std::vector<float>();
                          arrival->push_back(1);
-                         arrival->assign(buffer+1, buffer+1026);
+                         arrival->assign(buffer, buffer+1026);
 
                          if(VERBOSE)
                               myfile << "Got a window segment : index=" << arrival->at(1) << std::endl;

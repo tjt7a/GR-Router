@@ -270,7 +270,7 @@
 
                     arrival = new std::vector<float>();
                     arrival->push_back(2);
-                    arrival->assign(buffer+1, buffer+1027);
+                    arrival->assign(buffer, buffer+1027);
 
                     if(VERBOSE)
                         thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
