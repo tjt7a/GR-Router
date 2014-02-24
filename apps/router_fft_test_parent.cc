@@ -91,15 +91,18 @@ int main(int argc, char **argv)
   */
 
   gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float, input_queue, preserve index after = true)]
-  //gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
+  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
 
   /*
   * Output queue Sink: Takes streams from the flow graph, packetized, slaps on an index, and pushes the result into the output queue; last argument indicates if the index is to be preserved from the stream tags
   * Output queue Source: Grabs windows from the output queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarrantee order of windows befoe streaming)
   */
 
-  //gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
+  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
   gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, true, true); // Preserve index, order data, write file
+
+  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
+
 
   tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
 
@@ -109,7 +112,7 @@ int main(int argc, char **argv)
   */
 
 // Keep this transparent for now
-/*
+
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < fft_count; i++){
   	ffts.push_back(fft_ifft_make(1024));
@@ -121,14 +124,15 @@ int main(int argc, char **argv)
   	}
   }
   tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
-*/
+
 
   /*
   * Sink Code
   * Connects the output_queue to the sink
   */
 
-  tb_1->connect(output_queue_source, 0, file_sink, 0);
+  tb_1->connect(output_queue_source, 0, throughput, 0);
+  tb_1->connect(throughput, 0, file_sink, 0);
 
   // Run flowgraph
   tb_1->run();

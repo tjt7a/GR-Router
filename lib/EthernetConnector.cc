@@ -44,7 +44,7 @@ bool EthernetConnector::set_local_fd(){
 
 	// We could not get a socket FD
     if(local.socket_fd < 0){
-    	if(V) std::cout << "\tEthernetConnector: Serious Error: Could not create a local socket!" << std::endl;
+    	std::cout << "\tEthernetConnector: Serious Error: Could not create a local socket!" << std::endl;
         return false;
     }
 	
@@ -56,7 +56,7 @@ bool EthernetConnector::set_local_fd(){
     local.address.sin_port = htons(local.port);
 
     if(bind(local.socket_fd, (struct sockaddr *) &local.address, local.length) < 0){
-    	if(V)printf("\tEthernetConnector: Serious Error: Could not bind to port %d\n", local.port);
+    	printf("\tEthernetConnector: Serious Error: Could not bind to port %d\n", local.port);
     	return false;
     	// Throw error here
     }
@@ -95,7 +95,7 @@ bool EthernetConnector::connect_to_child(int index, int port){
 
 	// Could not connect to the child
 	if((children[index].socket_fd) < 0){
-		if(V)printf("Serious Error: Could not connect to child\n");
+		printf("Serious Error: Could not connect to child\n");
 		return false;
 	}
 	
@@ -149,7 +149,7 @@ bool EthernetConnector::connect_to_parent(char* hostname, int port){
 
         // Attempt to connect to parent
         if(connect(parent.socket_fd, (sockaddr *)&parent.address, sizeof(parent.address))){
-                if(V)printf("\tEthernetConnector: Serious Error: Failed connecting to Parent\n");
+                printf("\tEthernetConnector: Serious Error: Failed connecting to Parent\n");
                 return false;
         }
 
@@ -161,7 +161,6 @@ bool EthernetConnector::connect_to_parent(char* hostname, int port){
 bool EthernetConnector::set_parent_fd(){
 	
 	if(parent.host == NULL){
-			if(V)
 				printf("\tEthernetConnector: Serious Error: No such host (%s)\n", (char *)parent.host);
 			close(parent.socket_fd);
 			return false;
@@ -169,7 +168,7 @@ bool EthernetConnector::set_parent_fd(){
 
 	parent.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(parent.socket_fd < 0){
-		if(V)std::cout << "\tEthernetConnector: Serious Error: Could not create parent socket!" << std::endl;
+		std::cout << "\tEthernetConnector: Serious Error: Could not create parent socket!" << std::endl;
 		return false;
 	}
 
