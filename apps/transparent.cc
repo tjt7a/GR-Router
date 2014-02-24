@@ -26,6 +26,7 @@
 #include <router/queue_source.h>
 #include <gnuradio/top_block.h>
 #include <router/queue_sink.h> 
+#include <router/throughput.h>
 #include <boost/thread.hpp>
 #include "fft_ifft.h"
 #include <vector>
@@ -39,7 +40,7 @@ int main(int argc, char **argv)
   gr::top_block_sptr tb_1 = gr::make_top_block("transparent");
 
   const char* in_file_name = "inputs/out.wav";
-  const char* out_file_name = "fft_output_with_queue";
+  const char* out_file_name = "transparent.out";
 
   boost::lockfree::queue< std::vector<float>* > input_queue(1026);
 
@@ -48,12 +49,23 @@ int main(int argc, char **argv)
 
   gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float, input_queue, preserve index after = true)]
   gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
+
+  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
   
-  tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
-  //tb_1->connect(input_queue_source, 0, file_sink, 0);
+   tb_1->connect(wavfile_source, 0, throughput, 0);
+   tb_1->connect(throughput, 0, input_queue_sink, 0);
+  //tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
+ 
+   //tb_1->connect(input_queue_source, 0, throughput, 0);
+  //tb_1->connect(throughput, 0, file_sink, 0);
+   tb_1->connect(input_queue_source, 0, file_sink, 0);
+
+  //tb_1->connect(wavfile_source, 0, input_queue_source, 0);
 
   //tb_1->connect(wavfile_source, 0, file_sink, 0);
 
+//tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
+/*
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < 50; i++){
     ffts.push_back(fft_ifft_make(1024));
@@ -67,7 +79,7 @@ int main(int argc, char **argv)
   }
   //tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
   tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
-
+*/
   tb_1->run();
 
   return 0;

@@ -101,7 +101,7 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 
 	if(VERBOSE){
 		myfile << "Calling Queue_Source Constructor\n\n";
-		myfile << "Arguments: size=" << size << " preserve index=" << BOOLEAN_STRING(preserve_index) << " order_data=" << BOOLEAN_STRING(order_data) << " write_file=" << BOOLEAN_STRING(write_to_file) << "\n\n";
+		myfile << "Arguments: size=" << size << " preserve_index=" << BOOLEAN_STRING(preserve_index) << " order_data=" << BOOLEAN_STRING(order_data) << " write_file=" << BOOLEAN_STRING(write_to_file) << "\n\n";
 		myfile << std::flush;
 	}
 
@@ -121,6 +121,7 @@ queue_source_impl::~queue_source_impl()
 		myfile << std::flush;
 		myfile.close();
 	}
+	std::cout << "Calling Queue Source Destructor!" << std::endl;
 }
 
 

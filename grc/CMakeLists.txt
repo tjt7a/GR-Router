@@ -21,5 +21,6 @@ install(FILES
     router_root.xml
     router_queue_sink.xml
     router_queue_source.xml
-    router_test.xml DESTINATION share/gnuradio/grc/blocks
+    router_test.xml
+    router_throughput.xml DESTINATION share/gnuradio/grc/blocks
 )

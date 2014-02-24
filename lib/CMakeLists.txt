@@ -32,6 +32,7 @@ list(APPEND router_sources
     EthernetConnector.cc
     NetworkInterface.cc
     test.cc
+    throughput_impl.cc
 )
 
 add_library(gnuradio-router SHARED ${router_sources})

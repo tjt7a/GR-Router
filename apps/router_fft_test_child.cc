@@ -33,6 +33,7 @@
 #include <router/queue_source.h>
 #include <gnuradio/top_block.h>
 #include <router/queue_sink.h>
+#include <router/throughput.h>
 #include <boost/thread.hpp> 
 #include <router/child.h>
 #include "fft_ifft.h"
@@ -93,6 +94,11 @@ int main(int argc, char **argv)
   gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, true); // Construct from stream index?
   //gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, false);
 
+
+  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
+
+
+
   /*
   * Handler Code
   * Chain of 50 FFTs that processes a window of 1024 values from the input_queue, and dumps the resulting output window into the output_queue
@@ -108,7 +114,9 @@ int main(int argc, char **argv)
   		tb->connect(ffts.at(i-1), 0, ffts.at(i), 0);
   	}
   } 
-  tb->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
+  tb->connect(ffts.at(ffts.size()-1), 0, throughput, 0);
+	
+  tb->connect(throughput, 0, output_queue_sink, 0);
 
 
   // Let us keep this transparent for now (read from input -> dump to output)

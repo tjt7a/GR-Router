@@ -33,6 +33,7 @@
 #include <router/queue_source.h>
 #include <gnuradio/top_block.h>
 #include <router/queue_sink.h> 
+#include <router/throughput.h>
 #include <boost/thread.hpp>
 #include <router/root.h>
 #include "fft_ifft.h"

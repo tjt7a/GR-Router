@@ -226,7 +226,7 @@
                          case 1:
                               if(VERBOSE){
                                    std::cout << "We have " << global_counter << "messages in the queue right now" << std::endl;
-                                   myfile << "Popped and sending packet index=" << temp->at(1) << " to parent with index=" << temp->at(2) << std::endl;
+                                   myfile << "Popped and sending packet index=" << temp->at(1) << " to parent with index=" << temp->at(1) << std::endl;
                               }
 
                               packet_size = (temp->at(2) + 3); // The size of the segment to be sent
