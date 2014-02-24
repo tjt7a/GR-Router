@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
   boost::lockfree::queue< std::vector<float>* > input_queue(1026);
 
-  gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(in_file_name, false); // input file source (WAV) [input_file, repeat=false]
+  gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(in_file_name, true); // input file source (WAV) [input_file, repeat=false]
   gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(float), out_file_name); // output file sink (BIN) [sizeof(float), output_file]
 
   gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float, input_queue, preserve index after = true)]

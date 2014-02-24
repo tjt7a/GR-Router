@@ -55,7 +55,7 @@
      	gr::io_signature::make(0,0,0))
         {
 
-            VERBOSE = true; // Used to dump useful information
+            VERBOSE = false; // Used to dump useful information
 
             if(VERBOSE)
                 myfile.open("root_router.data");
@@ -205,10 +205,7 @@
 
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
-                myfile << "Delecting reference " << std::endl;
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
-                myfile << "Done" << std::endl;
-
      		}
      	  }
         }
@@ -243,8 +240,8 @@
 
 
           float * tempbuffer = new float[1];
-     	  float * buffer;
-     	  std::vector<float> *temp;
+     	    float * buffer;
+     	    std::vector<float> *temp;
           int size = 0;
           int packet_type = 0;
           bool success = false;

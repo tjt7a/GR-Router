@@ -43,7 +43,7 @@
      	gr::io_signature::make(0, 0, 0),
      	gr::io_signature::make(0, 0, 0))
      {
-          VERBOSE = true; // Used to dump useful information
+          VERBOSE = false; // Used to dump useful information
           if(VERBOSE)
                myfile.open("child_router.data");
 
@@ -108,14 +108,12 @@
      child_impl::~child_impl()
      {
 
-          if(VERBOSE)
+          if(VERBOSE){
                std::cout << "Calling Child Router " << child_index << "'s destructor!" << std::endl;
-
-          file_lock.lock();
-          myfile << "Calling Child Router Destructor\n";
-          myfile << std::flush;
-          file_lock.unlock();
-
+               myfile << "Calling Child Router Destructor\n";
+               myfile << std::flush;
+          }
+          
      	d_finished = true;
 
      	// Kill send thread

@@ -75,7 +75,7 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	Read from XML to get size information
 	*/
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size**
-	VERBOSE = true; // Dump information to Std::out
+	VERBOSE = false; // Dump information to Std::out
 
 	if(VERBOSE)
 		myfile.open("queue_sink.data"); // Dump information to file	
