@@ -18,7 +18,7 @@
 #include <io.h>
 #endif
 
-#define V   true
+#define V   false 
 
 class NetworkInterface{
 public:

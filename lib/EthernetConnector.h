@@ -18,7 +18,7 @@
 #include <boost/thread.hpp>// used for lock
 
 // Verbose Flag
-#define V	true
+#define V	false	
 
 // Class for children nodes; encapsulates child-specific data
 class Node{
