@@ -34,7 +34,7 @@
 #include <gnuradio/io_signature.h>
 #include "root_impl.h"
 
-#define VERBOSE true
+#define VERBOSE false
 
  namespace gr {
  	namespace router {
