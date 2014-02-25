@@ -25,7 +25,7 @@
 #include "child_impl.h"
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
 
-#define VERBOSE     true
+#define VERBOSE     false
 
  namespace gr {
  	namespace router {
