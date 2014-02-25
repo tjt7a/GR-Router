@@ -52,20 +52,20 @@ int main(int argc, char **argv)
 
   gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
   
-   tb_1->connect(wavfile_source, 0, throughput, 0);
-   tb_1->connect(throughput, 0, input_queue_sink, 0);
-  //tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
+   //tb_1->connect(wavfile_source, 0, throughput, 0);
+   //tb_1->connect(throughput, 0, input_queue_sink, 0);
+  tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
  
    //tb_1->connect(input_queue_source, 0, throughput, 0);
   //tb_1->connect(throughput, 0, file_sink, 0);
-   tb_1->connect(input_queue_source, 0, file_sink, 0);
+   //tb_1->connect(input_queue_source, 0, file_sink, 0);
 
   //tb_1->connect(wavfile_source, 0, input_queue_source, 0);
 
   //tb_1->connect(wavfile_source, 0, file_sink, 0);
 
 //tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
-/*
+
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < 50; i++){
     ffts.push_back(fft_ifft_make(1024));
@@ -78,8 +78,10 @@ int main(int argc, char **argv)
     }
   }
   //tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
-  tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
-*/
+  //tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
+   tb_1->connect(ffts.at(ffts.size()-1), 0, throughput, 0);
+   tb_1->connect(throughput, 0, file_sink,0);
+
   tb_1->run();
 
   return 0;
