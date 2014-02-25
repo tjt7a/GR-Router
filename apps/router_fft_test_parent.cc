@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   */
 
   gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
-  gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, true, true); // Preserve index, order data, write file
+  gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, true); // Preserve index, order data, write file
 
   gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
 

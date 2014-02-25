@@ -93,7 +93,7 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 
 	if(VERBOSE){
 		myfile << "Calling Queue_Sink Constructor\n";
-		myfile << "Arguments: size=" << size << " preserve index=" << BOOLEAN_STRING(preserve_index) << "\n\n" << std::flush;
+		myfile << "Arguments: size=" << size << " preserve_index=" << BOOLEAN_STRING(preserve_index) << "\n\n" << std::flush;
 	}
 }
 
