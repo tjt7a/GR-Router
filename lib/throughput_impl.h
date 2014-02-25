@@ -37,6 +37,8 @@ namespace gr {
 	   double current_count;
 	   double smoothing_coeff;
 	   double last_throughput;
+     double running_sum;
+     double running_count;
 	
      public:
       throughput_impl(size_t itemsize, double print_counter);
