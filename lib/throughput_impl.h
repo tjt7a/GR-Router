@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2014 <+YOU OR YOUR COMPANY+>.
+ * Written by Tommy Tracy II (University of Virginia HPLP)
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,14 +29,14 @@ namespace gr {
     class throughput_impl : public throughput
     {
      private:
-	boost::system_time d_start;
-	size_t d_itemsize;
-	double d_last_samples;
+	   boost::system_time d_start;
+	   size_t d_itemsize;
+	   double d_last_samples;
 
-	double d_print_counter;
-	double current_count;
-	double smoothing_coeff;
-	double last_throughput;
+	   double d_print_counter;
+	   double current_count;
+	   double smoothing_coeff;
+	   double last_throughput;
 	
      public:
       throughput_impl(size_t itemsize, double print_counter);

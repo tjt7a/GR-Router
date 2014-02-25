@@ -44,6 +44,7 @@
 #include <stdio.h>
 
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
+#define VERBOSE	true
 
 namespace gr {
 namespace router {
@@ -85,7 +86,6 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 {
 
 	set_output_multiple(1024); // Guarantee outputs in multiples of 1024!
-	VERBOSE = true; // Dump information to Std::out
 	dead = false;
 
 	if(VERBOSE)
@@ -255,6 +255,9 @@ queue_source_impl::work(int noutput_items,
 			default:
 				return 0;
 		}
+	}
+	else{
+		myfile << "Failed popping from the queue" << std::endl;
 	}
 }
 

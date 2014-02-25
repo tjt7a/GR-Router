@@ -25,6 +25,8 @@
 #include "child_impl.h"
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
 
+#define VERBOSE     true
+
  namespace gr {
  	namespace router {
 
@@ -43,9 +45,7 @@
      	gr::io_signature::make(0, 0, 0),
      	gr::io_signature::make(0, 0, 0))
      {
-          VERBOSE = false; // Used to dump useful information
-          if(VERBOSE)
-               myfile.open("child_router.data");
+          if(VERBOSE) myfile.open("child_router.data");
 
 		// Set index of the child
      	child_index = index;

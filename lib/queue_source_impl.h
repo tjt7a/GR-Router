@@ -37,7 +37,6 @@ class queue_source_impl : public queue_source
 {
 private:
 
-	bool VERBOSE; // Verbosity flag
 	std::ofstream myfile; // output file stream
 
 	bool dead;

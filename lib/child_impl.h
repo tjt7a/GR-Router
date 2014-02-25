@@ -35,7 +35,6 @@ namespace gr {
     {
     private:
 	
-    	bool VERBOSE; // VERBOSITY flag
     	std::ofstream myfile; // Output file stream for debugging
 
 		int master_thread_index;

@@ -36,7 +36,6 @@
  		{
  		private:
 
- 			bool VERBOSE; // VERBOSITY flag
  			std::ofstream myfile; // Output file stream for debugging
 
  			int number_of_children;	// Set the number of children to listen for

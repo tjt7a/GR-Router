@@ -37,8 +37,6 @@ class queue_sink_impl : public queue_sink
 {
 private:
 
-	bool VERBOSE; // Write debug information to std::out
-
 	std::ofstream myfile; // output file stream
 
 	int number_of_windows; // Number of windows we can fill with floats

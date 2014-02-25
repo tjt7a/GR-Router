@@ -34,6 +34,8 @@
 #include <gnuradio/io_signature.h>
 #include "root_impl.h"
 
+#define VERBOSE true
+
  namespace gr {
  	namespace router {
 
@@ -54,8 +56,6 @@
      	gr::io_signature::make(0,0,0),
      	gr::io_signature::make(0,0,0))
         {
-
-            VERBOSE = true; // Used to dump useful information
 
             if(VERBOSE)
                 myfile.open("root_router.data");
@@ -207,6 +207,11 @@
 
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
      		}
+        else{
+          int fail_count = 0;
+          if(++fail_count%10 == 0)
+            myfile << "Failed popping 10 times in a row" << std::endl;
+        }
      	  }
         }
 

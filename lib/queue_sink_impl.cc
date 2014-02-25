@@ -43,6 +43,7 @@
 
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
 
+#define VERBOSE	true
 
 namespace gr {
 namespace router {
@@ -75,7 +76,6 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	Read from XML to get size information
 	*/
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size**
-	VERBOSE = false; // Dump information to Std::out
 
 	if(VERBOSE)
 		myfile.open("queue_sink.data"); // Dump information to file	
@@ -210,8 +210,11 @@ queue_sink_impl::work(int noutput_items,
 
 		// Keep trying to push segment into queue until successful
 		bool success = false;
+		int fail_count = 0;
 		do{
 			success = queue ->push(window);
+			if(++fail_count%10 == 0)
+				myfile << "Failed pushing 10 times in a row" << std::endl;
 		} while(!success);// Push window reference into queue
 
 		if(VERBOSE)
