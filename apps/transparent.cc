@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 
   //tb_1->connect(wavfile_source, 0, file_sink, 0);
 
-  //tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
+//tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
 
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < 50; i++){
