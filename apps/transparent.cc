@@ -69,11 +69,7 @@ int main(int argc, char **argv)
 
   //tb_1->connect(wavfile_source, 0, file_sink, 0);
 
-<<<<<<< HEAD
-//tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
-=======
   //tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
->>>>>>> 1a8aae90f7f8381154f57b52c53860d8201b98aa
 
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < 50; i++){
@@ -86,17 +82,10 @@ int main(int argc, char **argv)
       tb_1->connect(ffts.at(i-1), 0, ffts.at(i), 0);
     }
   }
-<<<<<<< HEAD
-  //tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
-  //tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
-   tb_1->connect(ffts.at(ffts.size()-1), 0, throughput, 0);
-   tb_1->connect(throughput, 0, file_sink,0);
-=======
   tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
   //tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
   tb_1->connect(output_queue_source, 0, throughput, 0);
   tb_1->connect(throughput, 0, file_sink, 0);
->>>>>>> 1a8aae90f7f8381154f57b52c53860d8201b98aa
 
   tb_1->run();
 
