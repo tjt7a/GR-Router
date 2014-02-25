@@ -55,7 +55,7 @@
      	gr::io_signature::make(0,0,0))
         {
 
-            VERBOSE = false; // Used to dump useful information
+            VERBOSE = true; // Used to dump useful information
 
             if(VERBOSE)
                 myfile.open("root_router.data");
