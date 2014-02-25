@@ -125,7 +125,6 @@ int main(int argc, char **argv)
   }
   tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
 
-
   /*
   * Sink Code
   * Connects the output_queue to the sink

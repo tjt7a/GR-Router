@@ -53,6 +53,8 @@ namespace gr {
 	   current_count = 0;
 	   last_throughput = 0;
 	   smoothing_coeff = 0.1;
+     running_count = 0;
+     running_sum = 0;
 	 }
 
     /*
@@ -81,9 +83,13 @@ namespace gr {
 
 	       last_throughput += (smoothing_coeff)*(throughput - last_throughput);
 
+         running_sum += throughput/1e6;
+         running_count++;
+
 	       if(current_count == d_print_counter){
-		        std::cout << std::setprecision(3) << "Throughput: "<< (throughput/1e6) << " Ms/s"<< "\t\t" << "Smoothed: " << (last_throughput/1e6) << " Ms/s" << std::endl;
-		        current_count = 0;
+		        //std::cout << std::setprecision(3) << "Throughput: "<< (throughput/1e6) << " Ms/s"<< "\t\t" << "Smoothed: " << (last_throughput/1e6) << " Ms/s" << std::endl;
+		        std::cout << (throughput/1e6) << "\t\t Running Average: "<< running_sum/running_count << std::endl;
+            current_count = 0;
 	       }
 	       else{
 		        current_count++;	
