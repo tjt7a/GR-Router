@@ -105,6 +105,8 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 		myfile << std::flush;
 	}
 
+	std::cout << "Finished calling the constructor; it's happy" << std::endl;
+
 	found_kill = false;
 }
 
@@ -136,7 +138,6 @@ queue_source_impl::work(int noutput_items,
 		gr_vector_const_void_star &input_items,
 		gr_vector_void_star &output_items)
 {
-
 	float *out = (float *) output_items[0]; // output float buffer pointer (where we're writing the floats to)
 	
 	std::vector<float> *temp_vector; // Temp vector pointer for popping vector pointers off of the shared queue
@@ -209,6 +210,7 @@ queue_source_impl::work(int noutput_items,
 					if(VERBOSE)
 						myfile << "Queue Source Memcpy size=" << sizeof(float)*data_size << std::endl;
 				
+					std::cout << "data_size, noutput_items: " << data_size << ", " << noutput_items << std::endl;
 					memcpy(out, &(temp_vector->at(3)), sizeof(float)*data_size);
 
 					if(preserve){
@@ -257,7 +259,10 @@ queue_source_impl::work(int noutput_items,
 		}
 	}
 	else{
-		myfile << "Failed popping from the queue" << std::endl;
+
+		if(VERBOSE)
+			myfile << "Failed popping from the queue" << std::endl;
+		return 0;
 	}
 }
 

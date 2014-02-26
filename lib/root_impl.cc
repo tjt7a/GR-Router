@@ -327,17 +327,17 @@
     	// Find index of child with minimum weight BIG_OH(N)
     	// Might want to use a better algorithm for this
     	// Configurable based on application (include XML for this)
-		int root_impl::min(){
-			float min = weights[0];
-			int index = 0;
-			for(int i = 1; i < number_of_children; i++){
-				if(weights[i] < min){
-					min = weights[i];
-					index = i;
-				}
-			} 
-			return index;
-		}
+	int root_impl::min(){
+		float min = weights[0];
+		int index = 0;
+		for(int i = 1; i < number_of_children; i++){
+			if(weights[i] < min){
+				min = weights[i];
+				index = i;
+			}
+		} 
+		return index;
+	}
 
 	// These functions are intended for a multi-threaded implementation; locking is not necessary with a single thread
     // Increments/decrements the outstanding windows
