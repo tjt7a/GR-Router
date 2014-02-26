@@ -83,9 +83,11 @@ int main(int argc, char **argv)
     }
   }
   tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
+
   //tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
   tb_1->connect(output_queue_source, 0, throughput, 0);
   tb_1->connect(throughput, 0, file_sink, 0);
+  // tb_1->connect(input_queue_source, 0, file_sink, 0);
 
   tb_1->run();
 
