@@ -52,9 +52,9 @@ namespace gr {
 	   d_last_samples = 0;
 	   current_count = 0;
 	   last_throughput = 0;
-	   smoothing_coeff = 0.1;
-     running_count = 0;
-     running_sum = 0;
+	   //smoothing_coeff = 0.1;
+     	   //running_count = 0;
+     	   //running_sum = 0;
 	 }
 
     /*
@@ -81,14 +81,16 @@ namespace gr {
 	       double throughput = (d_last_samples / time_for_ticks)/d_itemsize;
 	       d_last_samples = (double)noutput_items;
 
-	       last_throughput += (smoothing_coeff)*(throughput - last_throughput);
+	       //last_throughput += (smoothing_coeff)*(throughput - last_throughput);
 
-         running_sum += throughput/1e6;
-         running_count++;
+         //running_sum += throughput/1e6;
+         //running_count++;
 
 	       if(current_count == d_print_counter){
+
+			std::cout << std::setprecision(3) << throughput/1e6 << std::endl;
 		        //std::cout << std::setprecision(3) << "Throughput: "<< (throughput/1e6) << " Ms/s"<< "\t\t" << "Smoothed: " << (last_throughput/1e6) << " Ms/s" << std::endl;
-		        std::cout << (throughput/1e6) << "\t\t Running Average: "<< running_sum/running_count << std::endl;
+		        //std::cout << (throughput/1e6) << "\t\t Running Average: "<< running_sum/running_count << std::endl;
             current_count = 0;
 	       }
 	       else{
