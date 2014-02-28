@@ -105,7 +105,6 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 		myfile << std::flush;
 	}
 
-	std::cout << "Finished calling the constructor; it's happy" << std::endl;
 
 	found_kill = false;
 }
@@ -123,7 +122,6 @@ queue_source_impl::~queue_source_impl()
 		myfile << std::flush;
 		myfile.close();
 	}
-	std::cout << "Calling Queue Source Destructor!" << std::endl;
 }
 
 
@@ -210,7 +208,6 @@ queue_source_impl::work(int noutput_items,
 					if(VERBOSE)
 						myfile << "Queue Source Memcpy size=" << sizeof(float)*data_size << std::endl;
 				
-					std::cout << "data_size, noutput_items: " << data_size << ", " << noutput_items << std::endl;
 					memcpy(out, &(temp_vector->at(3)), sizeof(float)*data_size);
 
 					if(preserve){
