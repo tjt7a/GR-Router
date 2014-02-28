@@ -119,9 +119,6 @@ int main(int argc, char **argv)
   tb->connect(throughput, 0, output_queue_sink, 0);
 
 
-  // Let us keep this transparent for now (read from input -> dump to output)
-  //tb->connect(input_queue_source, 0, output_queue_sink, 0);
-
   // Run flowgraph
   tb->run();
 
