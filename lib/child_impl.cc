@@ -32,34 +32,31 @@
 
  		// Return a shared pointer to the Scheduler; this public constructor calls the private constructor
  		child::sptr
- 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
+ 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue, double throughput)
  		{
- 			return gnuradio::get_initial_sptr (new child_impl(number_of_children, child_index, hostname, input_queue, output_queue));
+ 			return gnuradio::get_initial_sptr (new child_impl(number_of_children, child_index, hostname, input_queue, output_queue, throughput));
  		}
 
     /*
      * The private constructor
      */
-     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
+     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue, double throughput)
      : gr::sync_block("child",
      	gr::io_signature::make(0, 0, 0),
-     	gr::io_signature::make(0, 0, 0))
+     	gr::io_signature::make(0, 0, 0)), in_queue(&input_queue), out_queue(&output_queue), child_index(index), global_counter(0), parent_hostname(hostname), number_of_children(numberofchildren), d_finished(false), d_throughput(throughput)
      {
+
+          // Throughput stuff ----------
+            d_start = boost::get_system_time();
+            d_total_samples = 0;
+            d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
+            d_samples_per_us = d_throughput/1e6;
+            // ----------
+
+
           if(VERBOSE) myfile.open("child_router.data");
 
-		// Set index of the child
-     	child_index = index;
-
-		// Initialize global_counter for router 
-     	global_counter = 0;
-
-     	// These queues serve as the input/output queues for packetized data
-     	// Assign queue pointers
-		in_queue = &input_queue; 
-		out_queue = &output_queue;
-
           // Connect to <hostname>
-
           if(VERBOSE)
                myfile << "Attempting to connect to parent\n";
 
@@ -68,18 +65,11 @@
           // Interconnect all blocks (hostname of Root)
           connector->connect(hostname);
 
-          if(VERBOSE)
+          if(VERBOSE){
                myfile << "Connected to parent\n";
-          
-          if(VERBOSE)
                std::cout << "\tChild Router Finished connecting to hostname=" << hostname << std::endl;
+          }
 
-		// Used to kill all threads
-		d_finished = false;
-
-		number_of_children = numberofchildren; // How many children does this node have?
-		parent_hostname = hostname; // What is the hostname of this child's parent?
-		
 		// Weights table to keep track of the 'business' of child nodes
 		weights = new float[number_of_children];
 
@@ -95,10 +85,8 @@
 		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
 	
           if(VERBOSE){
-               file_lock.lock();
                myfile << "Calling Child Router Constructor v.2\n";
                myfile << "Arguments: number of children=" << numberofchildren << " index=" << index << " hostname= " << hostname << "\n\n" << std::flush;
-               file_lock.unlock();
           }
      }
 
@@ -135,6 +123,7 @@
      	gr_vector_void_star &output_items)
      {
         // This block is completely asynchronous; therefore there is no need for 'work()'ing
+          // Might want to put something else in here; not sure yet.
      	return noutput_items;
      }
 
@@ -144,13 +133,12 @@
 
           float * temp_buffer = new float[1];
      	float * buffer;
-          bool success = false;
           std::vector<float> *arrival;
           int size;
 
      	while(!d_finished){
 
-     		// Spin wait; might want to change this later to interrupt handler
+     		// Spin wait; but calling the blocking connect
                size = 0;
                while(size < 1){
                     size += connector->receive(-1, (char*)&(temp_buffer[size]), (1-size));
@@ -176,12 +164,13 @@
                          if(VERBOSE)
                               myfile << "Got a window segment : index=" << arrival->at(1) << std::endl;
 
-                         success = false;
-                         do{
-                              success = in_queue->push(arrival);
-                         }while(!success);
+                         while(!in_queue->push(arrival))
+                              ;
 
                          increment();
+
+                         if(VERBOSE)
+                              std::cout << "Number of Windows: " << global_counter << std::endl;
 
                          break;
                     case 2:
@@ -191,10 +180,9 @@
                          arrival = new std::vector<float>();
                          arrival->push_back(3);
 
-                         success = false;
-                         do{
-                              success = in_queue->push(arrival);
-                         }while(!success);
+                         while(!in_queue->push(arrival))
+                              ;
+
                          break;
                     default:
                          myfile << "ERROR: Got a message of unexpected type" << std::endl;
@@ -213,8 +201,19 @@
 
      	while(!d_finished){
 
-     		// If we have windows, send window
 
+            // Throughput Stuff------
+            // Code derived from throughput block
+            boost::system_time now = boost::get_system_time();
+            boost::int64_t ticks = (now - d_start).ticks();
+            uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
+
+            if(d_total_samples > expected_samples)
+               boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+            //----------
+
+
+     		// If we have windows, send window
      		if(out_queue->pop(temp)){
 
                     packet_type = (int)temp->at(0); // Get the packet type
@@ -240,6 +239,7 @@
                                    sent += connector->send(-1, (char*)&((temp->data())[sent]), (packet_size-sent)); // *4
 
                               decrement();
+                              d_total_samples += 1024;
                               delete temp;
                               break;
                          case 2:
