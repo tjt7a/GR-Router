@@ -35,6 +35,15 @@ namespace gr {
     {
     private:
 	
+ 			//----------
+			// Throughput state
+			double d_throughput;
+			boost::system_time d_start;
+			double d_samples_per_tick, d_samples_per_us;
+			uint64_t d_total_samples;
+			//----------
+
+
     	std::ofstream myfile; // Output file stream for debugging
 
 		int master_thread_index;
@@ -87,7 +96,7 @@ namespace gr {
 		int get_weight();
 
     public:
-     	child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue);
+     	child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue, double throughput);
       	~child_impl();
 
      	// Where all the action really happens

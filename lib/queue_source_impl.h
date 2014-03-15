@@ -61,11 +61,19 @@ private:
 	std::vector<float> window; // Window buffer
 	bool preserve; // Preserve indexes across flow graph
 
-	bool write_to_file;
+
+//----------
+	// Throughput state
+	double d_throughput;
+	boost::system_time d_start;
+	double d_samples_per_tick, d_samples_per_us;
+	uint64_t d_total_samples;
+//----------
+
 
 public:
 	//queue_source_impl(int size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order);
-	queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order, bool write_to_file);
+	queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order, double throughput);
 	~queue_source_impl();
 
 	// Where all the action really happens

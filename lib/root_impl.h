@@ -36,6 +36,14 @@
  		{
  		private:
 
+ 			//----------
+			// Throughput state
+			double d_throughput;
+			boost::system_time d_start;
+			double d_samples_per_tick, d_samples_per_us;
+			uint64_t d_total_samples;
+			//----------
+
  			std::ofstream myfile; // Output file stream for debugging
 
  			int number_of_children;	// Set the number of children to listen for
@@ -94,7 +102,7 @@
  			void decrement();
 
  		public:
- 			root_impl(int number_of_children, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue);
+ 			root_impl(int number_of_children, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue, double throughput);
  			~root_impl();
 
       		// Where all the action really happens
