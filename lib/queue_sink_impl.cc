@@ -174,9 +174,15 @@ queue_sink_impl::work(int noutput_items,
 	}
 
 	// Determine how many windows worth of floats we have available
-	//number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
-	number_of_windows = 1;
-	left_over = noutput_items % 1024; // In this case will always be 0
+	number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
+	if(number_of_windows >= 1){
+		number_of_windows = 1; // Only going to pass one window at a time
+	}
+	else{
+		return 0;
+	}
+
+	//left_over = noutput_items % 1024; // In this case will always be 0
 
 	if(VERBOSE)
 		myfile << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl << std::flush;

@@ -143,18 +143,7 @@ queue_source_impl::work(int noutput_items,
 	float index; // Index of the window that the current vector pointer is pointing to
 	std::vector<float> buffer; // A temporary buffer; might not be necessary
 
-	// Pop next value off of shared queue if there is one available
-
-
-	// Code derived from throughput block
-	boost::system_time now = boost::get_system_time();
-	boost::int64_t ticks = (now - d_start).ticks();
-	uint64_t expected_samples = uint64_t(d_samples_per_tick*ticks);
-
-	if(d_total_samples > expected_samples)
-		boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
-					//----------
-
+	// Pop next value off of shared queue if there is one availabl
 	if(queue->pop(temp_vector)){
 
 		int type = (int)temp_vector->at(0);
@@ -220,6 +209,18 @@ queue_source_impl::work(int noutput_items,
 					if(VERBOSE)
 						myfile << "Queue Source Memcpy size=" << sizeof(float)*data_size << std::endl;
 				
+
+
+						// Code derived from throughput block
+						boost::system_time now = boost::get_system_time();
+						boost::int64_t ticks = (now - d_start).ticks();
+						uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
+
+						if(d_total_samples > expected_samples)
+							boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+						//----------
+
+
 
 					memcpy(out, &(temp_vector->at(3)), sizeof(float)*data_size);
 

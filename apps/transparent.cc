@@ -37,10 +37,12 @@ using namespace gr;
 int main(int argc, char **argv)
 {
 
+  double throughput_value = 1e6;
+
   gr::top_block_sptr tb_1 = gr::make_top_block("transparent");
 
   const char* in_file_name = "inputs/out.wav";
-  const char* out_file_name = "transparent.out";
+  const char* out_file_name = "/dev/null";
 
   boost::lockfree::queue< std::vector<float>* > input_queue(1026);
   boost::lockfree::queue< std::vector<float>* > output_queue(1026);
@@ -48,11 +50,11 @@ int main(int argc, char **argv)
   gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(in_file_name, true); // input file source (WAV) [input_file, repeat=false]
   gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(float), out_file_name); // output file sink (BIN) [sizeof(float), output_file]
 
-  gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false, 1e5); // input queue sink [sizeof(float), input_queue, preserve index after = true, throughput=10e6]
-  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false, 1e5); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
+  gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false, throughput_value); // input queue sink [sizeof(float), input_queue, preserve index after = true, throughput=10e6]
+  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false, throughput_value); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
 
-  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false, 1e5);
-  gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, 1e5); // Preserve index, order data, write file
+  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false, throughput_value);
+  gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, throughput_value); // Preserve index, order data, write file
 
 
   gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
