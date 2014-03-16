@@ -41,9 +41,9 @@
 
         // This is the public shared-pointer constructor; it is called by the Scheduler at creation time
  		root::sptr
- 		root::make(int number_of_children, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
+ 		root::make(int number_of_children, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue, double throughput)
  		{
- 			return gnuradio::get_initial_sptr (new root_impl(number_of_children, input_queue, output_queue));
+ 			return gnuradio::get_initial_sptr (new root_impl(number_of_children, input_queue, output_queue, throughput));
  		}
 
         /*
@@ -51,26 +51,27 @@
         * 1 inputs: 1 from source
         * 1 outputs: 1 to sink
         */
-        root_impl::root_impl(int numberofchildren, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue)
+        root_impl::root_impl(int numberofchildren, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue, double throughput)
         : gr::sync_block("root",
      	gr::io_signature::make(0,0,0),
-     	gr::io_signature::make(0,0,0))
+     	gr::io_signature::make(0,0,0)), number_of_children(numberofchildren), in_queue(&input_queue), out_queue(&output_queue), d_throughput(throughput)
         {
+
+            // Throughput stuff ----------
+            d_start = boost::get_system_time();
+            d_total_samples = 0;
+            d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
+            d_samples_per_us = d_throughput/1e6;
+            // ----------
+
 
             if(VERBOSE)
                 myfile.open("root_router.data");
-
-            // Number of children for root node
-            number_of_children = numberofchildren;
 
             num_killed = 0;
 
     		// Set global counter; no need to lock -> no contention
          	global_counter = 0;
-
-            // Pointers to input/output queue of packets
-    		in_queue = &input_queue;
-    		out_queue = &output_queue;
 
             // Communication connector between nodes (size of elements, number of children, port number, are we root?)
     		connector =  new NetworkInterface(sizeof(float), number_of_children, 8080, true);
@@ -95,15 +96,15 @@
     		for(int i = 0; i < number_of_children; i++){
 
     			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
-                if(VERBOSE)
-                    std::cout << "Spawning new receiver thread for child #" << i << std::endl;
+          if(VERBOSE)
+            std::cout << "Spawning new receiver thread for child #" << i << std::endl;
     			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
 
-            if(VERBOSE){
-                std::cout << "Finished calling Root Router's Constructor" << std::endl;
-                myfile << "Calling Root Router Constructor v.2\n" << std::flush;
-            }
+        if(VERBOSE){
+          std::cout << "Finished calling Root Router's Constructor" << std::endl;
+          myfile << "Calling Root Router Constructor v.2\n" << std::flush;
+        }
 	    }
         /*
          * Our virtual destructor.
@@ -161,8 +162,18 @@
      	  // Until the program exits, continue sending
      	  while(!d_finished){
 
-     		// If there is a window available, send it to indexed node
-     		if(in_queue->pop(temp)){
+            // Throughput Stuff------
+            // Code derived from throughput block
+            boost::system_time now = boost::get_system_time();
+            boost::int64_t ticks = (now - d_start).ticks();
+            uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
+
+          if(d_total_samples > expected_samples)
+            boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+          //----------
+
+     		   // If there is a window available, send it to indexed node
+     		   if(in_queue->pop(temp)){
 
                 packet_type = (int)temp->at(0); // Get packet type
 
@@ -188,6 +199,7 @@
                             myfile << "Finished sending" << std::endl;
 
                         increment();
+                        d_total_samples += 1024;
                         break;
                     case 3:
                         for(int i = 0; i < number_of_children; i++){
@@ -206,14 +218,14 @@
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
-     		}
-        else{
-          int fail_count = 0;
-          if(++fail_count%10 == 0)
-            myfile << "Failed popping 10 times in a row" << std::endl;
-        }
+     		   }
+          else{
+            int fail_count = 0;
+            if(++fail_count%10 == 0)
+              myfile << "Failed popping 10 times in a row" << std::endl;
+          }
      	  }
-        }
+      }
 
 
         /*
@@ -243,14 +255,12 @@
           sprintf(name_buff, "root_router_%d.data", index);
           thread_file.open(name_buff);
 
-
           float * tempbuffer = new float[1];
      	    float * buffer;
      	    std::vector<float> *temp;
           int size = 0;
           int packet_type = 0;
-          bool success = false;
-          std::vector<float>*arrival;
+          std::vector<float> *arrival;
           std::vector<float> *kill_msg;
 
           if(VERBOSE)
@@ -286,10 +296,8 @@
                     if(VERBOSE)
                         thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
 
-                    success = false;
-                    do{
-                        success = out_queue->push(arrival);
-                    } while(!success);
+                    while(!out_queue->push(arrival))
+                      ;
 
                     decrement();
 
@@ -307,10 +315,8 @@
                         if(VERBOSE)
                             thread_file << "Pushing kill message" << std::endl;
 
-                        success = false;
-                        do{
-                            success = out_queue->push(kill_msg);
-                        }while(!success);
+                        while(!out_queue->push(kill_msg))
+                            ;
                     }
                     return;
                     break;

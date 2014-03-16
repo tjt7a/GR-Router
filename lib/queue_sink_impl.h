@@ -48,6 +48,14 @@ private:
 	int queue_counter; // Counter for windows in queue
 	int item_size;
 
+//----------
+	// Throughput state
+	double d_throughput;
+	boost::system_time d_start;
+	double d_samples_per_tick, d_samples_per_us;
+	uint64_t d_total_samples;
+//----------
+
 	std::vector<float> *window; // Window buffer for building windows
 	std::vector<float> *index_vector; // Vector of stream tags; used as indexes
 
@@ -57,7 +65,7 @@ private:
 	float get_index(); // Returns the next index
 
 public:
-	queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index);
+	queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, double throughput);
 	~queue_sink_impl();
 
 	// Where all the action really happens
