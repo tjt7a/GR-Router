@@ -51,7 +51,7 @@ namespace gr {
         * creating new instances.
         */
        //static sptr make(int item_size, boost::shared_ptr< boost::lockfree::queue< std::vector<float>* > > shared_queue, bool preserve_index, bool order);
-        static sptr make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order, double throughput);
+        static sptr make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order);
     };
 
   } // namespace router

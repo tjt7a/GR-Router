@@ -54,9 +54,9 @@ namespace router {
  */
 
 queue_sink::sptr
-queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, double throughput)
+queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index)
 {
-	return gnuradio::get_initial_sptr (new queue_sink_impl(item_size, shared_queue, preserve_index, throughput));
+	return gnuradio::get_initial_sptr (new queue_sink_impl(item_size, shared_queue, preserve_index));
 }
 
 /*
@@ -66,23 +66,16 @@ queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>* > &s
  * shared_queue: pointer to lockfree queue to drop packets into
  * preserve_index: whether or not to preserve the index located in stream tag (if any)
  */
-queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, double throughput)
+queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index)
 : gr::sync_block("queue_sink",
 		gr::io_signature::make(1, 1, sizeof(float)),
-		gr::io_signature::make(0, 0, 0)), queue(&shared_queue), item_size(size), preserve(preserve_index), index_of_window(0), window(NULL), d_throughput(throughput)
+		gr::io_signature::make(0, 0, 0)), queue(&shared_queue), item_size(size), preserve(preserve_index), index_of_window(0), window(NULL)
 {
 
 	/*
 	Read from XML to get size information
 	*/
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size**
-
-	// Throughput stuff ----------
-	d_start = boost::get_system_time();
-	d_total_samples = 0;
-	d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
-	d_samples_per_us = d_throughput/1e6;
-	// ----------
 
 	if(VERBOSE)
 		myfile.open("queue_sink.data"); // Dump information to file	
@@ -218,24 +211,11 @@ queue_sink_impl::work(int noutput_items,
 	window->push_back(1024);
 	window->insert(window->end(), &in[0], &in[1024]);
 
-	// Throughput Stuff------
-	// Code derived from throughput block
-	boost::system_time now = boost::get_system_time();
-	boost::int64_t ticks = (now - d_start).ticks();
-	uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
-
-	if(d_total_samples > expected_samples)
-		boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
-	//----------
-
-
 	while(!queue->push(window))
 		;
 
 	window = NULL;
 	queue_counter++;
-
-	d_total_samples += 1024;
 
 	return number_of_windows*1024;
 }

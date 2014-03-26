@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
+ * the Free Software Foundation, Inc., 51 Franklin Street
  * Boston, MA 02110-1301, USA.
  */
 
@@ -58,10 +58,11 @@
         {
 
             // Throughput stuff ----------
+          	// How fast are we going to check the queue? Don't want to over-work here
             d_start = boost::get_system_time();
             d_total_samples = 0;
             d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
-            d_samples_per_us = d_throughput/1e6;
+            d_samples_per_us = d_throughput/1e6; // Number of samples in a micro-second 
             // ----------
 
 
@@ -98,13 +99,14 @@
     			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
           if(VERBOSE)
             std::cout << "Spawning new receiver thread for child #" << i << std::endl;
+
     			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
     		}
 
-        if(VERBOSE){
-          std::cout << "Finished calling Root Router's Constructor" << std::endl;
-          myfile << "Calling Root Router Constructor v.2\n" << std::flush;
-        }
+        	if(VERBOSE){
+          		std::cout << "Finished calling Root Router's Constructor" << std::endl;
+          		myfile << "Calling Root Router Constructor v.2\n" << std::flush;
+        	}
 	    }
         /*
          * Our virtual destructor.
@@ -164,12 +166,14 @@
 
             // Throughput Stuff------
             // Code derived from throughput block
+            
             boost::system_time now = boost::get_system_time();
-            boost::int64_t ticks = (now - d_start).ticks();
-            uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
+            boost::int64_t ticks = (now - d_start).ticks(); // total number of ticks since start time
+            uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks); // The total number of samples we expect to pass through since then
 
           if(d_total_samples > expected_samples)
             boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+          
           //----------
 
      		   // If there is a window available, send it to indexed node
@@ -188,6 +192,8 @@
 
                         packet_size = (temp->at(2) + 3); // The size of the segment is located at index 2
 
+                        d_total_samples += (packet_size-3);
+
                         if(VERBOSE)
                             myfile << "Sending packet index=" << temp->at(1) << " to child=" << index << std::endl;
 
@@ -199,7 +205,6 @@
                             myfile << "Finished sending" << std::endl;
 
                         increment();
-                        d_total_samples += 1024;
                         break;
                     case 3:
                         for(int i = 0; i < number_of_children; i++){
@@ -220,9 +225,8 @@
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
      		   }
           else{
-            int fail_count = 0;
-            if(++fail_count%10 == 0)
-              myfile << "Failed popping 10 times in a row" << std::endl;
+          	// Wait some span of time
+          	;
           }
      	  }
       }
