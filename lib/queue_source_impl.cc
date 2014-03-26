@@ -66,9 +66,9 @@ bool order_window(const std::vector<float>* a, const std::vector<float>* b){
  */
 
 queue_source::sptr
-queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order, double throughput)
+queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order)
 {
-	return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order, throughput));
+	return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order));
 }
 
 /*
@@ -79,10 +79,10 @@ queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > 
  * order_data (boolean): If we need to order the windows by index
  */
 
-queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order_data, double throughput)
+queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order_data)
 : gr::sync_block("queue_source",
 		gr::io_signature::make(0, 0, 0),
-		gr::io_signature::make(1, 1, size)), queue(&shared_queue), item_size(size), preserve(preserve_index), order(order_data), d_throughput(throughput)
+		gr::io_signature::make(1, 1, size)), queue(&shared_queue), item_size(size), preserve(preserve_index), order(order_data)
 {
 
 	set_output_multiple(1024); // Guarantee outputs in multiples of 1024!
@@ -96,16 +96,9 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 
 	if(VERBOSE){
 		myfile << "Calling Queue_Source Constructor\n\n";
-		myfile << "Arguments: size=" << size << " preserve_index=" << BOOLEAN_STRING(preserve_index) << " order_data=" << BOOLEAN_STRING(order_data) << " throughput=" << throughput << std::endl;
+		myfile << "Arguments: size=" << size << " preserve_index=" << BOOLEAN_STRING(preserve_index) << " order_data=" << BOOLEAN_STRING(order_data) << std::endl;
 		myfile << std::flush;
 	}
-
-	// Throughput stuff ----------
-	d_start = boost::get_system_time();
-	d_total_samples = 0;
-	d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
-	d_samples_per_us = d_throughput / 1e6;
-	// ----------
 
 	found_kill = false;
 }
@@ -208,19 +201,6 @@ queue_source_impl::work(int noutput_items,
 				else{
 					if(VERBOSE)
 						myfile << "Queue Source Memcpy size=" << sizeof(float)*data_size << std::endl;
-				
-
-
-						// Code derived from throughput block
-						boost::system_time now = boost::get_system_time();
-						boost::int64_t ticks = (now - d_start).ticks();
-						uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
-
-						if(d_total_samples > expected_samples)
-							boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
-						//----------
-
-
 
 					memcpy(out, &(temp_vector->at(3)), sizeof(float)*data_size);
 
@@ -246,7 +226,6 @@ queue_source_impl::work(int noutput_items,
 
 					}
 
-					d_total_samples += data_size;
 					return data_size;
 				}	
 				break;
@@ -271,9 +250,6 @@ queue_source_impl::work(int noutput_items,
 		}
 	}
 	else{
-
-		if(VERBOSE)
-			myfile << "Failed popping from the queue" << std::endl;
 		return 0;
 	}
 }
