@@ -31,17 +31,14 @@ namespace gr {
      private:
 	   boost::system_time d_start;
 	   size_t d_itemsize;
-	   double d_last_samples;
+	   double d_total_samples;
 
-	   double d_print_counter;
-	   double current_count;
-	   double smoothing_coeff;
+	   int d_print_counter;
 	   double last_throughput;
-     double running_sum;
      double running_count;
 	
      public:
-      throughput_impl(size_t itemsize, double print_counter);
+      throughput_impl(size_t itemsize, int print_counter);
       ~throughput_impl();
 
       // Where all the action really happens

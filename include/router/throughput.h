@@ -46,7 +46,7 @@ namespace gr {
        * class. router::throughput::make is the public interface for
        * creating new instances.
        */
-      static sptr make(size_t itemsize, double print_counter);
+      static sptr make(size_t itemsize, int print_counter);
     };
 
   } // namespace router

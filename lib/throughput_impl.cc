@@ -34,7 +34,7 @@ namespace gr {
   namespace router {
 
     throughput::sptr
-    throughput::make(size_t itemsize, double print_counter)
+    throughput::make(size_t itemsize, int print_counter)
     {
       return gnuradio::get_initial_sptr
         (new throughput_impl(itemsize, print_counter));
@@ -43,17 +43,15 @@ namespace gr {
     /*
      * The private constructor
      */
-    throughput_impl::throughput_impl(size_t itemsize, double print_counter)
+    throughput_impl::throughput_impl(size_t itemsize, int print_counter)
       : gr::sync_block("throughput",
               gr::io_signature::make(1, 1, itemsize),
               gr::io_signature::make(1, 1, itemsize)), d_itemsize(itemsize), d_print_counter(print_counter)
     {
 	   d_start = boost::get_system_time();
-	   d_last_samples = 0;
-	   current_count = 0;
+	   d_total_samples = 0;
 	   last_throughput = 0;
-       running_count = 0;
-       running_sum = 0;
+     running_count = 0;
 	 }
 
     /*
@@ -73,27 +71,21 @@ namespace gr {
         const char *in = (const char *) input_items[0];
         char *out = (char *) output_items[0];
 
-	   boost::system_time now = boost::get_system_time();
-	   double ticks = (now - d_start).ticks();
+	     boost::system_time now = boost::get_system_time();
+	     double ticks = (now - d_start).ticks(); // Total number of ticks since start
 
-	   double time_for_ticks = ticks / boost::posix_time::time_duration::ticks_per_second();
+	     double time_for_ticks = ticks / boost::posix_time::time_duration::ticks_per_second(); // Total time since start
 
-	   double throughput = (d_last_samples / time_for_ticks) / 1e6;
-	   d_last_samples = (double)noutput_items;
+	     double throughput = (d_total_samples / time_for_ticks) / 1e6; // (Total number of samples / total time) in MegaSamples / Second
+	     d_total_samples += (double)noutput_items;
 
-       running_sum += throughput;
        running_count++;
 
-	   //std::cout << std::setprecision(3) << throughput/1e6 << std::endl;
-		        //std::cout << std::setprecision(3) << "Throughput: "<< (throughput/1e6) << " Ms/s"<< "\t\t" << "Smoothed: " << (last_throughput/1e6) << " Ms/s" << std::endl;
-	   std::cout << std::setprecision(3) << (throughput) << "\t\t Running Average: "<< running_sum/running_count << std::endl;
+       if((int)running_count % d_print_counter == 0)
+         std::cout << throughput << std::endl;
 			
-	   std::memcpy(out, in, noutput_items * d_itemsize);
+	     std::memcpy(out, in, noutput_items * d_itemsize);
 
-       running_sum += throughput;
-       running_count++;
-
-        d_start = now;
         return noutput_items;
     }
 

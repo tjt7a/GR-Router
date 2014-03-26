@@ -47,10 +47,12 @@
      {
 
           // Throughput stuff ----------
+      
             d_start = boost::get_system_time();
             d_total_samples = 0;
             d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
             d_samples_per_us = d_throughput/1e6;
+            
             // ----------
 
 
@@ -70,24 +72,24 @@
                std::cout << "\tChild Router Finished connecting to hostname=" << hostname << std::endl;
           }
 
-		// Weights table to keep track of the 'business' of child nodes
-		weights = new float[number_of_children];
+		    // Weights table to keep track of the 'business' of child nodes
+		    weights = new float[number_of_children];
 
-		// Create a thread per child for listeners (future work)
-		//for(int i = 0; i < number_of_children; i++){
-		//	thread_vector.append(boost::shared_ptr<boost::thread>(new Boost::thread(boost::bind(&child_impl::run, this))));
-		//}
+		    // Create a thread per child for listeners (future work)
+		    //for(int i = 0; i < number_of_children; i++){
+		    //	thread_vector.append(boost::shared_ptr<boost::thread>(new Boost::thread(boost::bind(&child_impl::run, this))));
+		    //}
 		
-		// Create single thread for sending windows back to root
-		d_thread_send_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::send_root, this)));
+		    // Create single thread for sending windows back to root
+		    d_thread_send_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::send_root, this)));
 
-		// Create single thread for receiving messages from root
-		d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
+		    // Create single thread for receiving messages from root
+		    d_thread_receive_root = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&child_impl::receive_root, this)));	
 	
-          if(VERBOSE){
+        if(VERBOSE){
                myfile << "Calling Child Router Constructor v.2\n";
                myfile << "Arguments: number of children=" << numberofchildren << " index=" << index << " hostname= " << hostname << "\n\n" << std::flush;
-          }
+        }
      }
 
     /*
@@ -102,15 +104,15 @@
                myfile << std::flush;
           }
           
-     	d_finished = true;
+     	    d_finished = true;
 
-     	// Kill send thread
-     	d_thread_send_root->interrupt();
-     	d_thread_send_root->join();
+     	  // Kill send thread
+     	  d_thread_send_root->interrupt();
+     	  d_thread_send_root->join();
 
-     	// Kill receive thread
-     	d_thread_receive_root->interrupt();
-     	d_thread_receive_root->join();
+     	  // Kill receive thread
+    	  d_thread_receive_root->interrupt();
+     	  d_thread_receive_root->join();
 
           delete connector;
      }
@@ -132,13 +134,13 @@
      void child_impl::receive_root(){
 
           float * temp_buffer = new float[1];
-     	float * buffer;
+     	    float * buffer;
           std::vector<float> *arrival;
           int size;
 
-     	while(!d_finished){
+     	  while(!d_finished){
 
-     		// Spin wait; but calling the blocking connect
+     		   // Spin wait; but calling the blocking connect
                size = 0;
                while(size < 1){
                     size += connector->receive(-1, (char*)&(temp_buffer[size]), (1-size));
@@ -204,12 +206,14 @@
 
             // Throughput Stuff------
             // Code derived from throughput block
+            
             boost::system_time now = boost::get_system_time();
             boost::int64_t ticks = (now - d_start).ticks();
             uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
 
             if(d_total_samples > expected_samples)
                boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+            
             //----------
 
 
@@ -228,6 +232,8 @@
 
                               packet_size = (temp->at(2) + 3); // The size of the segment to be sent
 
+                              d_total_samples += (packet_size - 3);
+
                               // Shove on a weight value, and make it a type-2 message
                               temp->push_back(get_weight());
                               temp->at(0) = 2;
@@ -239,7 +245,6 @@
                                    sent += connector->send(-1, (char*)&((temp->data())[sent]), (packet_size-sent)); // *4
 
                               decrement();
-                              d_total_samples += 1024;
                               delete temp;
                               break;
                          case 2:
