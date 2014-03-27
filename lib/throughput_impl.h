@@ -36,9 +36,11 @@ namespace gr {
 	   int d_print_counter;
 	   double last_throughput;
      double running_count;
+
+     int d_index;
 	
      public:
-      throughput_impl(size_t itemsize, int print_counter);
+      throughput_impl(size_t itemsize, int print_counter, int index);
       ~throughput_impl();
 
       // Where all the action really happens

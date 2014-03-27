@@ -34,19 +34,19 @@ namespace gr {
   namespace router {
 
     throughput::sptr
-    throughput::make(size_t itemsize, int print_counter)
+    throughput::make(size_t itemsize, int print_counter, int index)
     {
       return gnuradio::get_initial_sptr
-        (new throughput_impl(itemsize, print_counter));
+        (new throughput_impl(itemsize, print_counter, index));
     }
 
     /*
      * The private constructor
      */
-    throughput_impl::throughput_impl(size_t itemsize, int print_counter)
+    throughput_impl::throughput_impl(size_t itemsize, int print_counter, int index)
       : gr::sync_block("throughput",
               gr::io_signature::make(1, 1, itemsize),
-              gr::io_signature::make(1, 1, itemsize)), d_itemsize(itemsize), d_print_counter(print_counter)
+              gr::io_signature::make(1, 1, itemsize)), d_itemsize(itemsize), d_print_counter(print_counter), d_index(index)
     {
 	   d_start = boost::get_system_time();
 	   d_total_samples = 0;
@@ -81,8 +81,12 @@ namespace gr {
 
        running_count++;
 
-       if((int)running_count % d_print_counter == 0)
-         std::cout << throughput << std::endl;
+       if((int)running_count % d_print_counter == 0){
+        for(int i = 0; i < d_index; i++)
+          std::cout << '\t';
+        
+         std::cout << d_index << ". " << throughput << std::endl;
+      }
 			
 	     std::memcpy(out, in, noutput_items * d_itemsize);
 
