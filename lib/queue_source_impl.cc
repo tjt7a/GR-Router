@@ -66,7 +66,7 @@ bool order_window(const std::vector<float>* a, const std::vector<float>* b){
  */
 
 queue_source::sptr
-queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order)
+queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index, bool order)
 {
 	return gnuradio::get_initial_sptr (new queue_source_impl(item_size, shared_queue, preserve_index, order));
 }
@@ -79,7 +79,7 @@ queue_source::make(int item_size, boost::lockfree::queue< std::vector<float>* > 
  * order_data (boolean): If we need to order the windows by index
  */
 
-queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index, bool order_data)
+queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index, bool order_data)
 : gr::sync_block("queue_source",
 		gr::io_signature::make(0, 0, 0),
 		gr::io_signature::make(1, 1, size)), queue(&shared_queue), item_size(size), preserve(preserve_index), order(order_data)
@@ -225,6 +225,8 @@ queue_source_impl::work(int noutput_items,
 							myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n" << std::flush;
 
 					}
+
+					delete temp_vector;
 
 					return data_size;
 				}	

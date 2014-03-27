@@ -54,7 +54,7 @@ namespace router {
  */
 
 queue_sink::sptr
-queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index)
+queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index)
 {
 	return gnuradio::get_initial_sptr (new queue_sink_impl(item_size, shared_queue, preserve_index));
 }
@@ -66,7 +66,7 @@ queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>* > &s
  * shared_queue: pointer to lockfree queue to drop packets into
  * preserve_index: whether or not to preserve the index located in stream tag (if any)
  */
-queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index)
+queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index)
 : gr::sync_block("queue_sink",
 		gr::io_signature::make(1, 1, sizeof(float)),
 		gr::io_signature::make(0, 0, 0)), queue(&shared_queue), item_size(size), preserve(preserve_index), index_of_window(0), window(NULL)
@@ -100,8 +100,9 @@ queue_sink_impl::~queue_sink_impl()
 	window = new std::vector<float>(); // Create a new vector for window pointer to point at
     window->push_back(3); // Append the type of the KILL message (3)
 
-    while(!queue->push(window))
-    	;
+    while(!queue->bounded_push(window)){
+   		boost::this_thread::sleep(boost::posix_time::microseconds(1)); // Arbitrary sleep time
+    }
 
  	if(VERBOSE)
 		myfile.close();
@@ -192,11 +193,14 @@ queue_sink_impl::work(int noutput_items,
 		window->push_back(1024); // there are 1024 floats in this window
 		window->insert(window->end(), &in[0], &in[1024]);
 
+		//std::cout << "PUSHING WINDOW SIZE: " << window->size() << std::endl;
+
 		in += 1024; // Update pointer to move 1024 samples in the future (next window)
 
 		// Keep trying to push segment into queue until successful
-		while(!queue->push(window))
-			;
+		while(!queue->push(window)){
+			boost::this_thread::sleep(boost::posix_time::microseconds(0.0001)); // Arbitrary sleep time
+		}
 
 		// NULL pointer to segment and incremement queue_counter
 		window = NULL; // Not strictly necessary

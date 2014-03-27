@@ -76,8 +76,8 @@ int main(int argc, char **argv)
   //boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > input_queue(new boost::lockfree::queue<std::vector<float>* >(0)); // input queue
   //boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > output_queue(new boost::lockfree::queue<std::vector<float>* >(0)); // output queue
   
-  boost::lockfree::queue< std::vector<float>* > input_queue(1026);
-  boost::lockfree::queue< std::vector<float>* > output_queue(1026);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(1026);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(1026);
 
   /*
   * Load Balancing Router to distribute windows to children
