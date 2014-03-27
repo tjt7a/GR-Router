@@ -44,7 +44,7 @@ private:
 
 	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
 
-	boost::lockfree::queue< std::vector<float>* > *queue; // Pointer to shared queue
+	boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > *queue; // Pointer to shared queue
 	int queue_counter; // Counter for windows in queue
 	int item_size;
 
@@ -57,7 +57,7 @@ private:
 	float get_index(); // Returns the next index
 
 public:
-	queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>* > &shared_queue, bool preserve_index);
+	queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index);
 	~queue_sink_impl();
 
 	// Where all the action really happens

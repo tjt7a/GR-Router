@@ -69,8 +69,8 @@ int main(int argc, char **argv)
   * Input and Output queues to hold 'windows' of 1025 floats. 1 index, and 1024 samples
   */
 
-  boost::lockfree::queue< std::vector<float>* > input_queue(1026);
-  boost::lockfree::queue< std::vector<float>* > output_queue(1026);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(1026);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(1026);
 
   /*
   * Load Balancing Router to receive windows from parent

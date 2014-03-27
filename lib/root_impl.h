@@ -54,10 +54,10 @@
  			bool d_finished; // variable for destruction (kill threads)
 
 			// Shared pointer to queues (input, output) and counters (implemented later)
- 			boost::lockfree::queue< std::vector<float>* > *in_queue;
+ 			boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > *in_queue;
  			float in_queue_counter;
 
- 			boost::lockfree::queue< std::vector<float>* > *out_queue;
+ 			boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > *out_queue;
  			float out_queue_counter;
 
  			int global_counter;
@@ -102,7 +102,7 @@
  			void decrement();
 
  		public:
- 			root_impl(int number_of_children, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue, double throughput);
+ 			root_impl(int number_of_children, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &in_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &out_queue, double throughput);
  			~root_impl();
 
       		// Where all the action really happens

@@ -49,7 +49,7 @@ namespace gr {
        * class. router::root::make is the public interface for
        * creating new instances.
        */
-      static sptr make(int number_of_children, boost::lockfree::queue< std::vector<float> *> &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue, double throughput);
+      static sptr make(int number_of_children, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &in_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &out_queue, double throughput);
     };
 
   } // namespace router
