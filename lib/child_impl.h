@@ -56,10 +56,10 @@ namespace gr {
 		char * parent_hostname;
 
 		// Queues used to read from and write to
-		boost::lockfree::queue< std::vector<float>* > *in_queue;
+		boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > *in_queue;
 		float in_queue_counter;
 
-		boost::lockfree::queue< std::vector<float>* > *out_queue;
+		boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > *out_queue;
 		float out_queue_counter;
 
 		int global_counter;
@@ -96,7 +96,7 @@ namespace gr {
 		int get_weight();
 
     public:
-     	child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>* > &in_queue, boost::lockfree::queue< std::vector<float>* > &out_queue, double throughput);
+     	child_impl(int number_of_children, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &in_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &out_queue, double throughput);
       	~child_impl();
 
      	// Where all the action really happens

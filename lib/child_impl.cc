@@ -32,7 +32,7 @@
 
  		// Return a shared pointer to the Scheduler; this public constructor calls the private constructor
  		child::sptr
- 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue, double throughput)
+ 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
  		{
  			return gnuradio::get_initial_sptr (new child_impl(number_of_children, child_index, hostname, input_queue, output_queue, throughput));
  		}
@@ -40,7 +40,7 @@
     /*
      * The private constructor
      */
-     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>* > &input_queue, boost::lockfree::queue< std::vector<float>* > &output_queue, double throughput)
+     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
      : gr::sync_block("child",
      	gr::io_signature::make(0, 0, 0),
      	gr::io_signature::make(0, 0, 0)), in_queue(&input_queue), out_queue(&output_queue), child_index(index), global_counter(0), parent_hostname(hostname), number_of_children(numberofchildren), d_finished(false), d_throughput(throughput)
