@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2014 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2014 Tommy Tracy II (University of Virginia HPLP) 
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ namespace gr {
        * class. router::throughput::make is the public interface for
        * creating new instances.
        */
-      static sptr make(size_t itemsize, int print_counter);
+      static sptr make(size_t itemsize, int print_counter, int index);
     };
 
   } // namespace router

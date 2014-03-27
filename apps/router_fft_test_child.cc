@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   //gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, false);
 
 
-  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2);
+  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2, 0);
 
 
 
