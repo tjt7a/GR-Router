@@ -174,7 +174,8 @@ queue_sink_impl::work(int noutput_items,
 	}
 	else{
 		return 0;
-	}*/
+	}
+	*/
 
 	//left_over = noutput_items % 1024; // In this case will always be 0
 
@@ -182,6 +183,7 @@ queue_sink_impl::work(int noutput_items,
 		myfile << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl << std::flush;
 
 	// Build window segments, and push into queue
+	
 	
 	for(int i = 0; i < number_of_windows; i++){
 
@@ -216,13 +218,14 @@ queue_sink_impl::work(int noutput_items,
 	window->push_back(1024);
 	window->insert(window->end(), &in[0], &in[1024]);
 
-	while(!queue->push(window))
-		;
+	while(!queue->push(window)){
+		boost::this_thread::sleep(boost::posix_time::microseconds(1));
+	}
 
 	window = NULL;
 	queue_counter++;
-
 */
+	
 	return number_of_windows*1024;
 }
 
