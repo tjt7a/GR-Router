@@ -199,7 +199,7 @@ queue_sink_impl::work(int noutput_items,
 
 		// Keep trying to push segment into queue until successful
 		while(!queue->push(window)){
-			boost::this_thread::sleep(boost::posix_time::microseconds(0.0001)); // Arbitrary sleep time
+			boost::this_thread::sleep(boost::posix_time::microseconds(0.00001)); // Arbitrary sleep time
 		}
 
 		// NULL pointer to segment and incremement queue_counter
