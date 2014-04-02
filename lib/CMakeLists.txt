@@ -33,6 +33,7 @@ list(APPEND router_sources
     NetworkInterface.cc
     test.cc
     throughput_impl.cc
+    throughput_sink_impl.cc
 )
 
 add_library(gnuradio-router SHARED ${router_sources})
