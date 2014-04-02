@@ -47,12 +47,12 @@
      {
 
           // Throughput stuff ----------
-      
+      /*
             d_start = boost::get_system_time();
             d_total_samples = 0;
             d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
             d_samples_per_us = d_throughput/1e6;
-            
+       */     
             // ----------
 
 
@@ -209,14 +209,14 @@
 
             // Throughput Stuff------
             // Code derived from throughput block
-            
+            /*
             boost::system_time now = boost::get_system_time();
             boost::int64_t ticks = (now - d_start).ticks();
             uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks);
 
             if(d_total_samples > expected_samples)
                boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
-            
+            */
             //----------
 
 
