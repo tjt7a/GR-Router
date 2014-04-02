@@ -18,6 +18,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
+ /*
+  This is a test application for the GR-ROUTER library.
+  It is used to test the throughput of a single machine, and use it as a base case for distributed speedup metrics.
+*/
+
 
 // Include header files for each block used in flowgraph
 #include <gnuradio/blocks/wavfile_source.h>
@@ -46,7 +51,7 @@ int main(int argc, char **argv)
   const char* out_file_name = "/dev/null";
 
   //boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(100);
-  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(100);
+  //boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(100);
 
   gr::blocks::wavfile_source::sptr wavfile_source = gr::blocks::wavfile_source::make(in_file_name, true); // input file source (WAV) [input_file, repeat=false]
   gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(float), out_file_name); // output file sink (BIN) [sizeof(float), output_file]
@@ -58,8 +63,8 @@ int main(int argc, char **argv)
   //gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float), input_queue, preserve index after = true, throughput=10e6]
   //gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
 
-  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
-  gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false); // Preserve index, order data, write file
+  //gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
+  //gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false); // Preserve index, order data, write file
 
 
   gr::router::throughput::sptr throughput_0 = gr::router::throughput::make(sizeof(float), 10, 0);
@@ -97,11 +102,11 @@ int main(int argc, char **argv)
   //tb_1->connect(throttle_1, 0, throughput_1, 0);
   //tb_1->connect(throughput_1, 0, output_queue_sink, 0);
   //tb_1->connect(throttle_1, 0, output_queue_sink , 0);
-  tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
+  //tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
 
-  //tb_1->connect(ffts.at(ffts.size()-1), 0, throughput_0, 0);
+  tb_1->connect(ffts.at(ffts.size()-1), 0, throughput_0, 0);
   //tb_1->connect(throughput_0, 0, output_queue_sink, 0);
-  tb_1->connect(output_queue_source, 0, throughput_0, 0);
+  //tb_1->connect(output_queue_source, 0, throughput_0, 0);
   //tb_1->connect(throttle_2, 0, throughput_2, 0);
   tb_1->connect(throughput_0, 0, file_sink, 0);
   //tb_1->connect(output_queue_source, 0, file_sink, 0);
