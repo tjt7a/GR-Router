@@ -167,8 +167,11 @@ queue_sink_impl::work(int noutput_items,
 		}
 	}
 
+
+	//std::cout << "SIZE of input buffer: " << noutput_items << std::endl;
+
 	// Determine how many windows worth of floats we have available
-	number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
+	//number_of_windows = noutput_items / 1024; // determine number of windows we can make with floats
 	/*if(number_of_windows >= 1){
 		number_of_windows = 1; // Only going to pass one window at a time
 	}
@@ -179,12 +182,12 @@ queue_sink_impl::work(int noutput_items,
 
 	//left_over = noutput_items % 1024; // In this case will always be 0
 
-	if(VERBOSE)
-		myfile << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl << std::flush;
+	//if(VERBOSE)
+		//myfile << "\t Number of floats=" << noutput_items << " Number of Windows=" << number_of_windows << "; left over=" << left_over << std::endl << std::flush;
 
 	// Build window segments, and push into queue
 	
-	
+	/*
 	for(int i = 0; i < number_of_windows; i++){
 
 		window = new std::vector<float>(); // Create a new vector for window pointer to point at
@@ -192,7 +195,7 @@ queue_sink_impl::work(int noutput_items,
 		window->push_back(get_index()); // push the index (get_index())
 
 		// Put next 1024 floats into the window
-		window->push_back(1024); // there are 1024 floats in this window
+		window->push_back(); // there are 1024 floats in this window
 		window->insert(window->end(), &in[0], &in[1024]);
 
 		//std::cout << "PUSHING WINDOW SIZE: " << window->size() << std::endl;
@@ -200,23 +203,24 @@ queue_sink_impl::work(int noutput_items,
 		in += 1024; // Update pointer to move 1024 samples in the future (next window)
 
 		// Keep trying to push segment into queue until successful
-		while(!queue->push(window)){
-			boost::this_thread::sleep(boost::posix_time::microseconds(0.00001)); // Arbitrary sleep time
+		while(!queue->bounded_push(window)){
+			//std::cout << "ERROR: QUEUE IS FULL" << std::endl;
+			boost::this_thread::sleep(boost::posix_time::microseconds(1)); // Arbitrary sleep time
 		}
 
 		// NULL pointer to segment and incremement queue_counter
 		window = NULL; // Not strictly necessary
 		queue_counter++;
 	}
-	
+	*/
 
-/*
+
 	// Build type-1 segment
 	window = new std::vector<float>();
-	window->push_back(1);
-	window->push_back(get_index());
-	window->push_back(1024);
-	window->insert(window->end(), &in[0], &in[1024]);
+	window->push_back(1); // Push back the type (message type 1)
+	window->push_back(get_index()); // Push the index of this window
+	window->push_back(noutput_items); // Push the number of floats we're packing into this message; it needs to be a multiple of window size (1024)
+	window->insert(window->end(), &in[0], &in[noutput_items]);
 
 	while(!queue->push(window)){
 		boost::this_thread::sleep(boost::posix_time::microseconds(1));
@@ -224,9 +228,9 @@ queue_sink_impl::work(int noutput_items,
 
 	window = NULL;
 	queue_counter++;
-*/
-	
-	return number_of_windows*1024;
+
+
+	return noutput_items;//number_of_windows*1024;
 }
 
 float queue_sink_impl::get_index(){

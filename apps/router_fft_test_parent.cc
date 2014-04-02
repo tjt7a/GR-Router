@@ -29,6 +29,7 @@
 // Include header files for each block used in flowgraph
 #include <gnuradio/blocks/wavfile_source.h>
 #include <gnuradio/blocks/file_sink.h>
+#include <gnuradio/blocks/throttle.h>
 #include <boost/lockfree/queue.hpp>
 #include <router/queue_source.h>
 #include <gnuradio/top_block.h>
@@ -44,6 +45,9 @@ using namespace gr;
 
 int main(int argc, char **argv)
 {
+
+  double throughput_value = 1e6; // Set the throughput of the throttle
+
 
   /*
   * Create a Top Block for the flowgraph
@@ -83,8 +87,11 @@ int main(int argc, char **argv)
   * Load Balancing Router to distribute windows to children
   */
 
-  gr::router::root::sptr root_router = gr::router::root::make(number_of_children, input_queue, output_queue, 10e6); // parent router [1 child, input queue, output queue]
-  
+  gr::router::root::sptr root_router = gr::router::root::make(number_of_children, input_queue, output_queue, throughput_value); // parent router [1 child, input queue, output queue]
+  gr::blocks::throttle::sptr throttle_0 = gr::blocks::throttle::make(sizeof(float), throughput_value);
+
+
+
   /*
   * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on an index, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
   * Input queue Source: Grabs windows from the input queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarantee order of windows before streaming)
@@ -101,10 +108,11 @@ int main(int argc, char **argv)
   gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
   gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false); // Preserve index, order data, write file
 
-  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2, 0);
+  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 10, 0);
 
 
-  tb_1->connect(wavfile_source, 0, input_queue_sink, 0);
+  tb_1->connect(wavfile_source, 0, throttle_0, 0);
+  tb_1->connect(throttle_0, 0, input_queue_sink, 0);
 
   /*
   * Handler Code
