@@ -46,6 +46,8 @@ using namespace gr;
 int main(int argc, char **argv)
 {
 
+  double throughput_value = 1e6; // Set the throughput of the throttle
+
   /*
   * Create a Top Block for the flowgraph
   */
@@ -69,14 +71,14 @@ int main(int argc, char **argv)
   * Input and Output queues to hold 'windows' of 1025 floats. 1 index, and 1024 samples
   */
 
-  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(1026);
-  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(1026);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(100);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(100);
 
   /*
   * Load Balancing Router to receive windows from parent
   */
 
-  gr::router::child::sptr child_router = gr::router::child::make(0, child_index, parent_name, input_queue, output_queue, 10e6);
+  gr::router::child::sptr child_router = gr::router::child::make(0, child_index, parent_name, input_queue, output_queue, 1e6);
 
   /*
   * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on an index, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
@@ -84,18 +86,18 @@ int main(int argc, char **argv)
   */
 
   //gr::router::queue_sink::sptr input_queue_sink = gr::router::queue_sink::make(sizeof(float), input_queue, false); // input queue sink [sizeof(float, input_queue, preserve index after = true)]
-  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, true, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
+  gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
 
   /*
   * Output queue Sink: Takes streams from the flow graph, packetized, slaps on an index, and pushes the result into the output queue; last argument indicates if the index is to be preserved from the stream tags
   * Output queue Source: Grabs windows from the output queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarrantee order of windows befoe streaming)
   */
 
-  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, true); // Construct from stream index?
+  gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false); // Construct from stream index?
   //gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false, false);
 
 
-  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 2, 0);
+  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 10, 0);
 
 
 

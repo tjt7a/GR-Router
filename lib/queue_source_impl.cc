@@ -133,127 +133,139 @@ queue_source_impl::work(int noutput_items,
 	float *out = (float *) output_items[0]; // output float buffer pointer (where we're writing the floats to)
 	
 	std::vector<float> *temp_vector; // Temp vector pointer for popping vector pointers off of the shared queue
-	float index; // Index of the window that the current vector pointer is pointing to
 	std::vector<float> buffer; // A temporary buffer; might not be necessary
 
-	// Pop next value off of shared queue if there is one availabl
-	if(queue->pop(temp_vector)){
+	float index;
+	float data_size;
 
-		int type = (int)temp_vector->at(0);
+	// Pop next value off of shared queue if there is one available
 
-		switch(type){
-			case 1:
-				index = temp_vector->at(1);
-				data_size = temp_vector->at(2);
 
-				if(order){
-					local.push_back(temp_vector);
-					std::sort(local.begin(), local.end(), order_window);
+		if(queue->pop(temp_vector)){
 
-					int temp_counter = 0;
+			//std::cout << "Popped!" << std::endl;
 
-					while((local.size() > 0) && ((int)(local.at(0)->at(1)) == global_index)){
+			int type = (int)temp_vector->at(0);
+
+			switch(type){
+				case 1:
+					index = temp_vector->at(1);
+					data_size = (int)temp_vector->at(2);
+
+					if(order){
+						local.push_back(temp_vector);
+						std::sort(local.begin(), local.end(), order_window);
+
+						int temp_counter = 0;
+
+						while((local.size() > 0) && ((int)(local.at(0)->at(1)) == global_index)){
+							if(VERBOSE)
+								myfile << "Got the next window; index=" << global_index << std::endl;
+
+							buffer.insert(buffer.end(), local.front()->begin()+3, local.front()->end()); // Copy the contents of the temp_vector to the buffer minus the type, index, size
+
+							local.erase(local.begin()); // Remove the pointer from the local vector
+
+							//If we want to preserve index, write an index stream tag
+							if(preserve){
+
+								const size_t item_index = 0; //Let the first item in the stream contain the index tag
+								const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
+								pmt::pmt_t key = pmt::string_to_symbol("i"); // Key associated with the index
+
+								// Have to cast index to long (pmt does not handle floats)
+								pmt::pmt_t value = pmt::from_long((long)global_index);
+
+								//write a tag to output port 0 with given absolute item offset
+								gr::tag_t temp_tag;
+								temp_tag.key = key;
+								temp_tag.value = value;
+								temp_tag.offset = offset;
+
+								this->add_item_tag(0, temp_tag); // write <index> to stream at location stream = 0+offset with key = key
+
+								if(VERBOSE)
+									myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n" << std::flush;
+							}
+
+							global_index++;
+							temp_counter++;
+
+						}
+
+						if(temp_counter > 0){
+							memcpy(out, &(buffer.data()[0]), sizeof(float)*data_size*temp_counter);
+							return temp_counter*data_size;
+						}
+						else{
+							if(VERBOSE)
+								myfile << "Looking for: " << global_index << " but our lowest index is: " << local.at(0)->at(0) << "\n" << std::flush;
+							return 0;
+						}
+
+					}
+					else{
 						if(VERBOSE)
-							myfile << "Got the next window; index=" << global_index << std::endl;
+							myfile << "Queue Source Memcpy size=" << sizeof(float)*data_size << std::endl;
 
-						buffer.insert(buffer.end(), local.front()->begin()+3, local.front()->end()); // Copy the contents of the temp_vector to the buffer minus the type, index, size
+						memcpy(out, &(temp_vector->at(3)), sizeof(float)*data_size);
+						//out += data_size;
 
-						local.erase(local.begin()); // Remove the pointer from the local vector
-
-						//If we want to preserve index, write an index stream tag
 						if(preserve){
-
 							const size_t item_index = 0; //Let the first item in the stream contain the index tag
 							const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
 							pmt::pmt_t key = pmt::string_to_symbol("i"); // Key associated with the index
 
 							// Have to cast index to long (pmt does not handle floats)
-							pmt::pmt_t value = pmt::from_long((long)global_index);
+							pmt::pmt_t value = pmt::from_long((long)index);
 
-							//write a tag to output port 0 with given absolute item offset
 							gr::tag_t temp_tag;
 							temp_tag.key = key;
 							temp_tag.value = value;
 							temp_tag.offset = offset;
 
-							this->add_item_tag(0, temp_tag); // write <index> to stream at location stream = 0+offset with key = key
+							//write a tag to output port 0 with given absolute item offset
+							//this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
+							this->add_item_tag(0, temp_tag);
 
 							if(VERBOSE)
 								myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n" << std::flush;
+
 						}
 
-						global_index++;
-						temp_counter++;
+						delete temp_vector;
 
-					}
+						return data_size;
+						//return_size += data_size;
+						//i++;
+					}	
+					break;
 
-					if(temp_counter > 0){
-						memcpy(out, &(buffer.data()[0]), sizeof(float)*data_size*temp_counter);
-						return temp_counter*data_size;
+				case 2:
+					std::cout << "ERROR: We don't expect type-2 messages" << std::endl;
+					break;
+
+				case 3:
+					dead = true;
+					if(local.size() == 0){
+						return -1;
 					}
 					else{
 						if(VERBOSE)
-							myfile << "Looking for: " << global_index << " but our lowest index is: " << local.at(0)->at(0) << "\n" << std::flush;
-						return 0;
+							myfile << "ERROR: Got the kill msg, but there's still stuff in local! No good" << std::endl;
+						return -1;
 					}
-
-				}
-				else{
-					if(VERBOSE)
-						myfile << "Queue Source Memcpy size=" << sizeof(float)*data_size << std::endl;
-
-					memcpy(out, &(temp_vector->at(3)), sizeof(float)*data_size);
-
-					if(preserve){
-						const size_t item_index = 0; //Let the first item in the stream contain the index tag
-						const uint64_t offset = this->nitems_written(0) + item_index; // Determine offset from first element in stream where tag will be placed
-						pmt::pmt_t key = pmt::string_to_symbol("i"); // Key associated with the index
-
-						// Have to cast index to long (pmt does not handle floats)
-						pmt::pmt_t value = pmt::from_long((long)index);
-
-						gr::tag_t temp_tag;
-						temp_tag.key = key;
-						temp_tag.value = value;
-						temp_tag.offset = offset;
-
-						//write a tag to output port 0 with given absolute item offset
-						//this->add_item_tag(0, offset, key, value); // write <index> to stream at location stream = 0+offset with key = key
-						this->add_item_tag(0, temp_tag);
-
-						if(VERBOSE)
-							myfile << "Writing stream tag: (key=i, offset=" << offset << ", value=" << index << "\n" << std::flush;
-
-					}
-
-					delete temp_vector;
-
-					return data_size;
-				}	
-				break;
-
-			case 2:
-				std::cout << "ERROR: We don't expect type-2 messages" << std::endl;
-				break;
-
-			case 3:
-				dead = true;
-				if(local.size() == 0){
-					return -1;
-				}
-				else{
-					if(VERBOSE)
-						myfile << "ERROR: Got the kill msg, but there's still stuff in local! No good" << std::endl;
-					return -1;
-				}
-				break;
-			default:
-				return 0;
+					break;
+				default:
+					return 0;
+			}
 		}
-	}
-	else{
-		return 0;
-	}
+		else{
+			boost::this_thread::sleep(boost::posix_time::microseconds(0.01)); // Arbitrary sleep time
+			//std::cout << "Failed to pop :(" << std::endl;
+			//return 0;
+		}
+
 }
 
 } /* namespace router */

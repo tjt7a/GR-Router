@@ -23,7 +23,7 @@
             < type :: [0] > -- contains the message type
             < index :: [1] > -- contains the index of the window
             < size :: [2] > -- contains the size of the data in the data field to come next
-            < data :: [3,1026] > -- contains data followed by zeros
+            < data :: [3,<datasize-1>] > -- contains data followed by zeros
 
 */
 
@@ -87,8 +87,8 @@
     	  	// Array of weights values for each child + local (index 0)
     		weights = new float[number_of_children];
 
-    	   	// Finished flag for threads(true if finished)
-    		d_finished = false;
+    	   	 // Finished flag for threads(true if finished)
+    		  d_finished = false;
 
             //Thread for parent to send
             send_thread = boost::shared_ptr< boost::thread >(new boost::thread(boost::bind(&root_impl::send, this)));
@@ -156,13 +156,12 @@
         void root_impl::send(){
 
           std::vector<float> *temp; // Pointer to current vector of floats to be sent
-          int packet_type = 0;
-          int index = 0;
-          int packet_size = 0;
           int sent = 0;
 
-     	  // Until the program exits, continue sending
-     	  while(!d_finished){
+          int index, data_size, window_count, packet_size;
+
+     	    // Until the program exits, continue sending
+     	    while(!d_finished){
 
             // Throughput Stuff------
             // Code derived from throughput block
@@ -171,15 +170,16 @@
             boost::int64_t ticks = (now - d_start).ticks(); // total number of ticks since start time
             uint64_t expected_samples = uint64_t(d_samples_per_tick * ticks); // The total number of samples we expect to pass through since then
 
-          if(d_total_samples > expected_samples)
-            boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+            if(d_total_samples > expected_samples){
+              boost::this_thread::sleep(boost::posix_time::microseconds(long((d_total_samples - expected_samples) / d_samples_per_us)));
+            }
           
-          //----------
+            //----------
 
      		   // If there is a window available, send it to indexed node
      		   if(in_queue->pop(temp)){
 
-                packet_type = (int)temp->at(0); // Get packet type
+                int packet_type = (int)temp->at(0); // Get packet type
 
                 if(VERBOSE)
                     myfile << "Packet type: packet_type" << std::endl;
@@ -188,23 +188,28 @@
                 switch(packet_type){
                     case 1:
                         index = min(); // Grab index of next target
-                        weights[index]++;
 
-                        packet_size = (temp->at(2) + 3); // The size of the segment is located at index 2
+                        data_size = (int)temp->at(2); // The size of the data segment is located at index 2
+                        window_count = data_size / 1024;
+                        packet_size = data_size + 3; // Size of the data + headers
 
-                        d_total_samples += (packet_size-3);
+                        weights[index] += window_count;
+
+                        d_total_samples += data_size;
 
                         if(VERBOSE)
                             myfile << "Sending packet index=" << temp->at(1) << " to child=" << index << std::endl;
 
                         sent = 0;
                         while(sent < packet_size)
-                            sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size-sent));
+                            sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size - sent));
 
                         if(VERBOSE)
                             myfile << "Finished sending" << std::endl;
 
-                        increment();
+                        for(int i = 0; i < window_count; i++)
+                          increment();
+
                         break;
                     case 3:
                         for(int i = 0; i < number_of_children; i++){
@@ -224,12 +229,12 @@
 
                 delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
      		   }
-          else{
-          	// Wait some span of time
-          	;
-          }
-     	  }
-      }
+            else{
+          	 // Wait some span of time
+              boost::this_thread::sleep(boost::posix_time::microseconds(1));
+            }
+     	    }
+        }
 
 
         /*
@@ -249,23 +254,27 @@
         */
 
 
-
         // Receiver thread; one per child node (instead of sequentially iterating through all nodes or using interrupts)
         void root_impl::receive(int index){
 
           /* Output file Setup */
           std::ofstream thread_file;
-          char name_buff[32];
-          sprintf(name_buff, "root_router_%d.data", index);
-          thread_file.open(name_buff);
 
-          float * tempbuffer = new float[1];
+          if(VERBOSE){
+            char name_buff[32];
+            sprintf(name_buff, "root_router_%d.data", index);
+            thread_file.open(name_buff);
+          }
+
+          float * temp_buffer = new float[3];
      	    float * buffer;
      	    std::vector<float> *temp;
           int size = 0;
-          int packet_type = 0;
           std::vector<float> *arrival;
           std::vector<float> *kill_msg;
+
+          int packet_type, message_index, data_size, number_of_windows, remaining_message_size;
+          float weight;
 
           if(VERBOSE)
             std::cout << "Started receiver thread for child #" << index << std::endl;
@@ -274,28 +283,37 @@
      	  while(!d_finished){
 
             // Wait until there's something to receive (may want to replace with something more efficient than a spinning wait)
-            size = 0;
-     		while(size < 1){
-                size += connector->receive(index, (char*)&(tempbuffer[size]), (1-size));
+           size = 0;
+     		   while(size < 3){
+                size += connector->receive(index, (char*)&(temp_buffer[size]), (3-size));
                 if(size == 0 && d_finished)
                     return; // We're done
             }
 
-            packet_type = (int)tempbuffer[0];
+            packet_type = (int)temp_buffer[0];
+            message_index = (int)temp_buffer[1];
+
+            data_size = (int)temp_buffer[2];
+            number_of_windows = data_size / 1024;
+            remaining_message_size = data_size + 1; // One footer at the end (the weight)
 
             switch(packet_type){
                 case 1:
                     std::cout << "ERROR: Right now we're not supporting this format from the child routers" << std::endl;
                     break;
                 case 2:
-                    buffer = new float[1027];
+                    buffer = new float[remaining_message_size];
                     size = 0;
-                    while(size < 1027)
-                        size += connector->receive(index, (char*)&(buffer[size]), (1027-size)); // Receive the data
+                    while(size < remaining_message_size)
+                        size += connector->receive(index, (char*)&(buffer[size]), (remaining_message_size-size)); // Receive the data
+
+                    weight = buffer[remaining_message_size-1]; // Get last item in buffer (weight)
 
                     arrival = new std::vector<float>();
                     arrival->push_back(1);
-                    arrival->insert(arrival->end(), &buffer[0], &buffer[1026]);
+                    arrival->push_back(temp_buffer[1]);
+                    arrival->push_back(temp_buffer[2]);
+                    arrival->insert(arrival->end(), &buffer[0], &buffer[data_size]);
 
                     if(VERBOSE)
                         thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
@@ -303,9 +321,10 @@
                     while(!out_queue->push(arrival))
                       ;
 
-                    decrement();
+                    for(int i = 0; i < number_of_windows; i++)
+                      decrement();
 
-                    weights[index] = buffer[1027];
+                    weights[index] = weight;
                     delete[] buffer;
                     break;
                 case 3:

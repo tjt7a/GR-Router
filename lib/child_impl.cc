@@ -133,7 +133,7 @@
      // Thread receive function receives from root
      void child_impl::receive_root(){
 
-          float * temp_buffer = new float[1];
+          float * temp_buffer = new float[3];
      	    float * buffer;
           std::vector<float> *arrival;
           int size;
@@ -142,26 +142,30 @@
 
      		   // Spin wait; but calling the blocking connect
                size = 0;
-               while(size < 1){
-                    size += connector->receive(-1, (char*)&(temp_buffer[size]), (1-size));
+               while(size < 3){
+                    size += connector->receive(-1, (char*)&(temp_buffer[size]), (3-size));
                     if(size == 0 && d_finished){
                          delete[] temp_buffer;
-                         return;
+                         continue;
                     }
                }
 
-               int packet_type = (int)temp_buffer[0];
+               float packet_type = temp_buffer[0];
+               float index = temp_buffer[1];
+               int data_size = (int)temp_buffer[2];
 
-               switch(packet_type){
+               switch((int)packet_type){
                     case 1:
-                         buffer = new float[1027];
+                         buffer = new float[data_size];
                          size = 0;
-                         while(size < 1026)
-                              size += connector->receive(-1, (char*)&(buffer[size]), (1026-size)); // Receive the rest of the segment
+                         while(size < data_size)
+                              size += connector->receive(-1, (char*)&(buffer[size]), (data_size-size)); // Receive the rest of the segment
                          
                          arrival = new std::vector<float>();
-                         arrival->push_back(1);
-                         arrival->insert(arrival->end(), &buffer[0], &buffer[1026]);
+                         arrival->push_back(packet_type);
+                         arrival->push_back(index);
+                         arrival->push_back((float)data_size);
+                         arrival->insert(arrival->end(), &buffer[0], &buffer[data_size]);
 
                          if(VERBOSE)
                               myfile << "Got a window segment : index=" << arrival->at(1) << std::endl;
@@ -169,7 +173,8 @@
                          while(!in_queue->push(arrival))
                               ;
 
-                         increment();
+                          for(int i = 0; i < (data_size/1024); i++)
+                            increment();
 
                          if(VERBOSE)
                               std::cout << "Number of Windows: " << global_counter << std::endl;
@@ -198,8 +203,6 @@
 
           std::vector<float> *temp; // Pointer to current vector of floats to be sen
           int sent = 0;
-          int packet_size = 0;
-          int packet_type = 0;
 
      	while(!d_finished){
 
@@ -220,31 +223,35 @@
      		// If we have windows, send window
      		if(out_queue->pop(temp)){
 
-                    packet_type = (int)temp->at(0); // Get the packet type
+                    float packet_type = temp->at(0); // Get the packet type
+                    float index = temp->at(1); // Get the packet index
+                    float data_size = temp->at(2); // Get the packet data_size
+                    float num_windows = data_size / 1024;
+                    float packet_size = data_size + 3;
 
                     //Switch on the packet_type
-                    switch(packet_type){
+                    switch((int)packet_type){
                          case 1:
                               if(VERBOSE){
                                    std::cout << "We have " << global_counter << "messages in the queue right now" << std::endl;
                                    myfile << "Popped and sending packet index=" << temp->at(1) << " to parent with index=" << temp->at(1) << std::endl;
                               }
 
-                              packet_size = (temp->at(2) + 3); // The size of the segment to be sent
-
-                              d_total_samples += (packet_size - 3);
+                              d_total_samples += data_size;
 
                               // Shove on a weight value, and make it a type-2 message
                               temp->push_back(get_weight());
                               temp->at(0) = 2;
 
-                              packet_size++;
+                              packet_size++; // Increment the packet size; we're adding a weight
 
                               sent = 0;
                               while(sent < packet_size)
                                    sent += connector->send(-1, (char*)&((temp->data())[sent]), (packet_size-sent)); // *4
 
-                              decrement();
+                              for(int i = 0; i < num_windows; i++)
+                                decrement();
+                              
                               delete temp;
                               break;
                          case 2:
