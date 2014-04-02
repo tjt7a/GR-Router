@@ -23,7 +23,6 @@
   This is a test application for the GR-ROUTER library.
   An input WAV file is read, and the resulting samples are streamed through a series of FFT/IFFT blocks.
   GR-ROUTER distributes the data out to multiple nodes to increase throughput.
-
 */
 
 // Include header files for each block used in flowgraph
@@ -57,16 +56,16 @@ int main(int argc, char **argv)
 
   int window_size = 1024;
   int fft_count = 50;
-  const char* in_file_name = "inputs/out.wav";
-  const char* out_file_name = "fft_only_child_output_with_ordering.out";
+  const char* in_file_name = "inputs/out.wav"; // Location of the input WAV file
+  const char* out_file_name = "/dev/null"; // Where the output will be saved (for metrics, it will be dumped)
   int number_of_children = 1;
 
   if(argc > 1)
 	   number_of_children = atoi(argv[1]);
 
   /*
-  * Input wavfile source for streaming data into the flowgraph
-  * Output file sink for streaming output data to a file
+  * Input wavfile source for streaming data into the flowgraph from a WAV source file; enabled repeat
+  * Output file sink for streaming output data to a file (in this case /dev/null)
   */
 
   // Wavfile source to read in the input WAV file
@@ -74,26 +73,27 @@ int main(int argc, char **argv)
   gr::blocks::file_sink::sptr file_sink = gr::blocks::file_sink::make(sizeof(float), out_file_name); // output file sink (BIN) [sizeof(float), output_file]
 
   /*
-  * Input and Output queues to hold 'windows' of 1025 floats. 1 index, and 1024 samples
+  * Input and Output queues to hold vector 'message' addresses
   */
-
-  //boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > input_queue(new boost::lockfree::queue<std::vector<float>* >(0)); // input queue
-  //boost::shared_ptr<boost::lockfree::queue< std::vector<float>* > > output_queue(new boost::lockfree::queue<std::vector<float>* >(0)); // output queue
   
-  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(1026);
-  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(1026);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(100);
+  boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(100);
 
   /*
   * Load Balancing Router to distribute windows to children
   */
 
   gr::router::root::sptr root_router = gr::router::root::make(number_of_children, input_queue, output_queue, throughput_value); // parent router [1 child, input queue, output queue]
+ 
+  /*
+  * Throttle: Throttles set maximum throughput from the WAV file (this can be tuned to the maximum obtainable throughput)
+  */
+
   gr::blocks::throttle::sptr throttle_0 = gr::blocks::throttle::make(sizeof(float), throughput_value);
 
 
-
   /*
-  * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on an index, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
+  * Input queue Sink: Takes streams from a flow graph, packetizes, slaps on headers, and pushes the result into the input queue; last argument indicates if index is to be preserved from the stream tags
   * Input queue Source: Grabs windows from the input queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarantee order of windows before streaming)
   */
 
@@ -101,18 +101,27 @@ int main(int argc, char **argv)
   gr::router::queue_source::sptr input_queue_source = gr::router::queue_source::make(sizeof(float), input_queue, false, false); // input queue source [sizeof(float), input_queue, preserve index = true, order = true]
 
   /*
-  * Output queue Sink: Takes streams from the flow graph, packetized, slaps on an index, and pushes the result into the output queue; last argument indicates if the index is to be preserved from the stream tags
+  * Output queue Sink: Takes streams from the flow graph, packetized, slaps on headers, and pushes the result into the output queue; last argument indicates if the index is to be preserved from the stream tags
   * Output queue Source: Grabs windows from the output queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarrantee order of windows befoe streaming)
   */
 
   gr::router::queue_sink::sptr output_queue_sink = gr::router::queue_sink::make(sizeof(float), output_queue, false);
   gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false); // Preserve index, order data, write file
 
+  /*
+  * Throughput: This block prints out the throughput of the Flowgraph in MegaSamples per second; first argument is the number of work() functions to be called between std::cout statements; the second argument is the index of the throughput block
+  */
+
   gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 10, 0);
 
 
+  /*
+  * Throttle the input rate, and push windows into the input queue
+  */
+
   tb_1->connect(wavfile_source, 0, throttle_0, 0);
   tb_1->connect(throttle_0, 0, input_queue_sink, 0);
+
 
   /*
   * Handler Code
@@ -135,7 +144,7 @@ int main(int argc, char **argv)
 
   /*
   * Sink Code
-  * Connects the output_queue to the sink
+  * Connects the output_queue to a throughput block to get the throughput of the system, and then pass the results to the output file (/dev/null)
   */
 
   tb_1->connect(output_queue_source, 0, throughput, 0);
