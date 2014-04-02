@@ -17,6 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+
+ /*
+ * This is the Child Router Block. This block receives messages from its parent, and pushes the messages into an input_queue.
+ * The router also pops messages off of the output_queue, tacks on a weight (indicating how busy it is) and sends the output message back to the parent.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -126,7 +132,7 @@
      {
         // This block is completely asynchronous; therefore there is no need for 'work()'ing
           // Might want to put something else in here; not sure yet.
-     	return noutput_items;
+     	return 0;
      }
 
 
@@ -140,7 +146,7 @@
 
      	  while(!d_finished){
 
-     		   // Spin wait; but calling the blocking connect
+     		   // Calling the blocking receive
                size = 0;
                while(size < 3){
                     size += connector->receive(-1, (char*)&(temp_buffer[size]), (3-size));

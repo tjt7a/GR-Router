@@ -23,13 +23,13 @@
 			< type :: [0] > -- contains the message type
 			< index :: [1] > -- contains the index of the window
 			< size :: [2] > -- contains the size of the data in the data field to come next
-			< data :: [3,1026] > -- contains data followed by zeros
+			< data :: [3,<data_size + 3 - 1] > -- contains data followed by zeros
 		|
  */
 
 /*
 	Important Note
-		This code functions on groups of 1024 float values. Any subsequent floats that cannot complete such a set are thrown away.
+		This code functions on groups of 1024 float values.
 		This can be modified in the future.
 */
 
