@@ -56,7 +56,6 @@ private:
 
 	// Right now everything is Floats, but future versions need to support any data type
 	int item_size; // size of items to be windowd
-	int data_size; // Number of floats in the segment
 
 	std::vector<float> window; // Window buffer
 	bool preserve; // Preserve indexes across flow graph
