@@ -23,7 +23,6 @@
   This is a test application for the GR-ROUTER library.
   An input WAV file is read, and the resulting samples are streamed through a series of FFT/IFFT blocks.
   GR-ROUTER distributes the data out to multiple nodes to increase throughput.
-
 */
 
 // Include header files for each block used in flowgraph

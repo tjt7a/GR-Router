@@ -23,7 +23,6 @@
   This is a test application for the GR-ROUTER library.
   A parent router sends messages to the child router, which then computes the FFT/IFFTx50 of that data
   The child router then sends the output messages back to the parent.
-
 */
 
 // Include header files for each block used in flowgraph
