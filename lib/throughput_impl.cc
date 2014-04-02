@@ -86,11 +86,11 @@ namespace gr {
           std::cout << '\t';
         
          std::cout << d_index << ". " << throughput << std::endl;
-      }
+       }
 			
 	     std::memcpy(out, in, noutput_items * d_itemsize);
 
-        return noutput_items;
+       return noutput_items;
     }
 
   } /* namespace router */
