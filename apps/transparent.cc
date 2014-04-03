@@ -33,6 +33,7 @@
 #include <gnuradio/top_block.h>
 #include <router/queue_sink.h> 
 #include <router/throughput.h>
+#include <router/throughput_sink.h>
 #include <boost/thread.hpp>
 #include "fft_ifft.h"
 #include <vector>
@@ -67,7 +68,8 @@ int main(int argc, char **argv)
   //gr::router::queue_source::sptr output_queue_source = gr::router::queue_source::make(sizeof(float), output_queue, false, false); // Preserve index, order data, write file
 
 
-  gr::router::throughput::sptr throughput_0 = gr::router::throughput::make(sizeof(float), 10, 0);
+  //gr::router::throughput::sptr throughput_0 = gr::router::throughput::make(sizeof(float), 10, 0);
+  gr::router::throughput_sink::sptr throughput_sink = gr::router::throughput_sink::make(sizeof(float), 10, 0);
   //gr::router::throughput::sptr throughput_1 = gr::router::throughput::make(sizeof(float), 10, 1);
   //gr::router::throughput::sptr throughput_2 = gr::router::throughput::make(sizeof(float), 10, 2);
   
@@ -104,11 +106,11 @@ int main(int argc, char **argv)
   //tb_1->connect(throttle_1, 0, output_queue_sink , 0);
   //tb_1->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
 
-  tb_1->connect(ffts.at(ffts.size()-1), 0, throughput_0, 0);
+  tb_1->connect(ffts.at(ffts.size()-1), 0, throughput_sink, 0);
   //tb_1->connect(throughput_0, 0, output_queue_sink, 0);
   //tb_1->connect(output_queue_source, 0, throughput_0, 0);
   //tb_1->connect(throttle_2, 0, throughput_2, 0);
-  tb_1->connect(throughput_0, 0, file_sink, 0);
+  tb_1->connect(ffts.at(ffts.size()-1), 0, file_sink, 0);
   //tb_1->connect(output_queue_source, 0, file_sink, 0);
   // tb_1->connect(input_queue_source, 0, file_sink, 0);
 
