@@ -33,6 +33,7 @@
 #include <gnuradio/top_block.h>
 #include <router/queue_sink.h>
 #include <router/throughput.h>
+#include <router/throughput_sink.h>
 #include <boost/thread.hpp> 
 #include <router/child.h>
 #include "fft_ifft.h"
@@ -45,7 +46,7 @@ using namespace gr;
 int main(int argc, char **argv)
 {
 
-  double throughput_value = 1e6; // Set the throughput of the throttle
+  double throughput_value = 2e6; // Set the throughput of the throttle
 
   /*
   * Create a Top Block for the flowgraph
@@ -96,7 +97,8 @@ int main(int argc, char **argv)
   * Throughput: This block prints out the throughput of the Flowgraph in MegaSamples per second; first argument is the number of work() functions to be called between std::cout statements; the second argument is the index of the throughput block
   */
 
-  gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 10, 0);
+  //gr::router::throughput::sptr throughput = gr::router::throughput::make(sizeof(float), 10, 0);
+  gr::router::throughput_sink::sptr throughput_sink = gr::router::throughput_sink::make(sizeof(float), 10, 0);
 
 
 
@@ -122,9 +124,10 @@ int main(int argc, char **argv)
     * Connects the FFT/IFFT chain to a throughput block to get the throughput of the system, and then pass the results to the output file (/dev/null)
   */
 
-  tb->connect(ffts.at(ffts.size()-1), 0, throughput, 0);
+  tb->connect(ffts.at(ffts.size()-1), 0, output_queue_sink, 0);
 	
-  tb->connect(throughput, 0, output_queue_sink, 0);
+  //tb->connect(ffts.at(ffts.size()-1), 0, throughput_sink, 0);
+  //tb->connect(throughput, 0, output_queue_sink, 0);
 
 
   // Run flowgraph
