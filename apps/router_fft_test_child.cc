@@ -18,7 +18,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
  /*
   This is a test application for the GR-ROUTER library.
   A parent router sends messages to the child router, which then computes the FFT/IFFTx50 of that data
@@ -28,6 +27,7 @@
 // Include header files for each block used in flowgraph
 #include <gnuradio/blocks/wavfile_source.h>
 #include <gnuradio/blocks/file_sink.h>
+#include <gnuradio/blocks/throttle.h>
 #include <boost/lockfree/queue.hpp>
 #include <router/queue_source.h>
 #include <gnuradio/top_block.h>
@@ -46,7 +46,7 @@ using namespace gr;
 int main(int argc, char **argv)
 {
 
-  double throughput_value = 2e6; // Set the throughput of the throttle
+  double throughput_value = 1.5e5; // Set the throughput of the throttle
 
   /*
   * Create a Top Block for the flowgraph
@@ -75,11 +75,14 @@ int main(int argc, char **argv)
   boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > input_queue(100);
   boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > output_queue(100);
 
+  gr::blocks::throttle::sptr throttle_0 = gr::blocks::throttle::make(sizeof(float), throughput_value);
+
+
   /*
   * Load Balancing Router to receive windows from parent; push workload into input_queue, and pop results from output_queue; last argument is not used at this time
   */
 
-  gr::router::child::sptr child_router = gr::router::child::make(0, child_index, parent_name, input_queue, output_queue, 1e6);
+  gr::router::child::sptr child_router = gr::router::child::make(0, child_index, parent_name, input_queue, output_queue, throughput_value);
 
   /*
   * Input queue Source: Grabs windows from the input queue, depacketizes, pulls out the index, and streams through flowgraph; arguments: preserve index (stream tags), order (guarantee order of windows before streaming)
@@ -107,11 +110,13 @@ int main(int argc, char **argv)
   * Chain of 50 FFTs that processes a window of 1024 values from the input_queue, and dumps the resulting output window into the output_queue
   */
 
+  tb->connect(input_queue_source, 0, throttle_0, 0);
+
   std::vector<fft_ifft_sptr> ffts;
   for(int i = 0; i < fft_count; i++){
   	ffts.push_back(fft_ifft_make(1024));
   	if(i == 0){
-  		tb->connect(input_queue_source, 0, ffts.at(0), 0);
+  		tb->connect(throttle_0, 0, ffts.at(0), 0);
   	}
   	else{
   		tb->connect(ffts.at(i-1), 0, ffts.at(i), 0);
