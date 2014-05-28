@@ -37,12 +37,18 @@ class queue_sink_impl : public queue_sink
 {
 private:
 
+
+	//std::map< int, std::vector<int> > message_format
+
 	std::ofstream myfile; // output file stream
 
 	int number_of_windows; // Number of windows we can fill with floats
 	int left_over; // What's left after filling window segments
 
+	int out_mult; // Output multiple
+
 	std::vector<gr::tag_t> tags; // Vector of tags pulled from stream
+	const char* symbol; // Symbol to look for in the stream
 
 	boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > *queue; // Pointer to shared queue
 	int queue_counter; // Counter for windows in queue

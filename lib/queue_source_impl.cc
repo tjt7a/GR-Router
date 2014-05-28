@@ -26,7 +26,6 @@
 			< size :: [2] > -- contains the size of the data in the data field to come next
 			< data :: [3,1026] > -- contains data followed by zeros
 		|
-		|
  */
 
 /*

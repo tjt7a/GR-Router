@@ -40,6 +40,8 @@
 #include <gnuradio/io_signature.h>
 #include "queue_sink_impl.h"
 #include <stdio.h>
+#include "tinyxml.h"
+#include <stdlib.h> 
 
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
 
@@ -75,6 +77,100 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	/*
 	Read from XML to get size information
 	*/
+/*
+	// XML file containing the format of the messages
+	const char *filename = "queue_sink.xml";
+
+	const char *fields[] = {"Properties", "Format"};
+
+	TiXmlDocument doc(filename);
+
+	if(doc.LoadFile()){
+
+		TiXmlElement *root = doc.FirstChildElement("Message");
+
+		std::vector<float> format;
+
+		if(root){
+
+			for(int i = 0; i < 2; i++){
+				TiXmlElement *element = root->FirstChildElement(fields[i]);
+
+				if(element){
+
+					TiXmlAttribute *pAttrib = element->FirstAttribute();
+
+					while(pAttrib){
+
+						//If Properties attribute
+						if(i == 0){
+
+							if(pAttrib->Name() == "multiple"){
+
+								if(pAttrib->QueryIntValue(&out_mult) != TIXML_SUCCESS){
+									out_mult = 1024;
+									std::cerr << "Cannot parse <multiple>; setting to 1024" << std::endl;
+								}
+
+							}
+							else if(pAttrib->Name() == "preserve"){
+
+								if(pAttrib->Value() == "false" || pAttrib->Value() == "False" || pAttrib->Value() == "FALSE"){
+									preserve = false;
+								}
+								else if(pAttrib->Value() == "true" || pAttrib->Value() == "True" || pAttrib->Value() == "TRUE"){
+									preserve = true;
+								}
+								else
+									preserve = false;
+
+							}
+
+							else if(pAttrib->Name() == "symbol"){
+								symbol = pAttrib->Value();
+							}
+
+							// Grab next attribute
+						}
+
+						// Else, Format attributes
+						else{
+
+							if(pAttrib->Name() == "type"){
+								format.clear();
+								format.push_back(atof(pAttrib->Value()));
+							}
+							else if(pAttrib->Name() == "index"){
+								// We want an index; true
+								if(pAttrib->Value() == "true" || pAttrib->Value() == "True" || pAttrib->Value() == "TRUE"){
+									format.push_back(1);
+								}
+								// Assume false
+								else
+							}
+						}
+
+						pAttrib = pAttrib->Next();
+					}
+				}
+				else
+					break;
+			}
+
+		}
+		else{
+			std::cerr << "Can't read message" << std::endl;
+			return -1;
+		}
+
+	}
+	else{
+		if(VERBOSE)
+			myfile << "Cannot read configuration file " << filename << " using defaults" << std::endl;
+	}
+*/
+
+
 	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size**
 
 	if(VERBOSE)
