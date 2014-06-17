@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /* 
- * Copyright 2013 <+YOU OR YOUR COMPANY+>.
+ * Copyright 2014 <+YOU OR YOUR COMPANY+>.
  * 
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
  */
 
 
-#ifndef INCLUDED_ROUTER_CHILD_H
-#define INCLUDED_ROUTER_CHILD_H
+#ifndef INCLUDED_ROUTER_QUEUE_SOURCE_BYTE_H
+#define INCLUDED_ROUTER_QUEUE_SOURCE_BYTE_H
 
 #include <router/api.h>
 #include <gnuradio/sync_block.h>
@@ -37,24 +37,24 @@ namespace gr {
      * \ingroup router
      *
      */
-    class ROUTER_API child : virtual public gr::sync_block
+    class ROUTER_API queue_source_byte : virtual public gr::sync_block
     {
      public:
-      typedef boost::shared_ptr<child> sptr;
+      typedef boost::shared_ptr<queue_source_byte> sptr;
 
       /*!
-       * \brief Return a shared_ptr to a new instance of router::child.
+       * \brief Return a shared_ptr to a new instance of router::queue_source_byte.
        *
-       * To avoid accidental use of raw pointers, router::child's
+       * To avoid accidental use of raw pointers, router::queue_source_byte's
        * constructor is in a private implementation
-       * class. router::child::make is the public interface for
+       * class. router::queue_source_byte::make is the public interface for
        * creating new instances.
        */
-      static sptr make(int n, int child_index, char* hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &in_queue, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> > &out_queue, double throughput);
+      static sptr make(int item_size, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> >&shared_queue, bool preserve_index, bool order);
     };
 
   } // namespace router
 } // namespace gr
 
-#endif /* INCLUDED_ROUTER_CHILD_H */
+#endif /* INCLUDED_ROUTER_QUEUE_SOURCE_BYTE_H */
 

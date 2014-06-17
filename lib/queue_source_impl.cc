@@ -21,16 +21,16 @@
 
 			Format of type-1 Segments
 		|
-			< type :: [0] > -- contains the message type
-			< index :: [1] > -- contains the index of the window
-			< size :: [2] > -- contains the size of the data in the data field to come next
-			< data :: [3,1026] > -- contains data followed by zeros
+			float < type :: [0] > -- contains the message type
+			float < index :: [1] > -- contains the index of the data segment
+			float < size :: [2] > -- contains the size of the data in the data field to come next
+			float < data :: [3, 770] > -- contains data followed by zeros
 		|
  */
 
 /*
 	Important Note
-		This code functions on groups of 1024 float values. Any subsequent floats that cannot complete such a set are thrown away.
+		This code functions on groups of 768 float values. Any subsequent floats that cannot complete such a set are thrown away.
 		This can be modified in the future.
 */
 
@@ -84,14 +84,13 @@ queue_source_impl::queue_source_impl(int size, boost::lockfree::queue< std::vect
 		gr::io_signature::make(1, 1, size)), queue(&shared_queue), item_size(size), preserve(preserve_index), order(order_data)
 {
 
-	set_output_multiple(1024); // Guarantee outputs in multiples of 1024!
+	set_output_multiple(768); // Guarantee outputs in multiples of 768!
 	dead = false;
 
 	if(VERBOSE)
 		myfile.open("queue_source.data"); // Dump information to file
 
 	global_index = 0; // Zero is the initial index used for ordering. All first Windows must be ordered from index 0
-	
 
 	if(VERBOSE){
 		myfile << "Calling Queue_Source Constructor\n\n";
@@ -232,11 +231,13 @@ queue_source_impl::work(int noutput_items,
 
 						}
 
+						//std::cout << "Popped [" << type << "], [" << index << "], [" << data_size << "]" << std::endl;
+
+
 						delete temp_vector;
 
 						return data_size;
-						//return_size += data_size;
-						//i++;
+
 					}	
 					break;
 
@@ -262,7 +263,7 @@ queue_source_impl::work(int noutput_items,
 		else{
 			boost::this_thread::sleep(boost::posix_time::microseconds(0.01)); // Arbitrary sleep time
 			//std::cout << "Failed to pop :(" << std::endl;
-			//return 0;
+			return 0;
 		}
 
 }

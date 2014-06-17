@@ -46,7 +46,8 @@ target_link_libraries(router_fft_test_child
 target_link_libraries(transparent
  ${BOOST_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_RUNTIME_LIBRARIES} ${GNURADIO_ANALOG_LIBRARIES} ${GNURADIO_AUDIO_LIBRARIES} ${GNURADIO_BLOCKS_LIBRARIES} ${GR_ROUTER_LIBRARIES} ${BOOST_SYSTEM_LIBRARIES} ${GNURADIO_FFT_LIBRARIES} ${GNURADIO_PMT_LIBRARIES} ${GNURADIO_FILTER_LIBRARIES})
 
+
 INSTALL(TARGETS
-    dial_tone fft_ifft_test router_fft_test_parent router_fft_test_child transparent 
+    dial_tone fft_ifft_test router_fft_test_parent router_fft_test_child transparent
     DESTINATION "/home/tjt7a/src/GR-Router/bin"
 )

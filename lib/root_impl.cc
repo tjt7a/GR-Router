@@ -41,7 +41,7 @@
 
         // This is the public shared-pointer constructor; it is called by the Scheduler at creation time
  		root::sptr
- 		root::make(int number_of_children, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
+ 		root::make(int number_of_children, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
  		{
  			return gnuradio::get_initial_sptr (new root_impl(number_of_children, input_queue, output_queue, throughput));
  		}
@@ -51,7 +51,7 @@
         * 1 inputs: 1 from source
         * 1 outputs: 1 to sink
         */
-        root_impl::root_impl(int numberofchildren, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
+        root_impl::root_impl(int numberofchildren, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
         : gr::sync_block("root",
      	gr::io_signature::make(0,0,0),
      	gr::io_signature::make(0,0,0)), number_of_children(numberofchildren), in_queue(&input_queue), out_queue(&output_queue), d_throughput(throughput)
@@ -74,24 +74,24 @@
 
             num_killed = 0;
 
-    		// Set global counter; no need to lock -> no contention
-         	global_counter = 0;
+    		    // Set global counter; no need to lock -> no contention
+         	  global_counter = 0;
 
             // Communication connector between nodes (size of elements, number of children, port number, are we root?)
-    		connector =  new NetworkInterface(sizeof(float), number_of_children, 8080, true);
+    		    connector =  new NetworkInterface(sizeof(char), number_of_children, 8080, true);
 
-    	   	// Interconnect all blocks (we're root, so localhost=NULL)
-    		connector->connect(NULL);
+    	   	   // Interconnect all blocks (we're root, so localhost=NULL)
+    		     connector->connect(NULL);
 
-        	// Initialize counters for both queues to 0 (not sure we need this)
-    		in_queue_counter = 0;
-    		out_queue_counter = 0;
+        	   // Initialize counters for both queues to 0 (not sure we need this)
+    		    in_queue_counter = 0;
+    		    out_queue_counter = 0;
 
-    	  	// Array of weights values for each child + local (index 0)
-    		weights = new float[number_of_children];
+    	  	  // Array of weights values for each child + local (index 0)
+    		    weights = new float[number_of_children];
 
-    	   	 // Finished flag for threads(true if finished)
-    		  d_finished = false;
+    	   	   // Finished flag for threads(true if finished)
+    		    d_finished = false;
 
             //Thread for parent to send
             send_thread = boost::shared_ptr< boost::thread >(new boost::thread(boost::bind(&root_impl::send, this)));
@@ -193,8 +193,10 @@
                         index = min(); // Grab index of next target
 
                         data_size = (int)temp->at(2); // The size of the data segment is located at index 2
-                        window_count = data_size / 1024;
-                        packet_size = data_size + 3; // Size of the data + headers
+                        window_count = data_size / 768;
+                        packet_size = (data_size + 3) * 4; // Size of the data + headers * 4 (chars per byte)
+
+                        char* data_bytes = new char[packet_size];
 
                         weights[index] += window_count;
 
@@ -203,9 +205,11 @@
                         if(VERBOSE)
                             myfile << "Sending packet index=" << temp->at(1) << " to child=" << index << std::endl;
 
+                        memcpy(&(data_bytes[0]), &(temp->data()[0]), packet_size);
+
                         sent = 0;
                         while(sent < packet_size)
-                            sent += connector->send(index, (char*)&((temp->data())[sent]), (packet_size - sent));
+                            sent += connector->send(index, &(data_bytes[sent]), (packet_size - sent));
 
                         if(VERBOSE)
                             myfile << "Finished sending" << std::endl;
@@ -244,10 +248,10 @@
             Format of type-2 Segments
         |
             < type :: [0] > -- contains the message type
-            < index :: [1] > -- contains the index of the window
-            < size :: [2] > -- contains the size of the data in the data field to come next
-            < data :: [3,1026] > -- contains data followed by zeros
-            < weight :: [1027] > -- contains the weight of the sending child
+            < index :: [1,2,3,4] > -- contains the index of the window
+            < size :: [5,6,7,8] > -- contains the size of the data in the data field to come next
+            < data :: [...] > -- contains data followed by zeros
+            < weight :: [1,2,3,4] > -- contains the weight of the sending child
         */
 
         /*
@@ -269,57 +273,63 @@
             thread_file.open(name_buff);
           }
 
-          float * temp_buffer = new float[3];
-     	    float * buffer;
-     	    std::vector<float> *temp;
+          char * temp_buffer = new char[9];
+     	    std::vector<char> *temp;
           int size = 0;
-          std::vector<float> *arrival;
+          std::vector<char> *arrival;
           std::vector<float> *kill_msg;
 
-          int packet_type, message_index, data_size, number_of_windows, remaining_message_size;
           float weight;
 
           if(VERBOSE)
             std::cout << "Started receiver thread for child #" << index << std::endl;
 
-     	  // Until the thread is finished
-     	  while(!d_finished){
+     	    // Until the thread is finished
+     	    while(!d_finished){
 
             // Wait until there's something to receive (may want to replace with something more efficient than a spinning wait)
            size = 0;
-     		   while(size < 3){
-                size += connector->receive(index, (char*)&(temp_buffer[size]), (3-size));
+     		   while(size < 9){
+                size += connector->receive(index, (char*)&(temp_buffer[size]), (9-size)); // Grab first byte (type), float (index), float (size)
                 if(size == 0 && d_finished)
                     return; // We're done
             }
 
-            packet_type = (int)temp_buffer[0];
-            message_index = (int)temp_buffer[1];
+            char packet_type = temp_buffer[0];
 
-            data_size = (int)temp_buffer[2];
-            number_of_windows = data_size / 1024;
-            remaining_message_size = data_size + 1; // One footer at the end (the weight)
+            float message_index;
+            memcpy(&message_index, &(temp_buffer[1]), 4);
 
-            switch(packet_type){
+            float data_size;
+            memcpy(&data_size, &(temp_buffer[5]), 4);
+
+            int number_of_windows = data_size / 768;
+            int remaining_message_size = data_size + (1 * sizeof(int)); // One footer at the end (the weight)
+
+            switch((int)packet_type){
                 case 1:
-                    std::cout << "ERROR: Right now we're not supporting this format from the child routers" << std::endl;
+                    std::cout << "ERROR: Right now we're not supporting format 1 from the child routers" << std::endl;
                     break;
                 case 2:
-                    buffer = new float[remaining_message_size];
+                    std::cout << "ERROR: Right now we're not supporting format 2 from the child routers" << std::endl;
+                    break;
+                case 3:
+                    char * buffer = new char[remaining_message_size];
+
                     size = 0;
                     while(size < remaining_message_size)
                         size += connector->receive(index, (char*)&(buffer[size]), (remaining_message_size-size)); // Receive the data
 
-                    weight = buffer[remaining_message_size-1]; // Get last item in buffer (weight)
+                    float weight;
+                    memcpy(&weight, &(buffer[remaining_message_size-4]), 4)
 
-                    arrival = new std::vector<float>();
-                    arrival->push_back(1);
-                    arrival->push_back(temp_buffer[1]);
-                    arrival->push_back(temp_buffer[2]);
+                    arrival = new std::vector<char>();
+                    arrival->push_back('2'); // type 1 message
+                    arrival->insert(arrival->end(), &(temp_buffer[1]), &(temp_buffer[9])); // Insert index and data_size bytes
                     arrival->insert(arrival->end(), &buffer[0], &buffer[data_size]);
 
                     if(VERBOSE)
-                        thread_file << "Got a window segment : index=" << arrival->at(1) << std::endl;
+                        thread_file << "Got a window segment : index=" << message_index << ", data_size=" << data_size << std::endl;
 
                     while(!out_queue->push(arrival))
                       ;
@@ -330,7 +340,7 @@
                     weights[index] = weight;
                     delete[] buffer;
                     break;
-                case 3:
+                case 4:
                     killed_lock.lock();
                     num_killed++;
                     killed_lock.unlock();

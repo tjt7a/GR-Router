@@ -28,5 +28,7 @@ install(FILES
     queue_source.h
     test.h
     throughput.h
-    throughput_sink.h DESTINATION include/router
+    throughput_sink.h
+    queue_sink_byte.h
+    queue_source_byte.h DESTINATION include/router
 )

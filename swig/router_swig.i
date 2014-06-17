@@ -15,6 +15,8 @@
 #include "router/test.h"
 #include "router/throughput.h"
 #include "router/throughput_sink.h"
+#include "router/queue_sink_byte.h"
+#include "router/queue_source_byte.h"
 %}
 
 
@@ -32,3 +34,7 @@ GR_SWIG_BLOCK_MAGIC2(router, queue_source);
 GR_SWIG_BLOCK_MAGIC2(router, throughput);
 %include "router/throughput_sink.h"
 GR_SWIG_BLOCK_MAGIC2(router, throughput_sink);
+%include "router/queue_sink_byte.h"
+GR_SWIG_BLOCK_MAGIC2(router, queue_sink_byte);
+%include "router/queue_source_byte.h"
+GR_SWIG_BLOCK_MAGIC2(router, queue_source_byte);
