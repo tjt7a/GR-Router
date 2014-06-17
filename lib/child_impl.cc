@@ -17,7 +17,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
  /*
  * This is the Child Router Block. This block receives messages from its parent, and pushes the messages into an input_queue.
  * The router also pops messages off of the output_queue, tacks on a weight (indicating how busy it is) and sends the output message back to the parent.
@@ -169,8 +168,6 @@
                float data_size; // size in floats
                memcpy(&data_size, &(temp_header_bytes[8]), 4);
 
-               delete[] temp_header_bytes;
-
                switch((int)packet_type){
                     case 1:
                          temp_buffer = new char[(int)data_size*sizeof(float)];
@@ -216,6 +213,9 @@
 
                }
      	}
+
+      delete[] temp_header_bytes;
+
      }
 
      // Thread send function (send to root)

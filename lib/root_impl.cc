@@ -190,6 +190,7 @@
                 // Switch on the packet_type
                 switch(packet_type){
                     case 1:
+                    {
                         index = min(); // Grab index of next target
 
                         data_size = (int)temp->at(2); // The size of the data segment is located at index 2
@@ -214,11 +215,16 @@
                         if(VERBOSE)
                             myfile << "Finished sending" << std::endl;
 
+                        // We've sent the data, so don't need the memory anymore
+                        delete[] data_bytes;
+
                         for(int i = 0; i < window_count; i++)
                           increment();
 
                         break;
+                    }
                     case 3:
+                    {
                         for(int i = 0; i < number_of_children; i++){
                             sent = 0;
                             while(sent < 1)
@@ -230,6 +236,7 @@
                     default:
                         std::cout << "ERROR: Parent Router is trying to parse an incorrectly formatted packet" << std::endl;
                         break;
+                    }
                 }
 
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
@@ -308,12 +315,17 @@
 
             switch((int)packet_type){
                 case 1:
+                {
                     std::cout << "ERROR: Right now we're not supporting format 1 from the child routers" << std::endl;
                     break;
+                }
                 case 2:
+                {
                     std::cout << "ERROR: Right now we're not supporting format 2 from the child routers" << std::endl;
                     break;
+                }
                 case 3:
+                {
                     char * buffer = new char[remaining_message_size];
 
                     size = 0;
@@ -321,12 +333,12 @@
                         size += connector->receive(index, (char*)&(buffer[size]), (remaining_message_size-size)); // Receive the data
 
                     float weight;
-                    memcpy(&weight, &(buffer[remaining_message_size-4]), 4)
+                    memcpy(&weight, &(buffer[remaining_message_size-4]), 4);
 
                     arrival = new std::vector<char>();
                     arrival->push_back('2'); // type 1 message
                     arrival->insert(arrival->end(), &(temp_buffer[1]), &(temp_buffer[9])); // Insert index and data_size bytes
-                    arrival->insert(arrival->end(), &buffer[0], &buffer[data_size]);
+                    arrival->insert(arrival->end(), &buffer[0], &buffer[(int)data_size]);
 
                     if(VERBOSE)
                         thread_file << "Got a window segment : index=" << message_index << ", data_size=" << data_size << std::endl;
@@ -340,14 +352,17 @@
                     weights[index] = weight;
                     delete[] buffer;
                     break;
+                }
                 case 4:
+                {
+                  /*
                     killed_lock.lock();
                     num_killed++;
                     killed_lock.unlock();
 
                     if(num_killed == number_of_children){
-                        kill_msg = new std::vector<float>();
-                        kill_msg->push_back(3);
+                        kill_msg = new std::vector<char>();
+                        kill_msg->push_back('3');
                         if(VERBOSE)
                             thread_file << "Pushing kill message" << std::endl;
 
@@ -355,15 +370,19 @@
                             ;
                     }
                     return;
+                  */
                     break;
+                }
                 default:
+                {
                     std::cout << "ERROR: Receiving unacceptable image format" << std::endl;
                     break;
+                }
             }
 
      	}
 
-     	delete [] buffer; // We're done with our buffer
+     	delete [] temp_buffer; // We're done with our buffer
      }
 
     	// Find index of child with minimum weight BIG_OH(N)
