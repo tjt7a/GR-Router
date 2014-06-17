@@ -17,7 +17,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
  /*
  * This is the Child Router Block. This block receives messages from its parent, and pushes the messages into an input_queue.
  * The router also pops messages off of the output_queue, tacks on a weight (indicating how busy it is) and sends the output message back to the parent.
@@ -29,6 +28,7 @@
 
 #include <gnuradio/io_signature.h>
 #include "child_impl.h"
+
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
 
 #define VERBOSE     false
@@ -38,7 +38,7 @@
 
  		// Return a shared pointer to the Scheduler; this public constructor calls the private constructor
  		child::sptr
- 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
+ 		child::make(int number_of_children, int child_index, char * hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
  		{
  			return gnuradio::get_initial_sptr (new child_impl(number_of_children, child_index, hostname, input_queue, output_queue, throughput));
  		}
@@ -46,7 +46,7 @@
     /*
      * The private constructor
      */
-     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
+     child_impl::child_impl( int numberofchildren, int index, char * hostname, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &input_queue, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> > &output_queue, double throughput)
      : gr::sync_block("child",
      	gr::io_signature::make(0, 0, 0),
      	gr::io_signature::make(0, 0, 0)), in_queue(&input_queue), out_queue(&output_queue), child_index(index), global_counter(0), parent_hostname(hostname), number_of_children(numberofchildren), d_finished(false), d_throughput(throughput)
@@ -62,13 +62,14 @@
             // ----------
 
 
-          if(VERBOSE) myfile.open("child_router.data");
+          if(VERBOSE) 
+              myfile.open("child_router.data");
 
           // Connect to <hostname>
           if(VERBOSE)
                myfile << "Attempting to connect to parent\n";
 
-          connector = new NetworkInterface(sizeof(float), 0, 8080, false);
+          connector = new NetworkInterface(sizeof(char), 0, 8080, false);
           
           // Interconnect all blocks (hostname of Root)
           connector->connect(hostname);
@@ -112,13 +113,13 @@
           
      	    d_finished = true;
 
-     	  // Kill send thread
-     	  d_thread_send_root->interrupt();
-     	  d_thread_send_root->join();
+     	    // Kill send thread
+     	    d_thread_send_root->interrupt();
+     	    d_thread_send_root->join();
 
-     	  // Kill receive thread
-    	  d_thread_receive_root->interrupt();
-     	  d_thread_receive_root->join();
+     	    // Kill receive thread
+    	    d_thread_receive_root->interrupt();
+     	    d_thread_receive_root->join();
 
           delete connector;
      }
@@ -139,39 +140,49 @@
      // Thread receive function receives from root
      void child_impl::receive_root(){
 
-          float * temp_buffer = new float[3];
+          char * temp_header_bytes = new char[3*sizeof(float)];
+          char * temp_buffer;
      	    float * buffer;
           std::vector<float> *arrival;
           int size;
 
-     	  while(!d_finished){
+     	    while(!d_finished){
 
      		   // Calling the blocking receive
                size = 0;
-               while(size < 3){
-                    size += connector->receive(-1, (char*)&(temp_buffer[size]), (3-size));
+               while(size < (3*sizeof(float))){
+                    size += connector->receive(-1, &(temp_header_bytes[0]), (3*sizeof(float)-size));
                     if(size == 0 && d_finished){
-                         delete[] temp_buffer;
+                         delete[] temp_header_bytes;
                          continue;
                     }
                }
 
-               float packet_type = temp_buffer[0];
-               float index = temp_buffer[1];
-               int data_size = (int)temp_buffer[2];
+
+               float packet_type;
+               memcpy(&packet_type, &(temp_header_bytes[0]), 4);
+
+               float index;
+               memcpy(&index, &(temp_header_bytes[4]), 4);
+
+               float data_size; // size in floats
+               memcpy(&data_size, &(temp_header_bytes[8]), 4);
 
                switch((int)packet_type){
                     case 1:
-                         buffer = new float[data_size];
+                         temp_buffer = new char[(int)data_size*sizeof(float)];
+                         buffer = new float[(int)data_size];
                          size = 0;
-                         while(size < data_size)
-                              size += connector->receive(-1, (char*)&(buffer[size]), (data_size-size)); // Receive the rest of the segment
+                         while(size < ((int)data_size*sizeof(float)))
+                              size += connector->receive(-1, &(temp_buffer[size]), ((int)data_size*sizeof(float)-size)); // Receive the rest of the segment
                          
+                         memcpy(&buffer[0], &temp_buffer[0], (int)data_size*sizeof(float));
+
                          arrival = new std::vector<float>();
                          arrival->push_back(packet_type);
                          arrival->push_back(index);
-                         arrival->push_back((float)data_size);
-                         arrival->insert(arrival->end(), &buffer[0], &buffer[data_size]);
+                         arrival->push_back(data_size);
+                         arrival->insert(arrival->end(), &buffer[0], &buffer[(int)data_size]);
 
                          if(VERBOSE)
                               myfile << "Got a window segment : index=" << arrival->at(1) << std::endl;
@@ -202,15 +213,18 @@
 
                }
      	}
+
+      delete[] temp_header_bytes;
+
      }
 
-     // Thread send function
+     // Thread send function (send to root)
      void child_impl::send_root(){
 
-          std::vector<float> *temp; // Pointer to current vector of floats to be sen
+          std::vector<char> *temp; // Pointer to current vector of bytes to be sent
           int sent = 0;
 
-     	while(!d_finished){
+     	    while(!d_finished){
 
 
             // Throughput Stuff------
@@ -226,18 +240,25 @@
             //----------
 
 
-     		// If we have windows, send window
-     		if(out_queue->pop(temp)){
+     		     // If we have windows, send window
+     		     if(out_queue->pop(temp)){
 
-                    float packet_type = temp->at(0); // Get the packet type
-                    float index = temp->at(1); // Get the packet index
-                    float data_size = temp->at(2); // Get the packet data_size
-                    float num_windows = data_size / 1024;
-                    float packet_size = data_size + 3;
+
+                    char packet_type = temp->at(0); // Get the packet type
+
+                    float index; // Get the packet index
+                    memcpy(&index, &(temp->at(1)), 4);
+
+                    float data_size; // Get the packet data_size
+                    memcpy(&data_size, &(temp->at(5)), 4);
+
+                    float num_windows = data_size / 50;
+                    float packet_size = data_size + 1 + 2 * sizeof(float);
 
                     //Switch on the packet_type
                     switch((int)packet_type){
                          case 1:
+                         {
                               if(VERBOSE){
                                    std::cout << "We have " << global_counter << "messages in the queue right now" << std::endl;
                                    myfile << "Popped and sending packet index=" << temp->at(1) << " to parent with index=" << temp->at(1) << std::endl;
@@ -246,23 +267,35 @@
                               d_total_samples += data_size;
 
                               // Shove on a weight value, and make it a type-2 message
-                              temp->push_back(get_weight());
-                              temp->at(0) = 2;
+                              int weight = get_weight();
+                              char* weight_bytes = new char[4];
+                              memcpy(weight_bytes, &weight, 4);
 
-                              packet_size++; // Increment the packet size; we're adding a weight
+                              temp->insert(temp->end(), &(weight_bytes[0]), &(weight_bytes[4]));
+                              temp->at(0) = '3'; // Change to type 3 message
+
+                              packet_size += 4; // Increment the packet size; we're adding a weight
 
                               sent = 0;
                               while(sent < packet_size)
-                                   sent += connector->send(-1, (char*)&((temp->data())[sent]), (packet_size-sent)); // *4
+                                   sent += connector->send(-1, &((temp->data())[sent]), (packet_size-sent)); // *4
 
                               for(int i = 0; i < num_windows; i++)
                                 decrement();
                               
                               delete temp;
                               break;
+                        }
                          case 2:
+                          {
+
+                              std::cout << "Child router cannot deal with receiving type two messages right now" << std::endl;
+
                               break;
+
+                          }
                          case 3: // Got a kill message
+                         {
                               if(VERBOSE)
                                    myfile << "Got a kill message \n" << std::flush;
 
@@ -275,9 +308,10 @@
                               d_finished = true;
                               return;
                               break;
+                        }
                     }
-     		}
-     	}
+     		     }
+     	    }
      }
 
      // Thread receive function receives from each child

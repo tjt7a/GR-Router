@@ -46,7 +46,7 @@ namespace gr {
      */
     throughput_sink_impl::throughput_sink_impl(size_t itemsize, int print_counter, int index)
       : gr::sync_block("throughput_sink",
-              gr::io_signature::make(1, 1, sizeof(float)),
+              gr::io_signature::make(1, 1, itemsize),
               gr::io_signature::make(0, 0, 0)), d_itemsize(itemsize), d_print_counter(print_counter), d_index(index)
     {
      d_start = boost::get_system_time();
@@ -69,7 +69,7 @@ namespace gr {
 			  gr_vector_const_void_star &input_items,
 			  gr_vector_void_star &output_items)
     {
-        const float *in = (const float *) input_items[0];
+        const char *in = (const char *) input_items[0];
         
        boost::system_time now = boost::get_system_time();
        double ticks = (now - d_start).ticks(); // Total number of ticks since start

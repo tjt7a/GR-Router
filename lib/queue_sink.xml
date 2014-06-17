@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<Message>
+	<Properties name="fft" multiple="1024" preserve="false" symbol="i"/> 
+	<Format  type="1" index="true" size="-1" data="true"/>
+</Message>

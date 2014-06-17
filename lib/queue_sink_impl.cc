@@ -20,7 +20,8 @@
  /*
 			Format of Segments
 		|
-			< type :: [0] > -- contains the message type
+			floats
+			< type :: [0] > -- contains the message type (1)
 			< index :: [1] > -- contains the index of the window
 			< size :: [2] > -- contains the size of the data in the data field to come next
 			< data :: [3,<data_size + 3 - 1] > -- contains data followed by zeros
@@ -29,7 +30,7 @@
 
 /*
 	Important Note
-		This code functions on groups of 1024 float values.
+		This code functions on groups of 768 float values.
 		This can be modified in the future.
 */
 
@@ -40,6 +41,8 @@
 #include <gnuradio/io_signature.h>
 #include "queue_sink_impl.h"
 #include <stdio.h>
+#include "tinyxml.h"
+#include <stdlib.h> 
 
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
 
@@ -66,6 +69,7 @@ queue_sink::make(int item_size, boost::lockfree::queue< std::vector<float>*, boo
  * shared_queue: pointer to lockfree queue to drop packets into
  * preserve_index: whether or not to preserve the index located in stream tag (if any)
  */
+ 
 queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index)
 : gr::sync_block("queue_sink",
 		gr::io_signature::make(1, 1, sizeof(float)),
@@ -75,7 +79,101 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 	/*
 	Read from XML to get size information
 	*/
-	set_output_multiple(1024); // Guarantee inputs in multiples of 1024! **Would not be used with application that has varying packet size**
+/*
+	// XML file containing the format of the messages
+	const char *filename = "queue_sink.xml";
+
+	const char *fields[] = {"Properties", "Format"};
+
+	TiXmlDocument doc(filename);
+
+	if(doc.LoadFile()){
+
+		TiXmlElement *root = doc.FirstChildElement("Message");
+
+		std::vector<float> format;
+
+		if(root){
+
+			for(int i = 0; i < 2; i++){
+				TiXmlElement *element = root->FirstChildElement(fields[i]);
+
+				if(element){
+
+					TiXmlAttribute *pAttrib = element->FirstAttribute();
+
+					while(pAttrib){
+
+						//If Properties attribute
+						if(i == 0){
+
+							if(pAttrib->Name() == "multiple"){
+
+								if(pAttrib->QueryIntValue(&out_mult) != TIXML_SUCCESS){
+									out_mult = 1024;
+									std::cerr << "Cannot parse <multiple>; setting to 1024" << std::endl;
+								}
+
+							}
+							else if(pAttrib->Name() == "preserve"){
+
+								if(pAttrib->Value() == "false" || pAttrib->Value() == "False" || pAttrib->Value() == "FALSE"){
+									preserve = false;
+								}
+								else if(pAttrib->Value() == "true" || pAttrib->Value() == "True" || pAttrib->Value() == "TRUE"){
+									preserve = true;
+								}
+								else
+									preserve = false;
+
+							}
+
+							else if(pAttrib->Name() == "symbol"){
+								symbol = pAttrib->Value();
+							}
+
+							// Grab next attribute
+						}
+
+						// Else, Format attributes
+						else{
+
+							if(pAttrib->Name() == "type"){
+								format.clear();
+								format.push_back(atof(pAttrib->Value()));
+							}
+							else if(pAttrib->Name() == "index"){
+								// We want an index; true
+								if(pAttrib->Value() == "true" || pAttrib->Value() == "True" || pAttrib->Value() == "TRUE"){
+									format.push_back(1);
+								}
+								// Assume false
+								else
+							}
+						}
+
+						pAttrib = pAttrib->Next();
+					}
+				}
+				else
+					break;
+			}
+
+		}
+		else{
+			std::cerr << "Can't read message" << std::endl;
+			return -1;
+		}
+
+	}
+	else{
+		if(VERBOSE)
+			myfile << "Cannot read configuration file " << filename << " using defaults" << std::endl;
+	}
+*/
+
+
+	set_output_multiple(768); // Guarantee inputs in multiples of 768 floats! **Would not be used with application that has varying packet size**
 
 	if(VERBOSE)
 		myfile.open("queue_sink.data"); // Dump information to file	
@@ -219,18 +317,21 @@ queue_sink_impl::work(int noutput_items,
 	window = new std::vector<float>();
 	window->push_back(1); // Push back the type (message type 1)
 	window->push_back(get_index()); // Push the index of this window
-	window->push_back(noutput_items); // Push the number of floats we're packing into this message; it needs to be a multiple of window size (1024)
+	window->push_back(noutput_items); // Push the number of floats we're packing into this message; it needs to be a multiple of window size (768)
 	window->insert(window->end(), &in[0], &in[noutput_items]);
 
 	while(!queue->push(window)){
 		boost::this_thread::sleep(boost::posix_time::microseconds(1));
 	}
 
+	//std::cout << "Pushed [" << window->at(0) << "], [" << window->at(1) << "], [" << window->at(2) << "]" << std::endl;
+
+
 	window = NULL;
 	queue_counter++;
 
 
-	return noutput_items;//number_of_windows*1024;
+	return noutput_items;//number_of_windows*768;
 }
 
 float queue_sink_impl::get_index(){
