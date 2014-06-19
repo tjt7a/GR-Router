@@ -155,8 +155,9 @@ namespace gr {
           char* index = get_index();
           window->insert(window->end(), &index[0], &index[4]); // Push the index of this window
 
+          float number = (float)noutput_items;
           char* number_of_items = new char[4]; // Convert int into array of bytes (chars)
-          memcpy(number_of_items, &noutput_items, 4);
+          memcpy(number_of_items, &(number), 4);
           window->insert(window->end(), &number_of_items[0], &number_of_items[4]); // Push the number of chars we're packing into this message; it needs to be a multiple of window size (50)
       
           window->insert(window->end(), &in[0], &in[noutput_items]);

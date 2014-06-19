@@ -74,24 +74,24 @@
 
             num_killed = 0;
 
-    		    // Set global counter; no need to lock -> no contention
-         	  global_counter = 0;
+    		// Set global counter; no need to lock -> no contention
+         	global_counter = 0;
 
             // Communication connector between nodes (size of elements, number of children, port number, are we root?)
-    		    connector =  new NetworkInterface(sizeof(char), number_of_children, 8080, true);
+    		connector =  new NetworkInterface(sizeof(char), number_of_children, 8080, true);
 
-    	   	   // Interconnect all blocks (we're root, so localhost=NULL)
-    		     connector->connect(NULL);
+    	   	// Interconnect all blocks (we're root, so localhost=NULL)
+    		connector->connect(NULL);
 
-        	   // Initialize counters for both queues to 0 (not sure we need this)
-    		    in_queue_counter = 0;
-    		    out_queue_counter = 0;
+        	// Initialize counters for both queues to 0 (not sure we need this)
+    		in_queue_counter = 0;
+    		out_queue_counter = 0;
 
-    	  	  // Array of weights values for each child + local (index 0)
-    		    weights = new float[number_of_children];
+    	  	// Array of weights values for each child + local (index 0)
+    		weights = new float[number_of_children];
 
-    	   	   // Finished flag for threads(true if finished)
-    		    d_finished = false;
+    	   	// Finished flag for threads(true if finished)
+    		d_finished = false;
 
             //Thread for parent to send
             send_thread = boost::shared_ptr< boost::thread >(new boost::thread(boost::bind(&root_impl::send, this)));
@@ -100,11 +100,12 @@
     		for(int i = 0; i < number_of_children; i++){
 
     			// _1 is a place holder for the argument of arguments passed to the functor ;; in this case the index
-          if(VERBOSE)
-            std::cout << "Spawning new receiver thread for child #" << i << std::endl;
-
-    			thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
-    		}
+          		if(VERBOSE)
+            		std::cout << "Spawning new receiver thread for child #" << i << std::endl;
+    				
+    			   thread_vector.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&root_impl::receive, this, _1), i)));
+    		
+        }
 
         	if(VERBOSE){
           		std::cout << "Finished calling Root Router's Constructor" << std::endl;
@@ -313,18 +314,18 @@
             int number_of_windows = data_size / 768;
             int remaining_message_size = data_size + (1 * sizeof(int)); // One footer at the end (the weight)
 
-            switch((int)packet_type){
-                case 1:
+            switch(packet_type){
+                case '1':
                 {
                     std::cout << "ERROR: Right now we're not supporting format 1 from the child routers" << std::endl;
                     break;
                 }
-                case 2:
+                case '2':
                 {
                     std::cout << "ERROR: Right now we're not supporting format 2 from the child routers" << std::endl;
                     break;
                 }
-                case 3:
+                case '3':
                 {
                     char * buffer = new char[remaining_message_size];
 
@@ -340,9 +341,6 @@
                     arrival->insert(arrival->end(), &(temp_buffer[1]), &(temp_buffer[9])); // Insert index and data_size bytes
                     arrival->insert(arrival->end(), &buffer[0], &buffer[(int)data_size]);
 
-                    if(VERBOSE)
-                        thread_file << "Got a window segment : index=" << message_index << ", data_size=" << data_size << std::endl;
-
                     while(!out_queue->push(arrival))
                       ;
 
@@ -353,7 +351,7 @@
                     delete[] buffer;
                     break;
                 }
-                case 4:
+                case '4':
                 {
                   /*
                     killed_lock.lock();

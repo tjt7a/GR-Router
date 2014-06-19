@@ -52,15 +52,6 @@
      	gr::io_signature::make(0, 0, 0)), in_queue(&input_queue), out_queue(&output_queue), child_index(index), global_counter(0), parent_hostname(hostname), number_of_children(numberofchildren), d_finished(false), d_throughput(throughput)
      {
 
-          // Throughput stuff ----------
-      /*
-            d_start = boost::get_system_time();
-            d_total_samples = 0;
-            d_samples_per_tick = d_throughput/boost::posix_time::time_duration::ticks_per_second();
-            d_samples_per_us = d_throughput/1e6;
-       */     
-            // ----------
-
 
           if(VERBOSE) 
               myfile.open("child_router.data");
@@ -256,11 +247,10 @@
                     float packet_size = data_size + 1 + 2 * sizeof(float);
 
                     //Switch on the packet_type
-                    switch((int)packet_type){
-                         case 1:
+                    switch(packet_type){
+                         case '2':
                          {
 
-				std::cout << "Child sending stuff" << std::endl;
                               if(VERBOSE){
                                    std::cout << "We have " << global_counter << "messages in the queue right now" << std::endl;
                                    myfile << "Popped and sending packet index=" << temp->at(1) << " to parent with index=" << temp->at(1) << std::endl;
@@ -288,15 +278,15 @@
                               delete temp;
                               break;
                         }
-                         case 2:
+                         case '1':
                           {
 
-                              std::cout << "Child router cannot deal with receiving type two messages right now" << std::endl;
+                              std::cout << "Child router cannot deal with receiving type 1 messages right now" << std::endl;
 
                               break;
 
                           }
-                         case 3: // Got a kill message
+                         case '3': // Got a kill message
                          {
                               if(VERBOSE)
                                    myfile << "Got a kill message \n" << std::flush;
@@ -311,8 +301,19 @@
                               return;
                               break;
                         }
+                        default:
+                        {
+                          std::cout << "WOW; shit's going down!!" << std::endl;
+                          std::cout << (int)packet_type << std::endl;
+                          break;
+                        }
                     }
      		     }
+             else{
+              //std::cout << "Child has nothing to pop" << std::endl;
+              boost::this_thread::sleep(boost::posix_time::microseconds(1000));
+
+             }
      	    }
      }
 

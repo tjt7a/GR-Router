@@ -103,7 +103,7 @@ namespace gr {
         std::vector<char> buffer;
 
         float index;
-        int data_size;
+        float data_size;
 
         if(queue->pop(temp_vector)){
 
