@@ -41,7 +41,7 @@
 #include <gnuradio/io_signature.h>
 #include "queue_sink_impl.h"
 #include <stdio.h>
-#include "tinyxml.h"
+//#include "tinyxml.h"
 #include <stdlib.h> 
 
 #define BOOLEAN_STRING(b) ((b) ? "true":"false")
