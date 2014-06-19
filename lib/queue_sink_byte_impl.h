@@ -57,7 +57,7 @@ namespace gr {
 
         char* get_index();
 
-        bool waiting_on_window = false;
+        bool waiting_on_window;
 
 
      public:
