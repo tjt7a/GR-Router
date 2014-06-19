@@ -136,6 +136,7 @@ queue_source_impl::work(int noutput_items,
 	float index;
 	float data_size;
 
+	//std::cout << "\tCalling source" << std::endl;
 	// Pop next value off of shared queue if there is one available
 
 
@@ -261,7 +262,7 @@ queue_source_impl::work(int noutput_items,
 			}
 		}
 		else{
-			boost::this_thread::sleep(boost::posix_time::microseconds(0.01)); // Arbitrary sleep time
+			boost::this_thread::sleep(boost::posix_time::microseconds(100)); // Arbitrary sleep time
 			//std::cout << "Failed to pop :(" << std::endl;
 			return 0;
 		}

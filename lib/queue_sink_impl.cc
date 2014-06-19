@@ -184,6 +184,8 @@ queue_sink_impl::queue_sink_impl(int size, boost::lockfree::queue< std::vector<f
 		myfile << "Calling Queue_Sink Constructor\n";
 		myfile << "Arguments: size=" << size << " preserve_index=" << BOOLEAN_STRING(preserve_index) << "\n\n" << std::flush;
 	}
+
+	waiting_on_window = false;
 }
 
 /*
@@ -216,6 +218,8 @@ queue_sink_impl::work(int noutput_items,
 
 	// Pointer to input
 	const float *in = (const float *) input_items[0]; // Input float buffer pointer
+
+	//std::cout<< "Calling Sink " << std::endl;
 
 	// Do we want to pull indexes from the stream tags and use those for window indexes?
 	if(preserve){
@@ -312,26 +316,43 @@ queue_sink_impl::work(int noutput_items,
 	}
 	*/
 
+	// If we don't have a window ready to push... let's make one
+	if(!waiting_on_window){
 
-	// Build type-1 segment
-	window = new std::vector<float>();
-	window->push_back(1); // Push back the type (message type 1)
-	window->push_back(get_index()); // Push the index of this window
-	window->push_back(noutput_items); // Push the number of floats we're packing into this message; it needs to be a multiple of window size (768)
-	window->insert(window->end(), &in[0], &in[noutput_items]);
+		// Build type-1 segment
+		window = new std::vector<float>();
+		window->push_back(1); // Push back the type (message type 1)
+		window->push_back(get_index()); // Push the index of this window
+		window->push_back(noutput_items); // Push the number of floats we're packing into this message; it needs to be a multiple of window size (768)
+		window->insert(window->end(), &in[0], &in[noutput_items]);
+	}
 
+	int push_attempts = 0 ;
+	waiting_on_window = false; // False unless we can't push 10 times in a row
+
+	// try to push the window 10 times; if that doesn't work, we'll try again next time this block is called
 	while(!queue->push(window)){
-		boost::this_thread::sleep(boost::posix_time::microseconds(1));
+
+		boost::this_thread::sleep(boost::posix_time::microseconds(10)); // wait 10 microsecond
+
+		if(++push_attempts == 10){
+			waiting_on_window = true;
+			break;
+		}
 	}
 
 	//std::cout << "Pushed [" << window->at(0) << "], [" << window->at(1) << "], [" << window->at(2) << "]" << std::endl;
 
-
-	window = NULL;
-	queue_counter++;
-
-
-	return noutput_items;//number_of_windows*768;
+	if(!waiting_on_window){
+		window = NULL; // We're done with this window; it's on the queue
+		queue_counter++; // We have one more outstanding window
+		//std::cout << "pushes" << std::endl;
+		return noutput_items;//number_of_windows*768;
+	}
+	else{
+		//std::cout << "Queue is full! Couldn't push after 10 attemps" << std::endl;
+		return 0;
+	}
 }
 
 float queue_sink_impl::get_index(){

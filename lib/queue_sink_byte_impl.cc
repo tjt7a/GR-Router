@@ -75,6 +75,8 @@ namespace gr {
       if(VERBOSE){
         myfile << "Calling queue_sink_byte Constructor" << std::endl;
       }
+
+      waiting_on_window = false;
     }
 
     /*
@@ -143,35 +145,47 @@ namespace gr {
           }
         }
 
-        // Build type-1 segment
-      window = new std::vector<char>();
-      window->push_back('2'); // Push back the type (message type 2)
 
-      char* index = get_index();
-      window->insert(window->end(), &index[0], &index[4]); // Push the index of this window
+        if(!waiting_on_window){
 
-      char* number_of_items = new char[4]; // Convert int into array of bytes (chars)
-      memcpy(number_of_items, &noutput_items, 4);
-      window->insert(window->end(), &number_of_items[0], &number_of_items[4]); // Push the number of chars we're packing into this message; it needs to be a multiple of window size (50)
+          // Build type-2 segment
+          window = new std::vector<char>();
+          window->push_back('2'); // Push back the type (message type 2)
+
+          char* index = get_index();
+          window->insert(window->end(), &index[0], &index[4]); // Push the index of this window
+
+          char* number_of_items = new char[4]; // Convert int into array of bytes (chars)
+          memcpy(number_of_items, &noutput_items, 4);
+          window->insert(window->end(), &number_of_items[0], &number_of_items[4]); // Push the number of chars we're packing into this message; it needs to be a multiple of window size (50)
       
-      window->insert(window->end(), &in[0], &in[noutput_items]);
+          window->insert(window->end(), &in[0], &in[noutput_items]);
+        }
+
+        int push_attempts = 0;
+        waiting_on_window = false;
 
       while(!queue->push(window)){
-        boost::this_thread::sleep(boost::posix_time::microseconds(1));
+
+        boost::this_thread::sleep(boost::posix_time::microseconds(10));
+
+        if(++push_attempts == 10){
+          waiting_on_window = true;
+          break;
+        }
       }
 
-      float temp_index;
-      int byte_count;
-      memcpy(&temp_index, &(window->data()[1]), 4);
-      memcpy(&byte_count, &(window->data()[5]), 4);
-
-      //std::cout << "Pushed [" << window->at(0) << "], [" << temp_index << "], [" << byte_count << "]" << std::endl;
-
-      window = NULL;
-      queue_counter++;
 
       // Tell runtime system how many output items we produced.
-      return noutput_items;
+      if(!waiting_on_window){
+        window = NULL;
+        queue_counter++;
+        return noutput_items;
+      }
+
+      else{
+        return 0;
+      }
     }
 
 char* queue_sink_byte_impl::get_index(){

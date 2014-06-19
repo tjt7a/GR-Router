@@ -127,7 +127,7 @@ namespace gr {
 
         }
         else{
-          boost::this_thread::sleep(boost::posix_time::microseconds(0.01));
+          boost::this_thread::sleep(boost::posix_time::microseconds(100));
           return 0;
         }
     }

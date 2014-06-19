@@ -57,6 +57,8 @@ namespace gr {
 
         char* get_index();
 
+        bool waiting_on_window = false;
+
 
      public:
       queue_sink_byte_impl(int item_size, boost::lockfree::queue< std::vector<char>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index);

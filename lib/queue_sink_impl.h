@@ -62,6 +62,8 @@ private:
 
 	float get_index(); // Returns the next index
 
+	bool waiting_on_window = false; // We still have a window we can't push?
+
 public:
 	queue_sink_impl(int item_size, boost::lockfree::queue< std::vector<float>*, boost::lockfree::fixed_sized<true> > &shared_queue, bool preserve_index);
 	~queue_sink_impl();
