@@ -259,6 +259,8 @@
                     switch((int)packet_type){
                          case 1:
                          {
+
+				std::cout << "Child sending stuff" << std::endl;
                               if(VERBOSE){
                                    std::cout << "We have " << global_counter << "messages in the queue right now" << std::endl;
                                    myfile << "Popped and sending packet index=" << temp->at(1) << " to parent with index=" << temp->at(1) << std::endl;
