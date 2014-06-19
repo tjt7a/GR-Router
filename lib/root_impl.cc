@@ -180,77 +180,85 @@
           */
             //----------
 
+		int min_weight = weights[min()];
+	//std::cout << "Min weight is: " << min_weight << std::endl;
+
+		if(min_weight < 1000){
      		   // If there is a window available, send it to indexed node
      		   if(in_queue->pop(temp)){
 
-                int packet_type = (int)temp->at(0); // Get packet type
+                	int packet_type = (int)temp->at(0); // Get packet type
 
-                if(VERBOSE)
-                    myfile << "Packet type: packet_type" << std::endl;
+                	if(VERBOSE)
+                    		myfile << "Packet type: packet_type" << std::endl;
 
-                // Switch on the packet_type
-                switch(packet_type){
-                    case 1:
-                    {
-                        index = min(); // Grab index of next target
+                	// Switch on the packet_type
+                	switch(packet_type){
+                    	case 1:
+                    	{
+                        	index = min(); // Grab index of next target
 
-                        data_size = (int)temp->at(2); // The size of the data segment is located at index 2
-                        window_count = data_size / 768;
-                        packet_size = (data_size + 3) * 4; // Size of the data + headers * 4 (chars per byte)
+                        	data_size = (int)temp->at(2); // The size of the data segment is located at index 2
+                        	window_count = data_size / 768;
+                        	packet_size = (data_size + 3) * 4; // Size of the data + headers * 4 (chars per byte)
 
-                        char* data_bytes = new char[packet_size];
+                        	char* data_bytes = new char[packet_size];
 
-                        weights[index] += window_count;
+                        	weights[index] += window_count;
 
-                        d_total_samples += data_size;
+                        	d_total_samples += data_size;
 
-                        if(VERBOSE)
-                            myfile << "Sending packet index=" << temp->at(1) << " to child=" << index << std::endl;
+                        	if(VERBOSE)
+                            		myfile << "Sending packet index=" << temp->at(1) << " to child=" << index << std::endl;
 
-                        memcpy(&(data_bytes[0]), &(temp->data()[0]), packet_size);
+                        	memcpy(&(data_bytes[0]), &(temp->data()[0]), packet_size);
 
-                        sent = 0;
-                        while(sent < packet_size)
-                            sent += connector->send(index, &(data_bytes[sent]), (packet_size - sent));
+                        	sent = 0;
+                        	while(sent < packet_size)
+                            		sent += connector->send(index, &(data_bytes[sent]), (packet_size - sent));
 
-                        if(VERBOSE)
-                            myfile << "Finished sending" << std::endl;
+                        	if(VERBOSE)
+                            		myfile << "Finished sending" << std::endl;
 
-                        // We've sent the data, so don't need the memory anymore
-                        delete[] data_bytes;
+                        	// We've sent the data, so don't need the memory anymore
+                        	delete[] data_bytes;
 
-                        for(int i = 0; i < window_count; i++)
-                          increment();
+                        	for(int i = 0; i < window_count; i++)
+                          		increment();
 
-                        break;
-                    }
-                    case 3:
-                    {
-                        for(int i = 0; i < number_of_children; i++){
-                            sent = 0;
-                            while(sent < 1)
-                                sent += connector->send(i, (char*)&((temp->data())[sent]), (1-sent)); // Send the segment
-                        }
+                        	break;
+                    	}
+                    	case 3:
+                    	{
+                        	for(int i = 0; i < number_of_children; i++){
+                            		sent = 0;
+                            		while(sent < 1)
+                                		sent += connector->send(i, (char*)&((temp->data())[sent]), (1-sent)); // Send the segment
+                        	}
 
-                        break;
+                        	break;
+			}
 
-                    default:
-                        std::cout << "ERROR: Parent Router is trying to parse an incorrectly formatted packet" << std::endl;
-                        break;
-                    }
+                    	default:
+                        {
+				std::cout << "ERROR: Parent Router is trying to parse an incorrectly formatted packet" << std::endl;
+                        	break;
+                   	}
+		 	}
+		}
+		else{
+			boost::this_thread::sleep(boost::posix_time::microseconds(1000));
+		}
                 }
-
+		else{
+			boost::this_thread::sleep(boost::posix_time::microseconds(1000));
+		}
                 // Future Work: Include additonal code for redundancy; keep copy of window until it has been ACKd;; Is this required given we're using TCP?
 
-                delete temp; // Delete vector<float> that temp is pointing to (we've sent it, so no need to hold on to it)
-     		   }
-            else{
-          	 // Wait some span of time
-              boost::this_thread::sleep(boost::posix_time::microseconds(1));
-            }
-     	    }
-        }
-
+     	}
+	
+delete temp;
+}
 
         /*
             Format of type-2 Segments
