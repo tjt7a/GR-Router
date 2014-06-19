@@ -54,22 +54,22 @@ install(TARGETS gnuradio-router
 ########################################################################
 # Build and register unit test
 ########################################################################
-include(GrTest)
+#include(GrTest)
 
-include_directories(${CPPUNIT_INCLUDE_DIRS})
-list(APPEND test_router_sources
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_router.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/qa_router.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/)
+#include_directories(${CPPUNIT_INCLUDE_DIRS})
+#list(APPEND test_router_sources
+#    ${CMAKE_CURRENT_SOURCE_DIR}/test_router.cc
+#    ${CMAKE_CURRENT_SOURCE_DIR}/qa_router.cc
+#    ${CMAKE_CURRENT_SOURCE_DIR}/)
 
-add_executable(test-router ${test_router_sources})
+#add_executable(test-router ${test_router_sources})
 
-target_link_libraries(
-  test-router
-  ${GNURADIO_RUNTIME_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${CPPUNIT_LIBRARIES}
-  gnuradio-router
-)
+#target_link_libraries(
+#  test-router
+#  ${GNURADIO_RUNTIME_LIBRARIES}
+#  ${Boost_LIBRARIES}
+#  ${CPPUNIT_LIBRARIES}
+#  gnuradio-router
+#)
 
-GR_ADD_TEST(test_router test-router)
+##GR_ADD_TEST(test_router test-router)
