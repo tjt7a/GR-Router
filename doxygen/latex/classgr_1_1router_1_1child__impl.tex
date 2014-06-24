@@ -1,0 +1,77 @@
+\hypertarget{classgr_1_1router_1_1child__impl}{\section{gr\+:\+:router\+:\+:child\+\_\+impl Class Reference}
+\label{classgr_1_1router_1_1child__impl}\index{gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}}
+}
+Inheritance diagram for gr\+:\+:router\+:\+:child\+\_\+impl\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classgr_1_1router_1_1child__impl}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classgr_1_1router_1_1child__impl_aabaff6e60fad3c91138087379a7aa5d3}{child\+\_\+impl} (int number\+\_\+of\+\_\+children, int child\+\_\+index, char $\ast$hostname, boost\+::lockfree\+::queue$<$ std\+::vector$<$ float $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&in\+\_\+queue, boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&out\+\_\+queue, double throughput)
+\item 
+\hyperlink{classgr_1_1router_1_1child__impl_a65c85e62fd693c4a87811f73c7e6234b}{$\sim$child\+\_\+impl} ()
+\item 
+int \hyperlink{classgr_1_1router_1_1child__impl_a7a429a34494106bd743e5515eacc6605}{work} (int noutput\+\_\+items, gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&input\+\_\+items, gr\+\_\+vector\+\_\+void\+\_\+star \&output\+\_\+items)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classgr_1_1router_1_1child__impl_aabaff6e60fad3c91138087379a7aa5d3}{\index{gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}!child\+\_\+impl@{child\+\_\+impl}}
+\index{child\+\_\+impl@{child\+\_\+impl}!gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}}
+\subsubsection[{child\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::child\+\_\+impl\+::child\+\_\+impl (
+\begin{DoxyParamCaption}
+\item[{int}]{numberofchildren, }
+\item[{int}]{index, }
+\item[{char $\ast$}]{hostname, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ float $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{input\+\_\+queue, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{output\+\_\+queue, }
+\item[{double}]{throughput}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1child__impl_aabaff6e60fad3c91138087379a7aa5d3}
+This is the private constructor for the child router block.
+
+
+\begin{DoxyParams}{Parameters}
+{\em number\+\_\+of\+\_\+children} & The number of children that the child router has. (0 for now) \\
+\hline
+{\em child\+\_\+index} & The index of this child. \\
+\hline
+{\em hostname} & The hostname (or ip address) of the child's parent. \\
+\hline
+{\em \&input\+\_\+queue} & A pointer to the input lockfree queue, where segments sent from the parent will be pushed. \\
+\hline
+{\em \&output\+\_\+queue} & A pointer to the output lockfree queue, where completed segments will be pulled from to send to the parent. \\
+\hline
+{\em throughput} & The maximum rate at which the child router will pull from the output queue. (Not currently being used) \\
+\hline
+\end{DoxyParams}
+\hypertarget{classgr_1_1router_1_1child__impl_a65c85e62fd693c4a87811f73c7e6234b}{\index{gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}!````~child\+\_\+impl@{$\sim$child\+\_\+impl}}
+\index{````~child\+\_\+impl@{$\sim$child\+\_\+impl}!gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}}
+\subsubsection[{$\sim$child\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::child\+\_\+impl\+::$\sim$child\+\_\+impl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1child__impl_a65c85e62fd693c4a87811f73c7e6234b}
+The destructor for the child router block.
+
+Interrupt and join all threads, and delete the Connector. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classgr_1_1router_1_1child__impl_a7a429a34494106bd743e5515eacc6605}{\index{gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}!work@{work}}
+\index{work@{work}!gr\+::router\+::child\+\_\+impl@{gr\+::router\+::child\+\_\+impl}}
+\subsubsection[{work}]{\setlength{\rightskip}{0pt plus 5cm}int gr\+::router\+::child\+\_\+impl\+::work (
+\begin{DoxyParamCaption}
+\item[{int}]{noutput\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&}]{input\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+void\+\_\+star \&}]{output\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1child__impl_a7a429a34494106bd743e5515eacc6605}
+This is the \hyperlink{classgr_1_1router_1_1child__impl_a7a429a34494106bd743e5515eacc6605}{work()} function. It doesn't do anything, because all sending and receiving is done with separate threads. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/child\+\_\+impl.\+h\item 
+lib/child\+\_\+impl.\+cc\end{DoxyCompactItemize}

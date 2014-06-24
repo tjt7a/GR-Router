@@ -1,0 +1,186 @@
+\hypertarget{class_ethernet_connector}{\section{Ethernet\+Connector Class Reference}
+\label{class_ethernet_connector}\index{Ethernet\+Connector@{Ethernet\+Connector}}
+}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_ethernet_connector_ad9c57f606bb89e55c8b2b9a368ddb7d7}{Ethernet\+Connector} (int number\+\_\+of\+\_\+children, int port)
+\item 
+\hyperlink{class_ethernet_connector_a0e4bbc154a90b5215c677fc8934ddc41}{$\sim$\+Ethernet\+Connector} ()
+\item 
+bool \hyperlink{class_ethernet_connector_ac87a2cd96046fbf4576c3be120a38bdc}{connect\+\_\+to\+\_\+parent} (char $\ast$hostname, int port)
+\item 
+int \hyperlink{class_ethernet_connector_a5e3daf8069bf7fdc1ebc96d33c03dd62}{write\+\_\+parent} (char $\ast$msg, int size)
+\item 
+int \hyperlink{class_ethernet_connector_a7594171ffb3c6f4de4bdf32f9b9b56cc}{read\+\_\+parent} (char $\ast$outbuf, int size)
+\item 
+bool \hyperlink{class_ethernet_connector_a2cb599573bc7db2e92a9c22d302f58ea}{connect\+\_\+to\+\_\+child} (int index, int port)
+\item 
+int \hyperlink{class_ethernet_connector_a44b4142c65e12b9dba201a840b09a02b}{write\+\_\+child} (int index, char $\ast$inbuf, unsigned long size)
+\item 
+int \hyperlink{class_ethernet_connector_a5589ca816791a3b2dbce8a50e401b72e}{read\+\_\+child} (int index, char $\ast$outbuf, int size)
+\item 
+void \hyperlink{class_ethernet_connector_a76621c514770ab7702cf9881c719715c}{stop} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_ethernet_connector_ad9c57f606bb89e55c8b2b9a368ddb7d7}{\index{Ethernet\+Connector@{Ethernet\+Connector}!Ethernet\+Connector@{Ethernet\+Connector}}
+\index{Ethernet\+Connector@{Ethernet\+Connector}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{Ethernet\+Connector}]{\setlength{\rightskip}{0pt plus 5cm}Ethernet\+Connector\+::\+Ethernet\+Connector (
+\begin{DoxyParamCaption}
+\item[{int}]{count, }
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_ad9c57f606bb89e55c8b2b9a368ddb7d7}
+This is the public constuctor for the Ethernet Connector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em count} & The number of children that the router will connect to. \\
+\hline
+{\em port} & The port on which the router will communicate. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_ethernet_connector_a0e4bbc154a90b5215c677fc8934ddc41}{\index{Ethernet\+Connector@{Ethernet\+Connector}!````~Ethernet\+Connector@{$\sim$\+Ethernet\+Connector}}
+\index{````~Ethernet\+Connector@{$\sim$\+Ethernet\+Connector}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{$\sim$\+Ethernet\+Connector}]{\setlength{\rightskip}{0pt plus 5cm}Ethernet\+Connector\+::$\sim$\+Ethernet\+Connector (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a0e4bbc154a90b5215c677fc8934ddc41}
+This is the destructor for the Ethernet Connector. 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_ethernet_connector_a2cb599573bc7db2e92a9c22d302f58ea}{\index{Ethernet\+Connector@{Ethernet\+Connector}!connect\+\_\+to\+\_\+child@{connect\+\_\+to\+\_\+child}}
+\index{connect\+\_\+to\+\_\+child@{connect\+\_\+to\+\_\+child}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{connect\+\_\+to\+\_\+child}]{\setlength{\rightskip}{0pt plus 5cm}bool Ethernet\+Connector\+::connect\+\_\+to\+\_\+child (
+\begin{DoxyParamCaption}
+\item[{int}]{index, }
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a2cb599573bc7db2e92a9c22d302f58ea}
+This function will connect the router to it's child
+
+
+\begin{DoxyParams}{Parameters}
+{\em index} & The index of the child to connect to. \\
+\hline
+{\em port} & The port on which the router will communicate with its child on. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_ethernet_connector_ac87a2cd96046fbf4576c3be120a38bdc}{\index{Ethernet\+Connector@{Ethernet\+Connector}!connect\+\_\+to\+\_\+parent@{connect\+\_\+to\+\_\+parent}}
+\index{connect\+\_\+to\+\_\+parent@{connect\+\_\+to\+\_\+parent}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{connect\+\_\+to\+\_\+parent}]{\setlength{\rightskip}{0pt plus 5cm}bool Ethernet\+Connector\+::connect\+\_\+to\+\_\+parent (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{hostname, }
+\item[{int}]{port}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_ac87a2cd96046fbf4576c3be120a38bdc}
+Connect to the parent.
+
+
+\begin{DoxyParams}{Parameters}
+{\em hostname} & The hostname / ip address of the parent node to connect to. \\
+\hline
+{\em port} & The port for the child to connect to the parent on. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+bool Return True if the node could connect to it's parent; False if not. 
+\end{DoxyReturn}
+\hypertarget{class_ethernet_connector_a5589ca816791a3b2dbce8a50e401b72e}{\index{Ethernet\+Connector@{Ethernet\+Connector}!read\+\_\+child@{read\+\_\+child}}
+\index{read\+\_\+child@{read\+\_\+child}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{read\+\_\+child}]{\setlength{\rightskip}{0pt plus 5cm}int Ethernet\+Connector\+::read\+\_\+child (
+\begin{DoxyParamCaption}
+\item[{int}]{index, }
+\item[{char $\ast$}]{outbuf, }
+\item[{int}]{size}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a5589ca816791a3b2dbce8a50e401b72e}
+Read from the child at index Children\mbox{[}index\mbox{]}
+
+
+\begin{DoxyParams}{Parameters}
+{\em index} & The index of the child to read from. \\
+\hline
+{\em outbuf} & A pointer to an array of characters to write the data into. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+r The number of bytes read from the child. 
+\end{DoxyReturn}
+\hypertarget{class_ethernet_connector_a7594171ffb3c6f4de4bdf32f9b9b56cc}{\index{Ethernet\+Connector@{Ethernet\+Connector}!read\+\_\+parent@{read\+\_\+parent}}
+\index{read\+\_\+parent@{read\+\_\+parent}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{read\+\_\+parent}]{\setlength{\rightskip}{0pt plus 5cm}int Ethernet\+Connector\+::read\+\_\+parent (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{outbuf, }
+\item[{int}]{size}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a7594171ffb3c6f4de4bdf32f9b9b56cc}
+Read data from the parent.
+
+
+\begin{DoxyParams}{Parameters}
+{\em outbuf} & A pointer to a byte array where the data from the parent would be written to. \\
+\hline
+{\em size} & The number of bytes to be received from the parent. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+r The number of bytes received. 
+\end{DoxyReturn}
+\hypertarget{class_ethernet_connector_a76621c514770ab7702cf9881c719715c}{\index{Ethernet\+Connector@{Ethernet\+Connector}!stop@{stop}}
+\index{stop@{stop}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{stop}]{\setlength{\rightskip}{0pt plus 5cm}void Ethernet\+Connector\+::stop (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a76621c514770ab7702cf9881c719715c}
+Close the file descriptors between this node and its parent and children. \hypertarget{class_ethernet_connector_a44b4142c65e12b9dba201a840b09a02b}{\index{Ethernet\+Connector@{Ethernet\+Connector}!write\+\_\+child@{write\+\_\+child}}
+\index{write\+\_\+child@{write\+\_\+child}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{write\+\_\+child}]{\setlength{\rightskip}{0pt plus 5cm}int Ethernet\+Connector\+::write\+\_\+child (
+\begin{DoxyParamCaption}
+\item[{int}]{index, }
+\item[{char $\ast$}]{inbuf, }
+\item[{unsigned long}]{size}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a44b4142c65e12b9dba201a840b09a02b}
+This is the public constuctor for the Ethernet Connector.
+
+
+\begin{DoxyParams}{Parameters}
+{\em count} & The number of children that the router will connect to. \\
+\hline
+{\em port} & The port on which the router will communicate. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+r True if the data was written to the child; False if not. 
+\end{DoxyReturn}
+\hypertarget{class_ethernet_connector_a5e3daf8069bf7fdc1ebc96d33c03dd62}{\index{Ethernet\+Connector@{Ethernet\+Connector}!write\+\_\+parent@{write\+\_\+parent}}
+\index{write\+\_\+parent@{write\+\_\+parent}!Ethernet\+Connector@{Ethernet\+Connector}}
+\subsubsection[{write\+\_\+parent}]{\setlength{\rightskip}{0pt plus 5cm}int Ethernet\+Connector\+::write\+\_\+parent (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{msg, }
+\item[{int}]{size}
+\end{DoxyParamCaption}
+)}}\label{class_ethernet_connector_a5e3daf8069bf7fdc1ebc96d33c03dd62}
+Write the data in the msg buffer to parent.
+
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & Pointer to a byte array buffer containing a message to be sent to parent. \\
+\hline
+{\em size} & The number of bytes to be sent to the parent. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+r The number of bytes to be sent to the parent. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/Ethernet\+Connector.\+h\item 
+lib/Ethernet\+Connector.\+cc\end{DoxyCompactItemize}

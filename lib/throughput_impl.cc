@@ -1,6 +1,6 @@
 /* -*- c++ -*- */
 /*
- * Written by Tommy Tracy II (University of Virginia HPLP)
+ * Written by Tommy Tracy II (University of Virginia HPLP) 2014
  *
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
  */
 
 /*
- The following code is derived from the throttle block
+ *  This is the  throughput block. It prints the average throughput to std::out every d_print_counter times work() is called.
+ *
+ *  The following code is derived from the throttle block.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,14 +36,13 @@ namespace gr {
     namespace router {
         
         /*!
-         *  This is the public constructor for the throughput block
+         *  This is the public constructor for the throughput block.
          *
          *  @param itemsize The size (in bytes) of the data being measured
          *  @param print_counter The number of work() calls between prints of throughput value
          *  @param index How many tabs in front of the throughput value to space them
          *  @return A shared pointer to the throughput block
          */
-        
         
         throughput::sptr
         throughput::make(size_t itemsize, int print_counter, int index)
@@ -50,9 +51,14 @@ namespace gr {
             (new throughput_impl(itemsize, print_counter, index));
         }
         
-        /*
-         * The private constructor
+        /*!
+         *  This is the private constructor for the throughput block.
+         *
+         *  @param itemsize The size (in bytes) of the data being measured
+         *  @param print_counter The number of work() calls between prints of throughput value
+         *  @param index How many tabs in front of the throughput value to space them
          */
+        
         throughput_impl::throughput_impl(size_t itemsize, int print_counter, int index)
         : gr::sync_block("throughput",
                          gr::io_signature::make(1, 1, itemsize),
@@ -64,14 +70,23 @@ namespace gr {
             running_count = 0;
         }
         
-        /*
-         * Our virtual destructor.
+        /**
+         *  The destructor for the throughput block.
          */
         throughput_impl::~throughput_impl()
         {
-            
             // Destructor code
         }
+      
+        /*!
+         *  This is the work() function. It prints the average throughput to std::out every d_print_counter times work() is called.
+         *
+         *  This block is transparent and the data on the input is copied to the output.
+         *
+         *  @param noutput_items The number of data samples
+         *  @param &input_items Pointer to input vector
+         *  @param &output_items Pointer to output vector
+         */
         
         int
         throughput_impl::work(int noutput_items,
@@ -93,6 +108,7 @@ namespace gr {
             
             running_count++;
             
+            // Print out the throughput every d_print_counter times work() is called
             if((int)running_count % d_print_counter == 0){
                 for(int i = 0; i < d_index; i++)
                     std::cout << '\t';

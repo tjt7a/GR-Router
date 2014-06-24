@@ -1,0 +1,77 @@
+\hypertarget{classgr_1_1router_1_1queue__sink__impl}{\section{gr\+:\+:router\+:\+:queue\+\_\+sink\+\_\+impl Class Reference}
+\label{classgr_1_1router_1_1queue__sink__impl}\index{gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}}
+}
+Inheritance diagram for gr\+:\+:router\+:\+:queue\+\_\+sink\+\_\+impl\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classgr_1_1router_1_1queue__sink__impl}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classgr_1_1router_1_1queue__sink__impl_aacd0fcad3ffba928c2782cc385c444d3}{queue\+\_\+sink\+\_\+impl} (int item\+\_\+size, boost\+::lockfree\+::queue$<$ std\+::vector$<$ float $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&shared\+\_\+queue, bool preserve\+\_\+index)
+\item 
+\hyperlink{classgr_1_1router_1_1queue__sink__impl_ac503d2c10e679dd10c6ab4a6762dd22f}{$\sim$queue\+\_\+sink\+\_\+impl} ()
+\item 
+int \hyperlink{classgr_1_1router_1_1queue__sink__impl_a5762ae13eb5b07e1925e2e7266a33436}{work} (int noutput\+\_\+items, gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&input\+\_\+items, gr\+\_\+vector\+\_\+void\+\_\+star \&output\+\_\+items)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classgr_1_1router_1_1queue__sink__impl_aacd0fcad3ffba928c2782cc385c444d3}{\index{gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}!queue\+\_\+sink\+\_\+impl@{queue\+\_\+sink\+\_\+impl}}
+\index{queue\+\_\+sink\+\_\+impl@{queue\+\_\+sink\+\_\+impl}!gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}}
+\subsubsection[{queue\+\_\+sink\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::queue\+\_\+sink\+\_\+impl\+::queue\+\_\+sink\+\_\+impl (
+\begin{DoxyParamCaption}
+\item[{int}]{size, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ float $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{shared\+\_\+queue, }
+\item[{bool}]{preserve\+\_\+index}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__sink__impl_aacd0fcad3ffba928c2782cc385c444d3}
+This is the private constructor of the queue sick block.
+
+
+\begin{DoxyParams}{Parameters}
+{\em size} & The size (in bytes) of data units. \\
+\hline
+{\em \&shared\+\_\+queue} & A pointer to the fixed-\/sized lockfree queue in which the segments will be pushed. \\
+\hline
+{\em preserve\+\_\+index} & True if there is an index preserved in the stream tags, and if it is to be preserved in the resulting segments. Else, False. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classgr_1_1router_1_1queue__sink__impl_ac503d2c10e679dd10c6ab4a6762dd22f}{\index{gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}!````~queue\+\_\+sink\+\_\+impl@{$\sim$queue\+\_\+sink\+\_\+impl}}
+\index{````~queue\+\_\+sink\+\_\+impl@{$\sim$queue\+\_\+sink\+\_\+impl}!gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}}
+\subsubsection[{$\sim$queue\+\_\+sink\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::queue\+\_\+sink\+\_\+impl\+::$\sim$queue\+\_\+sink\+\_\+impl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__sink__impl_ac503d2c10e679dd10c6ab4a6762dd22f}
+The destructor for the queue sink block. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classgr_1_1router_1_1queue__sink__impl_a5762ae13eb5b07e1925e2e7266a33436}{\index{gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}!work@{work}}
+\index{work@{work}!gr\+::router\+::queue\+\_\+sink\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+impl}}
+\subsubsection[{work}]{\setlength{\rightskip}{0pt plus 5cm}int gr\+::router\+::queue\+\_\+sink\+\_\+impl\+::work (
+\begin{DoxyParamCaption}
+\item[{int}]{noutput\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&}]{input\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+void\+\_\+star \&}]{output\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__sink__impl_a5762ae13eb5b07e1925e2e7266a33436}
+This is the \hyperlink{classgr_1_1router_1_1queue__sink__impl_a5762ae13eb5b07e1925e2e7266a33436}{work()} function. It segments the stream, and pushes the resulting segments into the lockfree queue.
+
+
+\begin{DoxyParams}{Parameters}
+{\em noutput\+\_\+items} & The number of data samples \\
+\hline
+{\em \&input\+\_\+items} & Pointer to input vector \\
+\hline
+{\em \&output\+\_\+items} & Pointer to output vector \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/queue\+\_\+sink\+\_\+impl.\+h\item 
+lib/queue\+\_\+sink\+\_\+impl.\+cc\end{DoxyCompactItemize}

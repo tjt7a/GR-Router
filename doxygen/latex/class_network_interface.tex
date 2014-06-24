@@ -1,0 +1,115 @@
+\hypertarget{class_network_interface}{\section{Network\+Interface Class Reference}
+\label{class_network_interface}\index{Network\+Interface@{Network\+Interface}}
+}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_network_interface_af1100e8523a678299803ef758bfea9ac}{Network\+Interface} (int itemsize, int children, int port, bool root)
+\item 
+\hypertarget{class_network_interface_adc72badb87b206431e240704e9aaa7c1}{\hyperlink{class_network_interface_adc72badb87b206431e240704e9aaa7c1}{$\sim$\+Network\+Interface} ()}\label{class_network_interface_adc72badb87b206431e240704e9aaa7c1}
+
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+bool \hyperlink{class_network_interface_a630a3ba34eb058544b6be811af374797}{connect} (char $\ast$parent\+\_\+hostname)
+\item 
+int \hyperlink{class_network_interface_a13f11eaeebcd9436bafabd2425074952}{receive} (int child\+\_\+index, char $\ast$outbuf, int noutput\+\_\+items)
+\item 
+int \hyperlink{class_network_interface_abb316c408224c29be9a1174678b914dd}{send} (int child\+\_\+index, char $\ast$msg, int num)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{class_network_interface_af1100e8523a678299803ef758bfea9ac}{\index{Network\+Interface@{Network\+Interface}!Network\+Interface@{Network\+Interface}}
+\index{Network\+Interface@{Network\+Interface}!Network\+Interface@{Network\+Interface}}
+\subsubsection[{Network\+Interface}]{\setlength{\rightskip}{0pt plus 5cm}Network\+Interface\+::\+Network\+Interface (
+\begin{DoxyParamCaption}
+\item[{int}]{itemsize, }
+\item[{int}]{children\+\_\+count, }
+\item[{int}]{port\+\_\+arg, }
+\item[{bool}]{root\+\_\+arg}
+\end{DoxyParamCaption}
+)}}\label{class_network_interface_af1100e8523a678299803ef758bfea9ac}
+Public Constructor for the Network Interface.
+
+
+\begin{DoxyParams}{Parameters}
+{\em itemsize} & The size of the samples (in bytes); For now use sizeof(char) \\
+\hline
+{\em children\+\_\+count} & The number of children that this node has. \\
+\hline
+{\em port\+\_\+arg} & The port on which this node will communicate on. \\
+\hline
+{\em root\+\_\+arg} & True if this node is the root; else, False. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_network_interface_a630a3ba34eb058544b6be811af374797}{\index{Network\+Interface@{Network\+Interface}!connect@{connect}}
+\index{connect@{connect}!Network\+Interface@{Network\+Interface}}
+\subsubsection[{connect}]{\setlength{\rightskip}{0pt plus 5cm}bool Network\+Interface\+::connect (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{parent\+\_\+hostname}
+\end{DoxyParamCaption}
+)}}\label{class_network_interface_a630a3ba34eb058544b6be811af374797}
+Connect function\+: The current node connects to it's parent and children.
+
+
+\begin{DoxyParams}{Parameters}
+{\em parent\+\_\+hostname} & The hostname or ip address of this node's parent. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+bool True if the node had connected to its neighbors; else if False. 
+\end{DoxyReturn}
+\hypertarget{class_network_interface_a13f11eaeebcd9436bafabd2425074952}{\index{Network\+Interface@{Network\+Interface}!receive@{receive}}
+\index{receive@{receive}!Network\+Interface@{Network\+Interface}}
+\subsubsection[{receive}]{\setlength{\rightskip}{0pt plus 5cm}int Network\+Interface\+::receive (
+\begin{DoxyParamCaption}
+\item[{int}]{child\+\_\+index, }
+\item[{char $\ast$}]{outbuf, }
+\item[{int}]{noutput\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{class_network_interface_a13f11eaeebcd9436bafabd2425074952}
+Receive function\+: Receive data from node with index child\+\_\+index of size packet\+\_\+size Code copied from file\+\_\+descriptor\+\_\+source\+\_\+impl.\+cc
+
+
+\begin{DoxyParams}{Parameters}
+{\em child\+\_\+index} & Index of the node to receive from; -\/1 for parent; $>$= 0 for child \\
+\hline
+{\em outbuf} & Pointer to byte array to write to. \\
+\hline
+{\em noutput\+\_\+items} & The size in bytes of the data to be received. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+nread The number of bytes received from the node. 
+\end{DoxyReturn}
+\hypertarget{class_network_interface_abb316c408224c29be9a1174678b914dd}{\index{Network\+Interface@{Network\+Interface}!send@{send}}
+\index{send@{send}!Network\+Interface@{Network\+Interface}}
+\subsubsection[{send}]{\setlength{\rightskip}{0pt plus 5cm}int Network\+Interface\+::send (
+\begin{DoxyParamCaption}
+\item[{int}]{child\+\_\+index, }
+\item[{char $\ast$}]{msg, }
+\item[{int}]{packet\+\_\+size}
+\end{DoxyParamCaption}
+)}}\label{class_network_interface_abb316c408224c29be9a1174678b914dd}
+Send function\+: Sends data from send buffer to node with index child\+\_\+index of size packet\+\_\+size Code copied from file\+\_\+descriptor\+\_\+sink\+\_\+impl.\+cc
+
+
+\begin{DoxyParams}{Parameters}
+{\em child\+\_\+index} & Index of the node to send to; -\/1 for parent; $>$= 0 for child \\
+\hline
+{\em msg} & Pointer to byte array containing data to be sent to node. \\
+\hline
+{\em packet\+\_\+size} & The size in bytes of the data to be sent. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+packet\+\_\+size The number of bytes sent to the intended node. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/Network\+Interface.\+h\item 
+lib/Network\+Interface.\+cc\end{DoxyCompactItemize}

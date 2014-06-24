@@ -1,0 +1,79 @@
+\hypertarget{classgr_1_1router_1_1throughput__impl}{\section{gr\+:\+:router\+:\+:throughput\+\_\+impl Class Reference}
+\label{classgr_1_1router_1_1throughput__impl}\index{gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}}
+}
+Inheritance diagram for gr\+:\+:router\+:\+:throughput\+\_\+impl\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classgr_1_1router_1_1throughput__impl}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classgr_1_1router_1_1throughput__impl_a4c435290b81331a3d7079e718a3b0326}{throughput\+\_\+impl} (size\+\_\+t itemsize, int print\+\_\+counter, int index)
+\item 
+\hyperlink{classgr_1_1router_1_1throughput__impl_a8ef92f4e626f69b8c18cb93c26969fd3}{$\sim$throughput\+\_\+impl} ()
+\item 
+int \hyperlink{classgr_1_1router_1_1throughput__impl_aafd5b37bbffbdb5ae5248f85fab76050}{work} (int noutput\+\_\+items, gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&input\+\_\+items, gr\+\_\+vector\+\_\+void\+\_\+star \&output\+\_\+items)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classgr_1_1router_1_1throughput__impl_a4c435290b81331a3d7079e718a3b0326}{\index{gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}!throughput\+\_\+impl@{throughput\+\_\+impl}}
+\index{throughput\+\_\+impl@{throughput\+\_\+impl}!gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}}
+\subsubsection[{throughput\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::throughput\+\_\+impl\+::throughput\+\_\+impl (
+\begin{DoxyParamCaption}
+\item[{size\+\_\+t}]{itemsize, }
+\item[{int}]{print\+\_\+counter, }
+\item[{int}]{index}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1throughput__impl_a4c435290b81331a3d7079e718a3b0326}
+This is the private constructor for the throughput block.
+
+
+\begin{DoxyParams}{Parameters}
+{\em itemsize} & The size (in bytes) of the data being measured \\
+\hline
+{\em print\+\_\+counter} & The number of \hyperlink{classgr_1_1router_1_1throughput__impl_aafd5b37bbffbdb5ae5248f85fab76050}{work()} calls between prints of throughput value \\
+\hline
+{\em index} & How many tabs in front of the throughput value to space them \\
+\hline
+\end{DoxyParams}
+\hypertarget{classgr_1_1router_1_1throughput__impl_a8ef92f4e626f69b8c18cb93c26969fd3}{\index{gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}!````~throughput\+\_\+impl@{$\sim$throughput\+\_\+impl}}
+\index{````~throughput\+\_\+impl@{$\sim$throughput\+\_\+impl}!gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}}
+\subsubsection[{$\sim$throughput\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::throughput\+\_\+impl\+::$\sim$throughput\+\_\+impl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1throughput__impl_a8ef92f4e626f69b8c18cb93c26969fd3}
+The destructor for the throughput block. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classgr_1_1router_1_1throughput__impl_aafd5b37bbffbdb5ae5248f85fab76050}{\index{gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}!work@{work}}
+\index{work@{work}!gr\+::router\+::throughput\+\_\+impl@{gr\+::router\+::throughput\+\_\+impl}}
+\subsubsection[{work}]{\setlength{\rightskip}{0pt plus 5cm}int gr\+::router\+::throughput\+\_\+impl\+::work (
+\begin{DoxyParamCaption}
+\item[{int}]{noutput\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&}]{input\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+void\+\_\+star \&}]{output\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1throughput__impl_aafd5b37bbffbdb5ae5248f85fab76050}
+This is the \hyperlink{classgr_1_1router_1_1throughput__impl_aafd5b37bbffbdb5ae5248f85fab76050}{work()} function. It prints the average throughput to std\+::out every d\+\_\+print\+\_\+counter times \hyperlink{classgr_1_1router_1_1throughput__impl_aafd5b37bbffbdb5ae5248f85fab76050}{work()} is called.
+
+This block is transparent and the data on the input is copied to the output.
+
+
+\begin{DoxyParams}{Parameters}
+{\em noutput\+\_\+items} & The number of data samples \\
+\hline
+{\em \&input\+\_\+items} & Pointer to input vector \\
+\hline
+{\em \&output\+\_\+items} & Pointer to output vector \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/throughput\+\_\+impl.\+h\item 
+lib/throughput\+\_\+impl.\+cc\end{DoxyCompactItemize}

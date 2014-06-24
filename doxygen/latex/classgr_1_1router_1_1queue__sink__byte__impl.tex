@@ -1,0 +1,66 @@
+\hypertarget{classgr_1_1router_1_1queue__sink__byte__impl}{\section{gr\+:\+:router\+:\+:queue\+\_\+sink\+\_\+byte\+\_\+impl Class Reference}
+\label{classgr_1_1router_1_1queue__sink__byte__impl}\index{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}}
+}
+Inheritance diagram for gr\+:\+:router\+:\+:queue\+\_\+sink\+\_\+byte\+\_\+impl\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classgr_1_1router_1_1queue__sink__byte__impl}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classgr_1_1router_1_1queue__sink__byte__impl_a0ccee4dde1117105900ac5db604f98a6}{queue\+\_\+sink\+\_\+byte\+\_\+impl} (int item\+\_\+size, boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&shared\+\_\+queue, bool preserve\+\_\+index)
+\item 
+\hyperlink{classgr_1_1router_1_1queue__sink__byte__impl_a77245d6d769eddd788bcc7bc39be18e5}{$\sim$queue\+\_\+sink\+\_\+byte\+\_\+impl} ()
+\item 
+int \hyperlink{classgr_1_1router_1_1queue__sink__byte__impl_ac740a4bbd4bd2f5dabf1a33e28c9be92}{work} (int noutput\+\_\+items, gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&input\+\_\+items, gr\+\_\+vector\+\_\+void\+\_\+star \&output\+\_\+items)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classgr_1_1router_1_1queue__sink__byte__impl_a0ccee4dde1117105900ac5db604f98a6}{\index{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}!queue\+\_\+sink\+\_\+byte\+\_\+impl@{queue\+\_\+sink\+\_\+byte\+\_\+impl}}
+\index{queue\+\_\+sink\+\_\+byte\+\_\+impl@{queue\+\_\+sink\+\_\+byte\+\_\+impl}!gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}}
+\subsubsection[{queue\+\_\+sink\+\_\+byte\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl\+::queue\+\_\+sink\+\_\+byte\+\_\+impl (
+\begin{DoxyParamCaption}
+\item[{int}]{size, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{shared\+\_\+queue, }
+\item[{bool}]{preserve\+\_\+index}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__sink__byte__impl_a0ccee4dde1117105900ac5db604f98a6}
+This is the public constructor for the queue\+\_\+sink\+\_\+byte block.
+
+
+\begin{DoxyParams}{Parameters}
+{\em size} & The size (in bytes) of the data being measured \\
+\hline
+{\em \&shared\+\_\+queue} & A reference to the shared queue where segments would be pushed. \\
+\hline
+{\em preserve\+\_\+index} & True if index is to be reconstructed from stream tags; generate new index from 0 otherwise. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classgr_1_1router_1_1queue__sink__byte__impl_a77245d6d769eddd788bcc7bc39be18e5}{\index{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}!````~queue\+\_\+sink\+\_\+byte\+\_\+impl@{$\sim$queue\+\_\+sink\+\_\+byte\+\_\+impl}}
+\index{````~queue\+\_\+sink\+\_\+byte\+\_\+impl@{$\sim$queue\+\_\+sink\+\_\+byte\+\_\+impl}!gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}}
+\subsubsection[{$\sim$queue\+\_\+sink\+\_\+byte\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl\+::$\sim$queue\+\_\+sink\+\_\+byte\+\_\+impl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__sink__byte__impl_a77245d6d769eddd788bcc7bc39be18e5}
+This is the destructor. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classgr_1_1router_1_1queue__sink__byte__impl_ac740a4bbd4bd2f5dabf1a33e28c9be92}{\index{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}!work@{work}}
+\index{work@{work}!gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl}}
+\subsubsection[{work}]{\setlength{\rightskip}{0pt plus 5cm}int gr\+::router\+::queue\+\_\+sink\+\_\+byte\+\_\+impl\+::work (
+\begin{DoxyParamCaption}
+\item[{int}]{noutput\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&}]{input\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+void\+\_\+star \&}]{output\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__sink__byte__impl_ac740a4bbd4bd2f5dabf1a33e28c9be92}
+This is the \hyperlink{classgr_1_1router_1_1queue__sink__byte__impl_ac740a4bbd4bd2f5dabf1a33e28c9be92}{work()} function of the queue sink byte block. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/queue\+\_\+sink\+\_\+byte\+\_\+impl.\+h\item 
+lib/queue\+\_\+sink\+\_\+byte\+\_\+impl.\+cc\end{DoxyCompactItemize}

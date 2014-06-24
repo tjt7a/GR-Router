@@ -1,0 +1,73 @@
+\hypertarget{classgr_1_1router_1_1queue__source__byte__impl}{\section{gr\+:\+:router\+:\+:queue\+\_\+source\+\_\+byte\+\_\+impl Class Reference}
+\label{classgr_1_1router_1_1queue__source__byte__impl}\index{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}}
+}
+Inheritance diagram for gr\+:\+:router\+:\+:queue\+\_\+source\+\_\+byte\+\_\+impl\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classgr_1_1router_1_1queue__source__byte__impl}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classgr_1_1router_1_1queue__source__byte__impl_af26965726f7f3c102c91e3cd78809070}{queue\+\_\+source\+\_\+byte\+\_\+impl} (int size, boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&shared\+\_\+queue, bool preserve\+\_\+index, bool order)
+\item 
+\hyperlink{classgr_1_1router_1_1queue__source__byte__impl_aa657da4357a0b8642ac71b07015934f3}{$\sim$queue\+\_\+source\+\_\+byte\+\_\+impl} ()
+\item 
+int \hyperlink{classgr_1_1router_1_1queue__source__byte__impl_acb768ac0c1e6e26a12e6cc31379ed415}{work} (int noutput\+\_\+items, gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&input\+\_\+items, gr\+\_\+vector\+\_\+void\+\_\+star \&output\+\_\+items)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classgr_1_1router_1_1queue__source__byte__impl_af26965726f7f3c102c91e3cd78809070}{\index{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}!queue\+\_\+source\+\_\+byte\+\_\+impl@{queue\+\_\+source\+\_\+byte\+\_\+impl}}
+\index{queue\+\_\+source\+\_\+byte\+\_\+impl@{queue\+\_\+source\+\_\+byte\+\_\+impl}!gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}}
+\subsubsection[{queue\+\_\+source\+\_\+byte\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl\+::queue\+\_\+source\+\_\+byte\+\_\+impl (
+\begin{DoxyParamCaption}
+\item[{int}]{size, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{shared\+\_\+queue, }
+\item[{bool}]{preserve\+\_\+index, }
+\item[{bool}]{order\+\_\+data}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__source__byte__impl_af26965726f7f3c102c91e3cd78809070}
+The private constructor for the Queue Source.
+
+
+\begin{DoxyParams}{Parameters}
+{\em size} & The size of the samples in the stream in bytes. \\
+\hline
+{\em \&shared\+\_\+queue} & Reference to queue where segments will be popped from \\
+\hline
+{\em preserve\+\_\+index} & If the index of the segments is to be preserved in the resulting stream, True; else, False \\
+\hline
+{\em order\+\_\+data} & Require that all data parsed from queue segments be in the correct order before streaming. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classgr_1_1router_1_1queue__source__byte__impl_aa657da4357a0b8642ac71b07015934f3}{\index{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}!````~queue\+\_\+source\+\_\+byte\+\_\+impl@{$\sim$queue\+\_\+source\+\_\+byte\+\_\+impl}}
+\index{````~queue\+\_\+source\+\_\+byte\+\_\+impl@{$\sim$queue\+\_\+source\+\_\+byte\+\_\+impl}!gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}}
+\subsubsection[{$\sim$queue\+\_\+source\+\_\+byte\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl\+::$\sim$queue\+\_\+source\+\_\+byte\+\_\+impl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__source__byte__impl_aa657da4357a0b8642ac71b07015934f3}
+The destructor. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classgr_1_1router_1_1queue__source__byte__impl_acb768ac0c1e6e26a12e6cc31379ed415}{\index{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}!work@{work}}
+\index{work@{work}!gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl@{gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl}}
+\subsubsection[{work}]{\setlength{\rightskip}{0pt plus 5cm}int gr\+::router\+::queue\+\_\+source\+\_\+byte\+\_\+impl\+::work (
+\begin{DoxyParamCaption}
+\item[{int}]{noutput\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&}]{input\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+void\+\_\+star \&}]{output\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1queue__source__byte__impl_acb768ac0c1e6e26a12e6cc31379ed415}
+The objective of the \hyperlink{classgr_1_1router_1_1queue__source__byte__impl_acb768ac0c1e6e26a12e6cc31379ed415}{work()} function is to grab windows from the shared\+\_\+queue and dump their contents into the out memory buffer.
+
+If required, the windows are ordered prior to dumping their contents to maintain order across the flow graph.
+
+Also, if the index of the window is to be maintained, the indexes are shared via stream tags. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/queue\+\_\+source\+\_\+byte\+\_\+impl.\+h\item 
+lib/queue\+\_\+source\+\_\+byte\+\_\+impl.\+cc\end{DoxyCompactItemize}

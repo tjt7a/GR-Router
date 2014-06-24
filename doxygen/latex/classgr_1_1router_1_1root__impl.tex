@@ -1,0 +1,69 @@
+\hypertarget{classgr_1_1router_1_1root__impl}{\section{gr\+:\+:router\+:\+:root\+\_\+impl Class Reference}
+\label{classgr_1_1router_1_1root__impl}\index{gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}}
+}
+Inheritance diagram for gr\+:\+:router\+:\+:root\+\_\+impl\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classgr_1_1router_1_1root__impl}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classgr_1_1router_1_1root__impl_ac848c67a6f8ca398d7ff7311ab4bb91d}{root\+\_\+impl} (int number\+\_\+of\+\_\+children, boost\+::lockfree\+::queue$<$ std\+::vector$<$ float $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&in\+\_\+queue, boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&out\+\_\+queue, double throughput)
+\item 
+\hyperlink{classgr_1_1router_1_1root__impl_aba5b7eb8c530a435c1c2590cdd614ebc}{$\sim$root\+\_\+impl} ()
+\item 
+int \hyperlink{classgr_1_1router_1_1root__impl_ad2ac4750d299fecd92dd270f082ea189}{work} (int noutput\+\_\+items, gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&input\+\_\+items, gr\+\_\+vector\+\_\+void\+\_\+star \&output\+\_\+items)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classgr_1_1router_1_1root__impl_ac848c67a6f8ca398d7ff7311ab4bb91d}{\index{gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}!root\+\_\+impl@{root\+\_\+impl}}
+\index{root\+\_\+impl@{root\+\_\+impl}!gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}}
+\subsubsection[{root\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::root\+\_\+impl\+::root\+\_\+impl (
+\begin{DoxyParamCaption}
+\item[{int}]{numberofchildren, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ float $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{input\+\_\+queue, }
+\item[{boost\+::lockfree\+::queue$<$ std\+::vector$<$ char $>$ $\ast$, boost\+::lockfree\+::fixed\+\_\+sized$<$ true $>$ $>$ \&}]{output\+\_\+queue, }
+\item[{double}]{throughput}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1root__impl_ac848c67a6f8ca398d7ff7311ab4bb91d}
+The private constructor for the Root router.
+
+
+\begin{DoxyParams}{Parameters}
+{\em number\+\_\+of\+\_\+children} & The number of children under this node. \\
+\hline
+{\em \&input\+\_\+queue} & Reference to input queue to push computable segments to. \\
+\hline
+{\em \&output\+\_\+queue} & Reference to output queue to pop result segments from. \\
+\hline
+{\em throughput} & The maximum rate at which segments are popped from the output queue \\
+\hline
+\end{DoxyParams}
+\hypertarget{classgr_1_1router_1_1root__impl_aba5b7eb8c530a435c1c2590cdd614ebc}{\index{gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}!````~root\+\_\+impl@{$\sim$root\+\_\+impl}}
+\index{````~root\+\_\+impl@{$\sim$root\+\_\+impl}!gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}}
+\subsubsection[{$\sim$root\+\_\+impl}]{\setlength{\rightskip}{0pt plus 5cm}gr\+::router\+::root\+\_\+impl\+::$\sim$root\+\_\+impl (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1root__impl_aba5b7eb8c530a435c1c2590cdd614ebc}
+The destructor for the root router block. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classgr_1_1router_1_1root__impl_ad2ac4750d299fecd92dd270f082ea189}{\index{gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}!work@{work}}
+\index{work@{work}!gr\+::router\+::root\+\_\+impl@{gr\+::router\+::root\+\_\+impl}}
+\subsubsection[{work}]{\setlength{\rightskip}{0pt plus 5cm}int gr\+::router\+::root\+\_\+impl\+::work (
+\begin{DoxyParamCaption}
+\item[{int}]{noutput\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+const\+\_\+void\+\_\+star \&}]{input\+\_\+items, }
+\item[{gr\+\_\+vector\+\_\+void\+\_\+star \&}]{output\+\_\+items}
+\end{DoxyParamCaption}
+)}}\label{classgr_1_1router_1_1root__impl_ad2ac4750d299fecd92dd270f082ea189}
+Unused \hyperlink{classgr_1_1router_1_1root__impl_ad2ac4750d299fecd92dd270f082ea189}{work()} function; this block is independently threaded. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+lib/root\+\_\+impl.\+h\item 
+lib/root\+\_\+impl.\+cc\end{DoxyCompactItemize}
