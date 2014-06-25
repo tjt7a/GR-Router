@@ -37,12 +37,10 @@ namespace gr {
         private:
             
 			// Throughput state
-            /*
              double d_throughput;
              boost::system_time d_start;
              double d_samples_per_tick, d_samples_per_us;
              uint64_t d_total_samples;
-             */
 			//----------
             
             
