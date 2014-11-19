@@ -101,8 +101,8 @@ namespace gr {
             
             double time_for_ticks = ticks / boost::posix_time::time_duration::ticks_per_second(); // Total time since start
             
-            // throughput (in Mega Samples per second) = total samples / total time
-            double throughput = (d_total_samples / time_for_ticks) / 1e6;
+            // throughput (in Samples per second) = total samples / total time
+            double throughput = (d_total_samples / time_for_ticks);
             
             d_total_samples += (double)noutput_items;
             
