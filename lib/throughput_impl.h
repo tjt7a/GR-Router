@@ -37,10 +37,15 @@ namespace gr {
             double last_throughput;
             double running_count;
             
+            double* shared_throughput;
+            double last_throughput;
+            double throughput_margin;
+            
             int d_index;
             
         public:
             throughput_impl(size_t itemsize, int print_counter, int index);
+            throughput_impl(size_t itemsize, int print_counter, double* shared_throughput);
             ~throughput_impl();
             
             int work(int noutput_items,

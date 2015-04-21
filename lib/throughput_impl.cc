@@ -114,6 +114,8 @@ namespace gr {
                     std::cout << '\t';
                 
                 
+                // check if throughput has changed by enough; if so update
+
                 std::cout << d_index << ". " << throughput << std::endl;
             }
 			
